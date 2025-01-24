@@ -1,3 +1,5 @@
+// REVIEWED
+
 package cz.syntaxbro.erpsystem.models.dtos;
 
 import java.util.Set;

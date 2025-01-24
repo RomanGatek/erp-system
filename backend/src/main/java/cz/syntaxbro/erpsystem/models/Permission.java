@@ -1,3 +1,5 @@
+// REVIEWED
+
 package cz.syntaxbro.erpsystem.models;
 
 import jakarta.persistence.*;

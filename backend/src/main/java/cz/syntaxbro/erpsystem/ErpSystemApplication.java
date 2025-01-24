@@ -1,3 +1,5 @@
+// REVIEWED
+
 package cz.syntaxbro.erpsystem;
 
 import org.springframework.boot.SpringApplication;

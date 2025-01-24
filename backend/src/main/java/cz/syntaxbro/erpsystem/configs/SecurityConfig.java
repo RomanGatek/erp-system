@@ -1,3 +1,6 @@
+
+// REVIEWED
+
 package cz.syntaxbro.erpsystem.configs;
 
 import org.springframework.context.annotation.Bean;

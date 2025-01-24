@@ -1,3 +1,5 @@
+// REVIEWED
+
 package cz.syntaxbro.erpsystem.constants;
 
 public class Roles {

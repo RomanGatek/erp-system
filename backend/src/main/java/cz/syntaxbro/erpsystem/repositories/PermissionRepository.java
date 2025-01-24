@@ -1,3 +1,5 @@
+// REVIEWED
+
 package cz.syntaxbro.erpsystem.repositories;
 
 import cz.syntaxbro.erpsystem.models.Permission;
