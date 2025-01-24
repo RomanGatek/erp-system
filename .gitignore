@@ -1,0 +1,47 @@
+# Pomocné soubory a složky
+HELP.md
+
+# Gradle
+.gradle/
+backend/build/
+!backend/gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Backend - STS/Eclipse
+backend/.apt_generated
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings
+backend/.springBeans
+backend/.sts4-cache
+backend/bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# IntelliJ IDEA (backend)
+backend/.idea/
+backend/*.iws
+backend/*.iml
+backend/*.ipr
+backend/out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Frontend (např. React, Angular)
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/.vscode/
+
+# NetBeans (pro backend)
+backend/nbproject/private/
+backend/nbbuild/
+backend/dist/
+backend/nbdist/
+backend/.nb-gradle/
+
+# VS Code
+.vscode/
