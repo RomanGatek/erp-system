@@ -1,8 +1,15 @@
 package cz.syntaxbro.erpsystem.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Set;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Entity
 public class Role {
 
@@ -24,43 +31,14 @@ public class Role {
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
 
-    public Role() {
-    }
-
-    public Role(String name, Set<Permission> permissions) {
-        this.name = name;
-        this.permissions = permissions;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Set<Permission> getPermissions() {
-        return permissions;
-    }
-
-    public void setPermissions(Set<Permission> permissions) {
-        this.permissions = permissions;
-    }
-
-    public Set<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Set<User> users) {
+    public Role(Set<User> users, Set<Permission> permissions, String name) {
         this.users = users;
+        this.permissions = permissions;
+        this.name = name;
+    }
+
+    public Role(Set<User> users, String name) {
+        this.users = users;
+        this.name = name;
     }
 }
