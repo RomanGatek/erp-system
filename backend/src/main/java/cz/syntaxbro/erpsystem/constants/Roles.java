@@ -1,7 +1,18 @@
 package cz.syntaxbro.erpsystem.constants;
 
-public class Roles {
-    public static final String ADMIN = "ROLE_ADMIN";
-    public static final String MANAGER = "ROLE_MANAGER";
-    public static final String USER = "ROLE_USER";
+public enum Roles {
+    ADMIN("ROLE_ADMIN"),
+    MANAGER("ROLE_MANAGER"),
+    USER("ROLE_USER");
+
+    private final String role;
+
+    Roles(String role) {
+        this.role = role;
+    }
+
+    @Override
+    public String toString() {
+        return this.role;
+    }
 }
