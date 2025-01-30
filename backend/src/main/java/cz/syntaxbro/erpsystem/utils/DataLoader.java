@@ -10,7 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -33,24 +33,58 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+
         // Create permissions
-        Permission readReports = new Permission("READ_REPORTS");
-        Permission approveBudgets = new Permission("APPROVE_BUDGETS");
-        Permission viewProfile = new Permission("VIEW_PROFILE");
-        permissionRepository.saveAll(List.of(readReports, approveBudgets, viewProfile));
+        Optional<Permission> readReportsFromDb = permissionRepository.findByName("READ_REPORTS");
+        Permission readReports = readReportsFromDb.orElseGet(() ->
+                permissionRepository.save(new Permission("READ_REPORTS"))
+        );
+        Optional<Permission> approveBudgetsFromDb = permissionRepository.findByName("APPROVE_BUDGETS");
+        Permission approveBudgets = readReportsFromDb.orElseGet(() ->
+                permissionRepository.save(new Permission("APPROVE_BUDGETS"))
+        );
+        Optional<Permission> viewProfileFromDb = permissionRepository.findByName("VIEW_PROFILE");
+        Permission viewProfile = viewProfileFromDb.orElseGet(() ->
+                permissionRepository.save(new Permission("VIEW_PROFILE"))
+        );
 
         // Create roles with permissions
-        Role adminRole = new Role("ROLE_ADMIN", Set.of(readReports, approveBudgets));
-        Role managerRole = new Role("ROLE_MANAGER", Set.of(readReports));
-        Role userRole = new Role("ROLE_USER", Set.of(viewProfile));
-        roleRepository.saveAll(List.of(adminRole, managerRole, userRole));
+        Optional<Role> adminRoleFromDb = roleRepository.findByName("ROLE_ADMIN");
+        Role adminRole = adminRoleFromDb.orElseGet(() ->
+                roleRepository.save(new Role("ROLE_ADMIN", Set.of(readReports, approveBudgets)))
+        );
+
+        Optional<Role> managerRoleFromDb = roleRepository.findByName("ROLE_MANAGER");
+        Role managerRole = managerRoleFromDb.orElseGet(() ->
+                roleRepository.save(new Role("ROLE_MANAGER", Set.of(readReports)))
+        );
+
+        Optional<Role> userRoleFromDb = roleRepository.findByName("ROLE_USER");
+        Role userRole = userRoleFromDb.orElseGet(() ->
+                roleRepository.save(new Role("ROLE_USER", Set.of(viewProfile)))
+        );
 
         // Create users
-        User admin = createUser("admin", "Admin", "admin@example.com", Set.of(adminRole));
-        User manager = createUser("manager", "Manager", "manager@example.com", Set.of(managerRole));
-        User user = createUser("user", "Regular", "user@example.com", Set.of(userRole));
+        Optional<User> adminFromDb = userRepository.findByUsername("admin");
+        if (adminFromDb.isEmpty()) {
+            userRepository.save(
+                    createUser("admin", "Admin", "admin@example.com", Set.of(adminRole))
+            );
+        }
 
-        userRepository.saveAll(List.of(admin, manager, user));
+        Optional<User> managerFromDb = userRepository.findByUsername("manager");
+        if (managerFromDb.isEmpty()) {
+            userRepository.save(
+                    createUser("manager", "Manager", "manager@example.com", Set.of(managerRole))
+            );
+        }
+
+        Optional<User> userFromDb = userRepository.findByUsername("user");
+        if (userFromDb.isEmpty()) {
+            userRepository.save(
+                    createUser("user", "Regular", "user@example.com", Set.of(userRole))
+            );
+        }
     }
 
     private User createUser(String username, String firstName, String email, Set<Role> roles) {
