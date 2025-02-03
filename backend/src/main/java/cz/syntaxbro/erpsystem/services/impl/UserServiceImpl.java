@@ -6,6 +6,7 @@ import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,46 +29,69 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAllUsers() {
-        return userRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+        return userRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public UserDto getUserById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
         return mapToDto(user);
     }
 
     @Override
     public UserDto createUser(UserDto userDto) {
+        if (userRepository.existsByUsername(userDto.getUsername())) {
+            throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
+        }
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
+        }
+
         User user = mapToEntity(userDto, new User());
-        user.setPassword(passwordEncoder.encode("defaultPassword")); // Set default password
+        user.setPassword(passwordEncoder.encode("defaultPassword"));
+
+        Set<Role> roles = userDto.getRoles().stream()
+                .map(roleName -> roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
+                .collect(Collectors.toSet());
+        user.setRoles(roles);
+
         User savedUser = userRepository.save(user);
         return mapToDto(savedUser);
     }
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        user = mapToEntity(userDto, user); // Map DTO to existing user entity
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        mapToEntity(userDto, user);
         User updatedUser = userRepository.save(user);
         return mapToDto(updatedUser);
     }
 
     @Override
     public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new IllegalArgumentException("User not found with id: " + id);
+        }
         userRepository.deleteById(id);
     }
 
     private UserDto mapToDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-        dto.setEmail(user.getEmail());
-        dto.setActive(user.isActive());
-        dto.setRoles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
-        return dto;
+        return new UserDto(
+                user.getId(),
+                user.getUsername(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.isActive(),
+                user.getRoles() != null
+                        ? user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
+                :Set.of()
+        );
     }
 
     private User mapToEntity(UserDto userDto, User user) {
@@ -75,13 +99,15 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setEmail(userDto.getEmail());
-        user.setActive(userDto.isActive());
 
-        Set<Role> roles = userDto.getRoles().stream()
-                .map(roleName -> roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found")))
-                .collect(Collectors.toSet());
-        user.setRoles(roles);
+        if (userDto.getRoles() !=null) {
+            Set<Role> roles = userDto.getRoles().stream()
+                    .map(roleName -> roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
+
+        }
 
         return user;
     }
