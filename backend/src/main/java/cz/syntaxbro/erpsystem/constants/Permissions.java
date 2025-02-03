@@ -1,7 +1,18 @@
 package cz.syntaxbro.erpsystem.constants;
 
-public class Permissions {
-    public static final String READ_REPORTS = "READ_REPORTS";
-    public static final String APPROVE_BUDGETS = "APPROVE_BUDGETS";
-    public static final String VIEW_PROFILE = "VIEW_PROFILE";
+public enum Permissions {
+    READ_REPORTS("READ_REPORTS"),
+    APPROVE_BUDGETS("APPROVE_BUDGETS"),
+    VIEW_PROFILE("VIEW_PROFILE");
+
+    private final String permission;
+
+    Permissions(String permission) {
+        this.permission = permission;
+    }
+
+    @Override
+    public String toString() {
+        return this.permission;
+    }
 }
