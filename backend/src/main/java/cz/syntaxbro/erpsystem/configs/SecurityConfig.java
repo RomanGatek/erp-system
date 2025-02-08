@@ -20,14 +20,14 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF (use with caution in production)
                 .authorizeHttpRequests(auth -> auth
-                        // 🔹 API endpoint rules
+                        // API endpoint rules
                         .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
                         .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
                         .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
                         .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
 
-                        // 🔹 UI-based routes
+                        // UI-based routes
                         .requestMatchers("/admin/**").hasRole("ADMIN") // Web admin panel
                         .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/user/**").hasAnyRole("ADMIN", "MANAGER", "USER")
