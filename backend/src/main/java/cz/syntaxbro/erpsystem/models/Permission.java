@@ -11,6 +11,8 @@ import java.util.Set;
 @Entity
 @Data
 @EqualsAndHashCode(exclude = "roles")
+@Table(name = "permissions")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Permission {
