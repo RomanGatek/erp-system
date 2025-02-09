@@ -77,9 +77,9 @@ public class DataLoader implements CommandLineRunner {
             user.setUsername(username);
             user.setPassword(passwordEncoder.encode("password123")); // Default password
             user.setFirstName(firstName);
-            user.setLastName(DEFAULT_LAST_NAME); // Default last name
+            user.setLastName("USER"); // Default last name
             user.setEmail(email);
-            user.setActive(DEFAULT_IS_ACTIVE); // Default active status
+            user.setActive(true); // Default active status
             user.setRoles(roles);
 
             userRepository.save(user);

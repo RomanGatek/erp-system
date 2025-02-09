@@ -31,7 +31,7 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     // Database Driver
-    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.mysql:mysql-connector-j")
     runtimeOnly("com.h2database:h2")
 
     // Swagger (Springdoc OpenAPI)
