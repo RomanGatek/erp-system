@@ -31,13 +31,11 @@ import java.util.stream.Collectors;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
     private final UserService userService;
 
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, UserService userService) {
-        this.userRepository = userRepository;
+    public AuthServiceImpl(UserService userService) {
         this.userService = userService;
     }
 
