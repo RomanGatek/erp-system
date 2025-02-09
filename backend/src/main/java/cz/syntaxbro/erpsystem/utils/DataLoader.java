@@ -72,6 +72,9 @@ public class DataLoader implements CommandLineRunner {
 
     private void createUserIfNotExists(String username, String firstName, String email, Set<Role> roles) {
         Optional<User> userFromDb = userRepository.findByUsername(username);
+
+        // Convert this creation to builder pattern via User class
+
         if (userFromDb.isEmpty()) {
             User user = new User();
             user.setUsername(username);

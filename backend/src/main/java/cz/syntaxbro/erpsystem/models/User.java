@@ -1,17 +1,21 @@
 package cz.syntaxbro.erpsystem.models;
 
+import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -39,4 +43,15 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    public UserDto toDto() {
+        return new UserDto(
+                getId(), getUsername(), getFirstName(), getLastName(),
+                getEmail(), isActive(),
+                getRoles()
+                        .stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toSet())
+        );
+    }
 }

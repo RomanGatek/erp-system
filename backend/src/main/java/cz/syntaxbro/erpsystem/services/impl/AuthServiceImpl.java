@@ -68,16 +68,17 @@ public class AuthServiceImpl implements AuthService {
                 .collect(Collectors.toSet());
 
         // Create an instance of the User entity and set the necessary fields
-        User currentUser = new User();
-        currentUser.setId(1L);  // Sample value, normally obtained dynamically
-        currentUser.setUsername(authentication.getName());
-        currentUser.setFirstName("current_firstName");
-        currentUser.setLastName("current_lastName");
-        currentUser.setEmail("current_user@exampler.com");
-        currentUser.setActive(true);
-        currentUser.setRoles(roles);
+        User currentUser = User.builder()
+            .id(1L)
+            .username(authentication.getName())
+            .firstName("current_firstName")
+            .lastName("current_lastName")
+            .email("current_user@examler.com")
+            .isActive(true)
+            .roles(roles)
+            .build();
 
-        // Mapping the User entity to UserDto using UserMapper.toDto()
-        return UserMapper.toDto(currentUser);
+        // Convert user entity to DTO via method.
+        return currentUser.toDto();
     }
 }
