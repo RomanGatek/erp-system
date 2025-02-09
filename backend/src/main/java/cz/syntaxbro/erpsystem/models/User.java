@@ -24,12 +24,16 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "first_name")
     private String firstName;
+
+    @Column(name = "last_name")
     private String lastName;
 
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(name = "is_active")
     private boolean isActive;
 
     @ManyToMany(fetch = FetchType.LAZY)
