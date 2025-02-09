@@ -14,7 +14,7 @@ import static cz.syntaxbro.erpsystem.constants.Roles.MANAGER;
 public class ManagerController {
 
     @GetMapping
-    @PreAuthorize("hasRole('" + MANAGER + "')")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<String> managerAccess() {
         return ResponseEntity.ok("Welcome, MANAGER!");
     }
