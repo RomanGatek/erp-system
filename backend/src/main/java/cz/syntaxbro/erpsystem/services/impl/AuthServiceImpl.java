@@ -52,7 +52,11 @@ public class AuthServiceImpl implements AuthService {
             if (entry.getKey() == null || entry.getKey().isEmpty()) {
                 throw new IllegalArgumentException(entry.getValue() + " cannot be null or empty");
             }else{
-                userService.createUserToDb(signUpRequest);
+                UserDto userDto = new UserDto();
+                userDto.setUsername(signUpRequest.getUsername());
+                userDto.setEmail(signUpRequest.getEmail());
+                userDto.setPassword(signUpRequest.getPassword());
+                userService.createUser(userDto);
             }
         });
     }
