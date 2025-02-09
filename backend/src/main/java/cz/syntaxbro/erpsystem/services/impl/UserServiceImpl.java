@@ -6,15 +6,18 @@ import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -30,15 +33,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::mapToDto)
+                .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public UserDto getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
-        return mapToDto(user);
+        User user = getUserByIdOrThrow(id);
+        return UserMapper.toDto(user);
     }
 
     @Override
@@ -51,6 +53,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = mapToEntity(userDto, new User());
+        // Here we set the password - you can use the password from the DTO if available, or the default password
         user.setPassword(passwordEncoder.encode("defaultPassword"));
 
         Set<Role> roles = userDto.getRoles().stream()
@@ -60,16 +63,15 @@ public class UserServiceImpl implements UserService {
         user.setRoles(roles);
 
         User savedUser = userRepository.save(user);
-        return mapToDto(savedUser);
+        return UserMapper.toDto(savedUser);
     }
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        User user = getUserByIdOrThrow(id);
         mapToEntity(userDto, user);
         User updatedUser = userRepository.save(user);
-        return mapToDto(updatedUser);
+        return UserMapper.toDto(updatedUser);
     }
 
     @Override
@@ -80,35 +82,26 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
-    private UserDto mapToDto(User user) {
-        return new UserDto(
-                user.getId(),
-                user.getUsername(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.isActive(),
-                user.getRoles() != null
-                        ? user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
-                :Set.of()
-        );
+    // Helper method to get the user by ID or throw an exception if the user does not exist.
+    private User getUserByIdOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
     }
 
+    // Converts UserDto to User entity by setting attributes and resolving roles.
     private User mapToEntity(UserDto userDto, User user) {
         user.setUsername(userDto.getUsername());
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setEmail(userDto.getEmail());
 
-        if (userDto.getRoles() !=null) {
+        if (userDto.getRoles() != null) {
             Set<Role> roles = userDto.getRoles().stream()
                     .map(roleName -> roleRepository.findByName(roleName)
                             .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
                     .collect(Collectors.toSet());
             user.setRoles(roles);
-
         }
-
         return user;
     }
 }

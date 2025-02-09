@@ -22,15 +22,13 @@ import java.util.Set;
 @Component
 public class DataLoader implements CommandLineRunner {
 
-    private static final String DEFAULT_LAST_NAME = "User"; // Default last name
-    private static final boolean DEFAULT_IS_ACTIVE = true;  // Default active status
-
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataLoader(RoleRepository roleRepository, UserRepository userRepository, PermissionRepository permissionRepository, PasswordEncoder passwordEncoder) {
+    public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
+                      PermissionRepository permissionRepository, PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
@@ -40,7 +38,6 @@ public class DataLoader implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-
         // Create permissions
         Permission readReports = createPermissionIfNotExists("READ_REPORTS");
         Permission approveBudgets = createPermissionIfNotExists("APPROVE_BUDGETS");

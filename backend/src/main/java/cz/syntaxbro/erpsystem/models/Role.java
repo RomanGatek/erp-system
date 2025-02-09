@@ -1,10 +1,11 @@
 package cz.syntaxbro.erpsystem.models;
 
 import jakarta.persistence.*;
+import lombok.*;
+import java.util.HashSet;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.Set;
 
 @AllArgsConstructor
@@ -12,39 +13,32 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "roles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = "permissions")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(unique = true, nullable = false)
     private String name;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "role_permission",
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-    private Set<Permission> permissions;
-
-    @ManyToMany(mappedBy = "roles")
-    private Set<User> users;
-
-    public Role(Set<User> users, Set<Permission> permissions, String name) {
-        this.users = users;
-        this.permissions = permissions;
-        this.name = name;
-    }
-
-    public Role(Set<User> users, String name) {
-        this.users = users;
-        this.name = name;
-    }
+    private Set<Permission> permissions = new HashSet<>();
 
     public Role(String name, Set<Permission> permissions) {
         this.name = name;
-        this.permissions = permissions;
+        this.permissions = permissions != null ? permissions : new HashSet<>();
     }
 }

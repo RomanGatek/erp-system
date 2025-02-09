@@ -3,11 +3,14 @@ package cz.syntaxbro.erpsystem.models;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
 @Entity
+@Data
+@EqualsAndHashCode(exclude = "roles")
 @Table(name = "permissions")
 @Data
 @NoArgsConstructor

@@ -4,19 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Data;
-
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
-    private Long id;
+public class LoginRequest {
+
+    @NotBlank(message = "Username is required")
     private String username;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private boolean isActive;
-    private Set<String> roles;
+
+    @NotBlank(message = "Password is required")
+    private String password;
 }
