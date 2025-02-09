@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
         }else {
             User user = new User();
             user.setUsername(signUpRequest.getUsername());
-            user.setPassword(passwordEncoder.encode("securePassword"));
+            user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
             user.setEmail(signUpRequest.getEmail());
             user.setActive(true);
 //            user.setRoles(List.of(new Role("User")));
