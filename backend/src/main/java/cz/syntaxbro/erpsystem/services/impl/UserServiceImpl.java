@@ -83,23 +83,6 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toDto(savedUser);
     }
 
-
-
-    @Override
-    public void createUserToDb(SignUpRequest signUpRequest) {
-        if (!userRepository.existsByUsername(signUpRequest.getUsername())) {
-            throw new IllegalArgumentException("Username already exists: " + signUpRequest.getUsername());
-        }else {
-            User user = new User();
-            user.setUsername(signUpRequest.getUsername());
-            user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
-            user.setEmail(signUpRequest.getEmail());
-            user.setActive(true);
-//            user.setRoles(List.of(new Role("User")));
-            userRepository.save(user);
-        }
-    }
-
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
         User user = getUserByIdOrThrow(id);

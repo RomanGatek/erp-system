@@ -16,8 +16,6 @@ public interface UserService {
 
     UserDto createUser(UserDto userDto);
 
-    void createUserToDb(SignUpRequest signUpRequest);
-
     UserDto updateUser(Long id, UserDto userDto);
 
     void deleteUser(Long id);
