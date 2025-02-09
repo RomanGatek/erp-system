@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -65,9 +66,12 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
         }
 
+
+
         User user = mapToEntity(userDto, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        user.setPassword(passwordEncoder.encode("securePassword"));
+        SecurityConfig security = new SecurityConfig();
+        user.setPassword(security.hashPassword(userDto.getPassword()));
 
         Set<Role> roles = userDto.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)
@@ -78,6 +82,8 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         return UserMapper.toDto(savedUser);
     }
+
+
 
     @Override
     public void createUserToDb(SignUpRequest signUpRequest) {
