@@ -7,12 +7,15 @@ import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
+import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,10 +41,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User getUserByUsername(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        return null;
+    }
+
+    @Override
     public UserDto getUserById(Long id) {
         User user = getUserByIdOrThrow(id);
         return UserMapper.toDto(user);
     }
+
 
     @Override
     public UserDto createUser(UserDto userDto) {
@@ -54,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
         User user = mapToEntity(userDto, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        user.setPassword(passwordEncoder.encode("defaultPassword"));
+        user.setPassword(passwordEncoder.encode("securePassword"));
 
         Set<Role> roles = userDto.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)
@@ -64,6 +77,21 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
         return UserMapper.toDto(savedUser);
+    }
+
+    @Override
+    public void createUserToDb(SignUpRequest signUpRequest) {
+        if (!userRepository.existsByUsername(signUpRequest.getUsername())) {
+            throw new IllegalArgumentException("Username already exists: " + signUpRequest.getUsername());
+        }else {
+            User user = new User();
+            user.setUsername(signUpRequest.getUsername());
+            user.setPassword(passwordEncoder.encode("securePassword"));
+            user.setEmail(signUpRequest.getEmail());
+            user.setActive(true);
+//            user.setRoles(List.of(new Role("User")));
+            userRepository.save(user);
+        }
     }
 
     @Override
