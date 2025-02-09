@@ -6,12 +6,18 @@ import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+
+/**
+ * @author steve
+ * Class to create dummy permission, role and user data
+ */
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -32,36 +38,54 @@ public class DataLoader implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) {
+
         // Create permissions
-        Permission readReports = new Permission("READ_REPORTS");
-        Permission approveBudgets = new Permission("APPROVE_BUDGETS");
-        Permission viewProfile = new Permission("VIEW_PROFILE");
-        permissionRepository.saveAll(List.of(readReports, approveBudgets, viewProfile));
+        Permission readReports = createPermissionIfNotExists("READ_REPORTS");
+        Permission approveBudgets = createPermissionIfNotExists("APPROVE_BUDGETS");
+        Permission viewProfile = createPermissionIfNotExists("VIEW_PROFILE");
 
         // Create roles with permissions
-        Role adminRole = new Role("ROLE_ADMIN", Set.of(readReports, approveBudgets));
-        Role managerRole = new Role("ROLE_MANAGER", Set.of(readReports));
-        Role userRole = new Role("ROLE_USER", Set.of(viewProfile));
-        roleRepository.saveAll(List.of(adminRole, managerRole, userRole));
+        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", Set.of(readReports, approveBudgets));
+        Role managerRole = createRoleIfNotExists("ROLE_MANAGER", Set.of(readReports));
+        Role userRole = createRoleIfNotExists("ROLE_USER", Set.of(viewProfile));
 
         // Create users
-        User admin = createUser("admin", "Admin", "admin@example.com", Set.of(adminRole));
-        User manager = createUser("manager", "Manager", "manager@example.com", Set.of(managerRole));
-        User user = createUser("user", "Regular", "user@example.com", Set.of(userRole));
-
-        userRepository.saveAll(List.of(admin, manager, user));
+        createUserIfNotExists("admin", "Admin", "admin@example.com", Set.of(adminRole));
+        createUserIfNotExists("manager", "Manager", "manager@example.com", Set.of(managerRole));
+        createUserIfNotExists("user", "Regular", "user@example.com", Set.of(userRole));
     }
 
-    private User createUser(String username, String firstName, String email, Set<Role> roles) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode("password123")); // Default password
-        user.setFirstName(firstName);
-        user.setLastName(DEFAULT_LAST_NAME); // Default last name
-        user.setEmail(email);
-        user.setActive(DEFAULT_IS_ACTIVE); // Default active status
-        user.setRoles(roles);
-        return user;
+    private Permission createPermissionIfNotExists(String permissionName) {
+        Optional<Permission> permissionFromDb = permissionRepository.findByName(permissionName);
+
+        return permissionFromDb.orElseGet(() ->
+                permissionRepository.save(new Permission(permissionName))
+        );
+    }
+
+    private Role createRoleIfNotExists(String roleName, Set<Permission> permissionList) {
+        Optional<Role> roleFromDb = roleRepository.findByName(roleName);
+
+        return roleFromDb.orElseGet(() ->
+                roleRepository.save(new Role(roleName, permissionList))
+        );
+    }
+
+    private void createUserIfNotExists(String username, String firstName, String email, Set<Role> roles) {
+        Optional<User> userFromDb = userRepository.findByUsername(username);
+        if (userFromDb.isEmpty()) {
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(passwordEncoder.encode("password123")); // Default password
+            user.setFirstName(firstName);
+            user.setLastName(DEFAULT_LAST_NAME); // Default last name
+            user.setEmail(email);
+            user.setActive(DEFAULT_IS_ACTIVE); // Default active status
+            user.setRoles(roles);
+
+            userRepository.save(user);
+        }
     }
 }

@@ -11,6 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @Entity
+@Table(name = "roles")
 public class Role {
 
     @Id
@@ -22,7 +23,7 @@ public class Role {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "role_permissions",
+            name = "role_permission",
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
