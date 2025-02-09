@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -32,14 +33,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
 
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(UserRepository userRepository, UserService userService) {
         this.userRepository = userRepository;
         this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -69,8 +68,9 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username");
         }
 
-        // 🔥 Compare hashed passwords using BCrypt
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        // authenticate with hash password algorithm SHA256!
+        SecurityConfig security = new SecurityConfig();
+        if (!security.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
         }
         return "generated-jwt-token";
