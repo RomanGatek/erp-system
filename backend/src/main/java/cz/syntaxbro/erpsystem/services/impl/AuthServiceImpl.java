@@ -32,12 +32,13 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
-    private SecurityConfig security;
+    private final SecurityConfig security;
 
 
     @Autowired
-    public AuthServiceImpl(UserService userService) {
+    public AuthServiceImpl(UserService userService, SecurityConfig security) {
         this.userService = userService;
+        this.security = security;
     }
 
     @Override
