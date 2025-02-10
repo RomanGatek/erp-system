@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
+    private SecurityConfig security;
 
 
     @Autowired
@@ -48,12 +49,17 @@ public class AuthServiceImpl implements AuthService {
         ).forEach(entry -> {
             if (entry.getKey() == null || entry.getKey().isEmpty()) {
                 throw new IllegalArgumentException(entry.getValue() + " cannot be null or empty");
+                //check if 1 capital char, 1 special char, 1 number, 10 char min and 32 char max
+            }else if (!security.passwordValidator(signUpRequest.getPassword())){
+                throw  new IllegalArgumentException(" is not a valid password");
             }else{
+                //convert SignUpRequest to UserDto to create user in db
                 UserDto userDto = new UserDto();
                 userDto.setUsername(signUpRequest.getUsername());
                 userDto.setEmail(signUpRequest.getEmail());
                 userDto.setPassword(signUpRequest.getPassword());
                 userDto.setRoles(Set.of("ROLE_USER"));
+                //create user to db
                 userService.createUser(userDto);
             }
         });
