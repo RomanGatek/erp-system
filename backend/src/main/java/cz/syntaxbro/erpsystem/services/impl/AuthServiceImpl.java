@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
-import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -68,7 +67,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // authenticate with hash password algorithm SHA256!
-        SecurityConfig security = new SecurityConfig();
         if (!passwordSecurity.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
         }
