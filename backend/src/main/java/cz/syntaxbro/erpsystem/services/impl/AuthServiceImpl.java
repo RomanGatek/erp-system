@@ -5,27 +5,21 @@ import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
-import org.antlr.v4.runtime.atn.ActionTransition;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,12 +27,13 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
-    private PasswordSecurity passwordSecurity = new PasswordSecurity();
+    private final PasswordSecurity passwordSecurity;
 
 
     @Autowired
-    public AuthServiceImpl(UserService userService) {
+    public AuthServiceImpl(UserService userService, PasswordSecurity passwordSecurity) {
         this.userService = userService;
+        this.passwordSecurity = passwordSecurity;
     }
 
     @Override
