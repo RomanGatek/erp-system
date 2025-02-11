@@ -57,7 +57,7 @@ class AuthControllerTest {
     void setUp() {
         signUpRequest = new SignUpRequest("testUser", "password", "test@example.com");
         loginRequest = new LoginRequest("testUser", "password");
-        userDto = new UserDto(1L, "testUser", "Test", "User", "test@example.com", true, Set.of("ROLE_USER"));
+        userDto = new UserDto(1L, "testUser", "Test", "User","pass", "test@example.com", true, Set.of("ROLE_USER"));
     }
 
     /**
