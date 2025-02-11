@@ -25,6 +25,9 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF (use with caution in production)
                 .authorizeHttpRequests(auth -> auth
+                        //H2 console rules
+                        .requestMatchers("/h2-console/**").permitAll()
+
                         // API endpoint rules
                         .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
