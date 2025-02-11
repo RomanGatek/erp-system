@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
@@ -57,17 +58,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
+        PasswordSecurity passwordSecurity = new PasswordSecurity();
         if (userRepository.existsByUsername(userDto.getUsername())) {
             throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
         }
         if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
         }
+        if (!passwordSecurity.passwordValidator(userDto.getPassword())) {
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter, one digit and one special character");
+        }
 
         User user = mapToEntity(userDto, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        SecurityConfig security = new SecurityConfig();
-        user.setPassword(security.hashPassword(userDto.getPassword()));
+
+        user.setPassword(passwordSecurity.hashPassword(userDto.getPassword()));
 
         Set<Role> roles = userDto.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)

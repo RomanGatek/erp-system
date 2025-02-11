@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
@@ -32,13 +33,12 @@ import java.util.stream.Collectors;
 public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
-    private final SecurityConfig security;
+    private PasswordSecurity passwordSecurity = new PasswordSecurity();
 
 
     @Autowired
-    public AuthServiceImpl(UserService userService, SecurityConfig security) {
+    public AuthServiceImpl(UserService userService) {
         this.userService = userService;
-        this.security = security;
     }
 
     @Override
@@ -50,9 +50,7 @@ public class AuthServiceImpl implements AuthService {
         ).forEach(entry -> {
             if (entry.getKey() == null || entry.getKey().isEmpty()) {
                 throw new IllegalArgumentException(entry.getValue() + " cannot be null or empty");
-                //check if 1 capital char, 1 special char, 1 number, 10 char min and 32 char max
-            }else if (!security.passwordValidator(signUpRequest.getPassword())){
-                throw  new IllegalArgumentException(" is not a valid password");
+
             }else{
                 //convert SignUpRequest to UserDto to create user in db
                 UserDto userDto = new UserDto();
@@ -76,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
 
         // authenticate with hash password algorithm SHA256!
         SecurityConfig security = new SecurityConfig();
-        if (!security.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
+        if (!passwordSecurity.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
         }
         return "generated-jwt-token";
