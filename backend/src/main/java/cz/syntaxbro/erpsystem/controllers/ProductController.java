@@ -2,6 +2,7 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,7 @@ public class ProductController {
 
     private final ProductService productService;
 
-
+    @Autowired
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
@@ -24,7 +25,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-        public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
@@ -48,7 +49,5 @@ public class ProductController {
     public ResponseEntity<Void> deleteProductByName(@PathVariable String name) {
         productService.deleteProductByName(name);
         return ResponseEntity.noContent().build();
-        }
     }
-
-
+}
