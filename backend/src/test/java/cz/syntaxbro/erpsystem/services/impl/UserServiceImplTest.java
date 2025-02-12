@@ -111,12 +111,23 @@ class UserServiceImplTest {
     }
 
     @Test
-    void createUserTestPassNoAuthenticated() {
-        this.userDto.setPassword("password");
+    void createUserTestPassNoAuthenticatedException() {
         //Arrest
+        this.userDto.setPassword("password");
+        //Act
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
         //Asser
         assertEquals("Password must contain at least one uppercase letter, one digit, one special character, min 10 char and max 32 char", exception.getMessage());
+    }
+
+    @Test
+    void createUserTestUsernameExistException() {
+        //Arrest
+        when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
+        //Act
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
+        //Asser
+        assertEquals("Username already exists: " + userDto.getUsername(), exception.getMessage());
     }
 
     @Test
