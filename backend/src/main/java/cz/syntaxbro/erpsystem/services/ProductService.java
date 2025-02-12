@@ -1,9 +1,7 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.Product;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface ProductService {
 
     Product createProduct(Product product);
