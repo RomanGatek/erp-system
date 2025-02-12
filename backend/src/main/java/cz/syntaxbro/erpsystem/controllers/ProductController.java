@@ -1,9 +1,14 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.dtos.ProductDto;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -18,6 +23,21 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @InitBinder("productDto")
+    protected void initBinder(WebDataBinder binder){
+        binder.addValidators(new ProductDtoValidator());
+    }
+
+    @PostMapping
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductDto productDTO) {
+        Product product = new Product();
+        product.setName(productDTO.getName());
+        product.setCost(productDTO.getCost());
+        product.setQuantity(productDTO.getQuantity());
+
+        Product createdProduct = productService.createProduct(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+    }
 
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
