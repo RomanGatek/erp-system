@@ -18,7 +18,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF (use with caution in production)
+                // Disable csrf for login, logout, signup
+                .csrf(csrf -> csrf.ignoringRequestMatchers(
+                        "/api/auth/public/login",
+                        "/api/auth/public/signup",
+                        "/api/auth/public/logout"
+                ))
+
                 .authorizeHttpRequests(auth -> auth
                         // API endpoint rules
                         .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
