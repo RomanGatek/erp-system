@@ -89,7 +89,11 @@ class UserServiceImplTest {
         //Arrest
         when(userRepository.findById(1L)).thenReturn(Optional.of(this.user));
         //Act
-
+        UserDto result = userServiceImpl.getUserById(1L);
+        //Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
