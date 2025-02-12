@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
@@ -34,6 +35,9 @@ class UserServiceImplTest {
 
     @Mock
     RoleRepository roleRepository;
+
+    @Mock
+    PasswordSecurity passwordSecurity;
 
     AutoCloseable autoCloseable;
 
@@ -114,6 +118,22 @@ class UserServiceImplTest {
         //Asser
         assertEquals("Password must contain at least one uppercase letter, one digit, one special character, min 10 char and max 32 char", exception.getMessage());
     }
+
+    @Test
+    void createUserHashPasswordAuthentication() {
+        // Arrange
+        this.user.setPassword(passwordSecurity.hashPassword(this.userDto.getPassword()));
+        when(userRepository.save(any(User.class))).thenReturn(this.user);
+
+        // Act
+        UserDto result = userServiceImpl.createUser(this.userDto);
+
+        // Assert
+        assertNotNull(result);
+        assertNotEquals(this.userDto.getPassword(), result.getPassword());
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
 
 
     @Test
