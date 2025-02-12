@@ -27,6 +27,7 @@ class UserServiceImplTest {
 
     UserServiceImpl userServiceImpl;
     User user;
+    UserDto userDto;
 
     @Mock
     UserRepository userRepository;
@@ -41,6 +42,15 @@ class UserServiceImplTest {
         autoCloseable = MockitoAnnotations.openMocks(this);
         userServiceImpl = new UserServiceImpl(userRepository, roleRepository);
         this.user = new User(1L,"username", "1!Password", "firstName", "lastName", "email@email", true, Set.of());
+        this.userDto = new UserDto(
+                this.user.getId(),
+                this.user.getUsername(),
+                this.user.getFirstName(),
+                this.user.getLastName(),
+                this.user.getPassword(),
+                this.user.getEmail(),
+                this.user.isActive(),
+                Set.of());
     }
 
     @AfterEach
@@ -97,8 +107,14 @@ class UserServiceImplTest {
     }
 
     @Test
-    void createUser() {
+    void createUserTestPassNoAuthenticated() {
+        this.userDto.setPassword("password");
+        //Arrest
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
+        //Asser
+        assertEquals("Password must contain at least one uppercase letter, one digit, one special character, min 10 char and max 32 char", exception.getMessage());
     }
+
 
     @Test
     void updateUser() {
