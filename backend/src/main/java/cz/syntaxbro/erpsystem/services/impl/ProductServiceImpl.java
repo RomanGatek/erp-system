@@ -4,13 +4,12 @@ import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+
+import static org.springframework.data.util.Optionals.ifPresentOrElse;
 
 @Service
-@Validated
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
@@ -22,7 +21,7 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    public Product createProduct(@Valid Product product) {
+    public Product createProduct(Product product) {
         return productRepository.save(product);
     }
 
@@ -39,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product updateProduct(Long id, @Valid Product product) {
+    public Product updateProduct(Long id, Product product) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
                     existingProduct.setName(product.getName());
@@ -52,11 +51,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProductById(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new EntityNotFoundException("Product not found with id: " + id);
+        productRepository.findById(id)
+                .ifPresentOrElse(
+                    productRepository::delete,
+                    () -> { throw new EntityNotFoundException("Product not found with id: " + id); }
+            );
         }
-        productRepository.deleteById(id);
-    }
+
 
     @Override
     public void deleteProductByName(String name) {
