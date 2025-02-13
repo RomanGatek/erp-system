@@ -1,15 +1,20 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.web.server.ResponseStatusException;
+
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class AuthServiceImplTest {
 
@@ -69,11 +74,43 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void registerUserTestPasswordEmpty() {
-
+    void authenticateUserUsernameException() {
+        //Arrange
+        LoginRequest loginRequest = new LoginRequest("Username", "1!Password");
+        when(userService.getUserByUsername(loginRequest.getUsername())).thenReturn(null);
+        //Act
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> authServiceImpl.authenticateUser(loginRequest));
+        //Assert
+        assertEquals("401 UNAUTHORIZED \"Invalid username\"", exception.getMessage());
     }
 
     @Test
-    void authenticateUser() {
+    void authenticateUserPasswordException() {
+        //Arrange
+        LoginRequest loginRequest = new LoginRequest("username", "1!Password");
+        User user = new User();
+        user.setUsername("username");
+        user.setPassword("deferment secure Password");
+        when(userService.getUserByUsername(loginRequest.getUsername())).thenReturn(user);
+        when(passwordSecurity.hashPassword(loginRequest.getPassword())).thenReturn("wrong password");
+        //Act
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> authServiceImpl.authenticateUser(loginRequest));
+        //Assert
+        assertEquals("401 UNAUTHORIZED \"Invalid password\"", exception.getMessage());
+    }
+
+    @Test
+    void authenticateUserSuccess() {
+        //Arrange
+        LoginRequest loginRequest = new LoginRequest("username", "1!Password");
+        User user = new User();
+        user.setUsername("username");
+        user.setPassword("1!Password");
+        when(userService.getUserByUsername(loginRequest.getUsername())).thenReturn(user);
+        when(passwordSecurity.hashPassword(loginRequest.getPassword())).thenReturn("1!Password");
+        //Act
+        String response = authServiceImpl.authenticateUser(loginRequest);
+        //Assert
+        assertEquals("generated-jwt-token", response);
     }
 }
