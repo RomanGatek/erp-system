@@ -131,6 +131,16 @@ class UserServiceImplTest {
     }
 
     @Test
+    void createUserTestEmailExistException() {
+        //Arrest
+        when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
+        //Act
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
+        //Asser
+        assertEquals("Email already exists: " + userDto.getEmail(), exception.getMessage());
+    }
+
+    @Test
     void createUserHashPasswordAuthentication() {
         // Arrange
         this.user.setPassword(passwordSecurity.hashPassword(this.userDto.getPassword()));
