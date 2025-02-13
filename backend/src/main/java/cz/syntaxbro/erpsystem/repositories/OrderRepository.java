@@ -6,10 +6,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    @Query("select o from Order o where o.cost between :cost and :cost2")
-    List<Order> findByCostBetween(@Param("cost") Double costOne, @Param("cost2") Double costTwo);
+
+    @Query("select o from Order o where o.cost between :startCost and :endCost")
+    List<Order> findByCostBetween(@Param("startCost") Double startCost, @Param("endCost") Double endCost);
+
+    @Query("select o from Order o where o.orderTime between :startDate and :endDate")
+    List<Order> findByDateBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }
