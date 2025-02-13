@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -58,8 +57,8 @@ public class OrderController {
     }
 
     @GetMapping("/by-product")
-    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam Product product) {
-        List<Order> orders = orderService.getOrdersByProduct(product);
+    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam Long productId) {
+        List<Order> orders = orderService.getOrdersByProduct(productId);
         if (orders == null) {
             return ResponseEntity.notFound().build();
         }return ResponseEntity.ok(orders);
@@ -81,5 +80,11 @@ public class OrderController {
     public ResponseEntity<String> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
         return ResponseEntity.ok(String.format("Order %s deleted", id));
+    }
+
+    @DeleteMapping("/delete-orders-with-product/{id}")
+    public ResponseEntity<String> deleteOrdersWithProductId(@PathVariable Long id) {
+        orderService.deleteOrderByProductId(id);
+        return ResponseEntity.ok(String.format("Order with product %s deleted", id));
     }
 }
