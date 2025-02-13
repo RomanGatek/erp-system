@@ -23,8 +23,12 @@ public class AuthController {
     // User Registration
     @PostMapping("/public/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignUpRequest signUpRequest) {
-        authService.registerUser(signUpRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+        try {
+            authService.registerUser(signUpRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     // User Login
