@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.Product;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,12 +15,14 @@ public interface OrderService {
 
     List<Order> getOrdersByDateBetween(LocalDateTime start, LocalDateTime end);
 
-    List<Order> getOrdersByProduct(Product product);
+    List<Order> getOrdersByProduct(Long productId);
 
     void createOrder(Order order);
 
     void updateOrder(Long id, Order order);
 
     void deleteOrder(Long id);
+
+    void deleteOrderByProductId(Long productId);
 
 }
