@@ -3,19 +3,18 @@ package cz.syntaxbro.erpsystem.services;
 import cz.syntaxbro.erpsystem.models.Role;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface RoleService {
 
     List<Role> getAllRoles();
 
-    Optional<Role> getRoleById(Long id);
+    Role getRoleById(Long id);
 
-    Optional<Role> getRoleByName(String name);
+    Role getRoleByName(String name);
 
-    Optional<Role> createRole(String name);
+    Role createRole(String name);
 
-    Optional<Role> updateRole(Long id, String newName);
+    Role updateRole(Long id, String newName);
 
     void deleteRole(Long id);
 

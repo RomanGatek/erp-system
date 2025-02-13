@@ -8,8 +8,8 @@ import cz.syntaxbro.erpsystem.services.RoleService;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RoleServiceImpl implements RoleService {
@@ -28,31 +28,37 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Optional<Role> getRoleById(Long id) {
-        return roleRepository.findById(id);
-    }
-
-    @Override
-    public Optional<Role> getRoleByName(String name) {
-        return roleRepository.findByName(name);
-    }
-
-    @Override
-    public Optional<Role> createRole(String name) {
-        if (roleRepository.existsByName(name)) {
-            return Optional.empty();
-        }
-        Role role = new Role(name, null);
-        return Optional.of(roleRepository.save(role));
-    }
-
-    @Override
-    public Optional<Role> updateRole(Long id, String newName) {
+    public Role getRoleById(Long id) {
         return roleRepository.findById(id)
-                .map(role -> {
-                    role.setName(newName);
-                    return roleRepository.save(role);
-                });
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+    }
+
+    @Override
+    public Role getRoleByName(String name) {
+        return roleRepository.findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with name: " + name));
+    }
+
+    @Override
+    public Role createRole(String name) {
+        if (roleRepository.existsByName(name)) {
+            throw new IllegalArgumentException("Role with this name already exists: " + name);
+        }
+        Role role = new Role(name);
+        return roleRepository.save(role);
+    }
+
+    @Override
+    @Transactional
+    public Role updateRole(Long id, String newName) {
+        Role role = getRoleById(id);
+
+        if (!role.getName().equals(newName)) {
+            throw new IllegalArgumentException("Role with this name already exists: " + newName);
+        }
+
+        role.setName(newName);
+        return roleRepository.save(role);
     }
 
     @Override
@@ -72,38 +78,43 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public Role assignPermissionToRole(Long roleId, Long permissionId) {
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
-
+        Role role = getRoleById(roleId);
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new IllegalArgumentException("Permission not found with id: " + permissionId));
 
-        role.addPermission(permission);
+        if (role.getPermissions() == null) {
+            role.setPermissions(new HashSet<>());
+        }
+
+        role.getPermissions().add(permission);
         return roleRepository.save(role);
     }
 
     @Override
     @Transactional
     public Role removePermissionFromRole(Long roleId, Long permissionId) {
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
-
+        Role role = getRoleById(roleId);
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new IllegalArgumentException("Permission not found with id: " + permissionId));
 
-        role.removePermission(permission);
+        if (role.getPermissions() != null) {
+            role.getPermissions().remove(permission);
+        }
         return roleRepository.save(role);
     }
 
     // Method for assigning multiple permissions to a role
+    @Override
     @Transactional
     public Role assignPermissionsToRole(Long roleId, List<Long> permissionIds) {
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
-
+        Role role = getRoleById(roleId);
         List<Permission> permissions = permissionRepository.findAllById(permissionIds);
-        role.getPermissions().addAll(permissions);
 
+        if (role.getPermissions() == null) {
+            role.setPermissions(new HashSet<>());
+        }
+
+        role.getPermissions().addAll(permissions);
         return roleRepository.save(role);
     }
 }
