@@ -3,7 +3,8 @@ package cz.syntaxbro.erpsystem.constants;
 public enum Roles {
     ADMIN("ROLE_ADMIN"),
     MANAGER("ROLE_MANAGER"),
-    USER("ROLE_USER");
+    USER("ROLE_USER"),
+    GUEST("ROLE_GUEST");
 
     private final String role;
 
