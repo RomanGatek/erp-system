@@ -62,13 +62,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String authenticateUser(LoginRequest loginRequest) {
         User user = userService.getUserByUsername(loginRequest.getUsername());
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username");
-        }
-
-        // authenticate with hash password algorithm SHA256!
-        if (!passwordSecurity.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password");
+        if (user == null || !passwordSecurity.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
         return "generated-jwt-token";
     }
