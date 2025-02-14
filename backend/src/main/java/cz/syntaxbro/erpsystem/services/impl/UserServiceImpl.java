@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -8,11 +9,11 @@ import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,12 +23,10 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -38,23 +37,38 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User getUserByUsername(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        return null;
+    }
+
+    @Override
     public UserDto getUserById(Long id) {
         User user = getUserByIdOrThrow(id);
         return UserMapper.toDto(user);
     }
 
+
     @Override
     public UserDto createUser(UserDto userDto) {
+        PasswordSecurity passwordSecurity = new PasswordSecurity();
         if (userRepository.existsByUsername(userDto.getUsername())) {
             throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
         }
         if (userRepository.existsByEmail(userDto.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
         }
+        if (!passwordSecurity.passwordValidator(userDto.getPassword())) {
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter, one digit, one special character, min 10 char and max 32 char");
+        }
 
         User user = mapToEntity(userDto, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        user.setPassword(passwordEncoder.encode("defaultPassword"));
+
+        user.setPassword(passwordSecurity.hashPassword(userDto.getPassword()));
 
         Set<Role> roles = userDto.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)

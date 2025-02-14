@@ -1,8 +1,9 @@
-package cz.syntaxbro.erpsystem.models.dtos;
+package cz.syntaxbro.erpsystem.validates;
 
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class SignUpRequest {
     private String username;
 
     @NotBlank
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @Size(min = 10, message = "Password must be at least 10 characters")
     private String password;
 
     @NotBlank
