@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.models.dtos.LoginRequest;
-import cz.syntaxbro.erpsystem.models.dtos.SignUpRequest;
+import cz.syntaxbro.erpsystem.validates.LoginRequest;
+import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import org.junit.jupiter.api.BeforeEach;
