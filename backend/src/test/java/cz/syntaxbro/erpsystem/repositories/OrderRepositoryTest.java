@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -87,8 +88,11 @@ class OrderRepositoryTest {
     @Test
     void findByProductOrderWithOneResult() {
         // Arrange
-        Product product = productRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        Product product = new Product();
+        Optional<Product> productOptional = productRepository.findById(1L);
+        if (productOptional.isPresent()) {
+            product = productOptional.get();
+        }
 
         // Act
         List<Order> orders = orderRepository.findByProduct(product);
