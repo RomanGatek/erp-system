@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/order")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -21,7 +21,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
         Order order = orderService.getOrderById(id);
         if (order == null) {
             return ResponseEntity.notFound().build();
