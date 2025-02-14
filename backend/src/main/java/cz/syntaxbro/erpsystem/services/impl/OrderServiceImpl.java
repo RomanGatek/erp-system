@@ -69,7 +69,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void deleteOrder(Long id) {
-        orderRepository.deleteById(id);
+        Optional <Order> OrderOptional = orderRepository.findById(id);
+        if (OrderOptional.isPresent()) {
+            orderRepository.delete(OrderOptional.get());
+        }
     }
 
     //delete all orders with witch include order
@@ -80,7 +83,6 @@ public class OrderServiceImpl implements OrderService {
             Product product = productOptional.get();
             List<Order> orders = orderRepository.findByProduct(product);
             orderRepository.deleteAll(orders);
-
         }
     }
 }
