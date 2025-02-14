@@ -3,8 +3,9 @@ package cz.syntaxbro.erpsystem.services.impl;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
-import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
+import cz.syntaxbro.erpsystem.services.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,11 +16,12 @@ import java.util.Optional;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository) {
+    @Autowired
+    public OrderServiceImpl(OrderRepository orderRepository, ProductService productService) {
         this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
+        this.productService = productService;
     }
 
     @Override
@@ -47,11 +49,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByProduct(Long productId) {
-        Optional <Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            return orderRepository.findByProduct(product);
-        }return null;
+        Product product = productService.getProductById(productId);
+        if (product == null) {
+            return null;
+        }return orderRepository.findByProduct(product);
     }
 
     @Override
@@ -78,9 +79,8 @@ public class OrderServiceImpl implements OrderService {
     //delete all orders with witch include order
     @Override
     public void deleteOrderByProductId(Long productId) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
+        Product product = productService.getProductById(productId);
+        if (product != null) {
             List<Order> orders = orderRepository.findByProduct(product);
             orderRepository.deleteAll(orders);
         }
