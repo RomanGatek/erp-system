@@ -3,10 +3,13 @@ package cz.syntaxbro.erpsystem.utils;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 @Component
@@ -44,17 +47,25 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    // fucked
-    public String generateToken(String username) {
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + JWT_EXPIRATION_MS);
-
+    public String generateToken(Map<String, Object> claims, String username) {
         return Jwts.builder()
+                .claims(claims)
                 .subject(username)
-                .issuedAt(now)
-                .expiration(expiration)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities());
+        return generateToken(claims, userDetails.getUsername());
+    }
+
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     private SecretKey getSigningKey() {
