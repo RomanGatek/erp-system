@@ -1,6 +1,5 @@
 package cz.syntaxbro.erpsystem.configs;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

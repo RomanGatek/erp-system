@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
-import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -9,13 +8,10 @@ import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
-import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -66,7 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
         }
         if (!passwordSecurity.passwordValidator(userDto.getPassword())) {
-            throw new IllegalArgumentException("Password must contain at least one uppercase letter, one digit and one special character");
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter, one digit, one special character, min 10 char and max 32 char");
         }
 
         User user = mapToEntity(userDto, new User());

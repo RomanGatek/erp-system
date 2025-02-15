@@ -44,6 +44,7 @@ class UserControllerTest {
                 "testUser",      // Username
                 "Test",          // First name
                 "User",          // Last name
+                "password", //Password
                 "test@example.com", // Email
                 true,            // Active status
                 Set.of("ROLE_USER") // Assigned roles
