@@ -1,16 +1,21 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.models.dtos.LoginRequest;
-import cz.syntaxbro.erpsystem.models.dtos.SignUpRequest;
+import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.validates.LoginRequest;
+import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +24,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private final UserService userService;
+    private final PasswordSecurity passwordSecurity;
+
+
+    @Autowired
+    public AuthServiceImpl(UserService userService, PasswordSecurity passwordSecurity) {
+        this.userService = userService;
+        this.passwordSecurity = passwordSecurity;
+    }
 
     @Override
     public void registerUser(SignUpRequest signUpRequest) {
@@ -29,21 +44,28 @@ public class AuthServiceImpl implements AuthService {
         ).forEach(entry -> {
             if (entry.getKey() == null || entry.getKey().isEmpty()) {
                 throw new IllegalArgumentException(entry.getValue() + " cannot be null or empty");
+
+            }else{
+                //convert SignUpRequest to UserDto to create user in db
+                UserDto userDto = new UserDto();
+                userDto.setUsername(signUpRequest.getUsername());
+                userDto.setEmail(signUpRequest.getEmail());
+                userDto.setPassword(signUpRequest.getPassword());
+                userDto.setRoles(Set.of("ROLE_USER"));
+                //create user to db
+                userService.createUser(userDto);
             }
         });
-
-        System.out.println("Checking if user exists: " + signUpRequest.getUsername());
-        System.out.println("Saving user to database: " + signUpRequest.getUsername());
     }
+
 
     @Override
     public String authenticateUser(LoginRequest loginRequest) {
-        if ("validUserName".equals(loginRequest.getUsername()) &&
-                "validPassword".equals(loginRequest.getPassword())) {
-            return "generated-jwt-token";
-        } else {
-            throw new IllegalArgumentException("Invalid username or password");
+        User user = userService.getUserByUsername(loginRequest.getUsername());
+        if (user == null || !passwordSecurity.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
+        return "generated-jwt-token";
     }
 
     @Override

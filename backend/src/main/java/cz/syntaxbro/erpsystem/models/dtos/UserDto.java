@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Data;
 
 import java.util.Set;
 
@@ -16,7 +15,9 @@ public class UserDto {
     private String username;
     private String firstName;
     private String lastName;
+    private String password;
     private String email;
     private boolean isActive;
     private Set<String> roles;
+
 }
