@@ -24,9 +24,10 @@ public class Product {
     private String name;
 
     @Column(nullable = false)
-    @Positive(message = "Product cost must be greater than zero")
+    @NotBlank(message = "Product cost is required")
     private double cost;
 
-    @PositiveOrZero(message = "Product quantity must be zero or positive")
+    @Column(nullable = false)
+    @NotBlank(message = "Product quantity is required")
     private int quantity;
 }
