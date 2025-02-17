@@ -18,7 +18,7 @@ public interface OrderService {
 
     List<Order> getOrdersByProduct(Long productId);
 
-    void createOrder(OrderDto orderDto);
+    Order createdOrder(OrderDto orderDto);
 
     void updateOrder(Long id, Order order);
 

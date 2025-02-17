@@ -73,8 +73,8 @@ public class OrderController {
     @PostMapping("/create")
     public ResponseEntity<String> createOrder(@RequestBody OrderDto orderDto) {
         try{
-            orderService.createOrder(orderDto);
-            return ResponseEntity.ok(String.format("Order created"));
+            Order createdOrder = orderService.createdOrder(orderDto);
+            return ResponseEntity.ok(String.format("Order %s created", createdOrder));
         }catch (ResponseStatusException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
