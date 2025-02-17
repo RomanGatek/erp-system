@@ -99,10 +99,10 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateOrder(@PathVariable(name = "id") Long id, @RequestBody Order order) {
+    public ResponseEntity<String> updateOrder(@PathVariable(name = "id") Long id, @RequestBody OrderDto orderDto) {
         try{
-            orderService.updateOrder(id, order);
-            return ResponseEntity.ok(String.format("Order %s updated", order));
+            orderService.updateOrder(id, orderDto);
+            return ResponseEntity.ok(String.format("Order %s updated", orderDto));
         }catch (ResponseStatusException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

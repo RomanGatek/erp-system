@@ -75,16 +75,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order createdOrder(OrderDto orderDto) {
         //map to OrderDto to Order
-        Order createdOrder = mapToEntity(orderDto);
+        Order createdOrder = mapToEntity(orderDto, new Order());
         orderRepository.save(createdOrder);
         return createdOrder;
     }
 
     @Override
-    public void updateOrder(Long id, Order order) {
-        Optional<Order> OrderOptional = orderRepository.findById(id);
-        if (OrderOptional.isPresent()) {
-            orderRepository.save(order);
+    public void updateOrder(Long id, OrderDto orderDto) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isPresent()) {
+            Order order = orderOptional.get();
+            Order mappedOrder = mapToEntity(orderDto, order);
+            orderRepository.save(mappedOrder);
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Order updated");
         }else{
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
@@ -103,8 +106,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     // Converts OrderDto to Order with exceptions.
-    private Order mapToEntity(OrderDto orderDto) {
-        Order order = new Order();
+    private Order mapToEntity(OrderDto orderDto, Order order) {
         order.setAmount(orderDto.getAmount());
         order.setCost(orderDto.getCost());
         order.setStatus(orderDto.getStatus());
