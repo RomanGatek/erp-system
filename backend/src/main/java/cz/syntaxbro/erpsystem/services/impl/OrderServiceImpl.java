@@ -68,11 +68,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByProduct(Long productId) {
-        Optional <Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            return orderRepository.findByProduct(product);
-        }return null;
+        Product createdProduct = createdById(productId);
+        return orderRepository.findByProduct(createdProduct);
     }
 
     @Override
@@ -118,10 +115,8 @@ public class OrderServiceImpl implements OrderService {
 
     //Product created by id exception
     private Product createdById(Long id) {
-        if(id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product must not be nul");
-        } else if (!(id instanceof Long)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product id must be Long");
+        if(id <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product must not be null or less than 1");
         } else if (!productService.isExistById(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product does not exist");
         } else {

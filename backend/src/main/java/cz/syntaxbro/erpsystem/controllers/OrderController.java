@@ -74,11 +74,17 @@ public class OrderController {
     }
 
     @GetMapping("/by-product")
-    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam("productId") Long productId) {
-        List<Order> orders = orderService.getOrdersByProduct(productId);
-        if (orders == null) {
-            return ResponseEntity.notFound().build();
-        }return ResponseEntity.ok(orders);
+    public ResponseEntity<String> getOrdersByProduct(@RequestParam(value = "productId", defaultValue = "0") Long productId) {
+
+        try{
+            List<Order> orders = orderService.getOrdersByProduct(productId);
+            if (orders == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(orders.toString());
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/create")
