@@ -22,6 +22,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // API endpoint rules
+                        .requestMatchers("/api/orders/**").permitAll()
                         .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
                         .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
