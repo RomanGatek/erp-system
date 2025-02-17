@@ -74,7 +74,7 @@ public class OrderController {
     }
 
     @GetMapping("/by-product")
-    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam Long productId) {
+    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam("productId") Long productId) {
         List<Order> orders = orderService.getOrdersByProduct(productId);
         if (orders == null) {
             return ResponseEntity.notFound().build();
