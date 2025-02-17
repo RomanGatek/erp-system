@@ -5,7 +5,10 @@ import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
+import cz.syntaxbro.erpsystem.services.ProductService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,10 +19,12 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.productService = productService;
     }
 
     @Override
@@ -56,7 +61,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void createOrder(Order order) {
-        orderRepository.save(order);
+        //validation if product exist
+        if(productService.isExistById(order.getProduct().getId())) {
+            orderRepository.save(order);
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Product does not exist");
+        }
     }
 
     @Override
