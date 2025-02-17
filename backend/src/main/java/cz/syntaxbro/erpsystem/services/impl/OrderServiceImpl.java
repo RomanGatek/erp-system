@@ -45,21 +45,24 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByCostBetween(double start, double end) {
-        if (start > end) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start must be less than end");
-        }
+        if (start >= end) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater than end");
+        }else if (start < 0 || end < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start and End must be greater than or equal to 0");
+        }else {
         return orderRepository.findByCostBetween(start, end);
+        }
     }
 
     @Override
     public List<Order> getOrdersByDateBetween(LocalDateTime start, LocalDateTime end) {
         if (end.isBefore(start)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater than start");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal than start");
         }
-        if(orderRepository.findByDateBetween(start,end) != null) {
-            return orderRepository.findByDateBetween(start,end);
-        }else{
+        else if(orderRepository.findByDateBetween(start, end).isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No orders found");
+        }else{
+            return orderRepository.findByDateBetween(start,end);
         }
     }
 

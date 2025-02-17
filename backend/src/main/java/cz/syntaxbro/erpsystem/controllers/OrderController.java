@@ -4,6 +4,7 @@ import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -52,12 +53,22 @@ public class OrderController {
 
     @GetMapping("/date-between")
     public ResponseEntity<String> getOrdersByDateBetween(
-            @RequestParam LocalDateTime start,
-            @RequestParam LocalDateTime end) {
+            @RequestParam(name = "start", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+
+            @RequestParam(name = "end", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        if (start == null) {
+            start = LocalDateTime.now();  // Default start to 1 day ago
+        }
+        if (end == null) {
+            end = LocalDateTime.now();  // Default end to now
+        }
         try {
+
             List<Order> orders = orderService.getOrdersByDateBetween(start, end);
             return ResponseEntity.ok(orders.toString());
-        }catch (ResponseStatusException e) {
+        } catch (ResponseStatusException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
