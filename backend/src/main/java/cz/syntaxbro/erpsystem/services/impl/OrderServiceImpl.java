@@ -33,11 +33,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long id) {
         Optional<Order> orderOptional =  orderRepository.findById(id);
-        if (orderOptional.isPresent()) {
-            return orderOptional.get();
-        }else{
-            return null;
-        }
+        return orderOptional.orElse(null);
     }
 
     @Override
