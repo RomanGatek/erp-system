@@ -23,7 +23,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+    public ResponseEntity<Order> getOrder(@PathVariable(name = "id") Long id) {
         Order order = orderService.getOrderById(id);
         if (order == null) {
             return ResponseEntity.notFound().build();
@@ -40,8 +40,8 @@ public class OrderController {
 
     @GetMapping("/cost-between")
     public ResponseEntity<String> getOrdersByCost(
-            @RequestParam Long start,
-            @RequestParam Long end) {
+            @RequestParam(value = "start", defaultValue = "0") double start,
+            @RequestParam(value = "end", defaultValue = "0") double end) {
         try {
             List<Order> orders = orderService.getOrdersByCostBetween(start, end);
             return ResponseEntity.ok(orders.toString());
@@ -82,7 +82,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateOrder(@PathVariable Long id, @RequestBody Order order) {
+    public ResponseEntity<String> updateOrder(@PathVariable(name = "id") Long id, @RequestBody Order order) {
         try{
             orderService.updateOrder(id, order);
             return ResponseEntity.ok(String.format("Order %s updated", order));
@@ -92,7 +92,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrder(@PathVariable Long id) {
+    public ResponseEntity<String> deleteOrder(@PathVariable(name = "id") Long id) {
         try{
             orderService.deleteOrder(id);
             return ResponseEntity.ok(String.format("Order %s deleted", id));
@@ -102,7 +102,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/delete-orders-with-product/{id}")
-    public ResponseEntity<String> deleteOrdersWithProductId(@PathVariable Long id) {
+    public ResponseEntity<String> deleteOrdersWithProductId(@PathVariable(name = "id") Long id) {
         orderService.deleteOrderByProductId(id);
         return ResponseEntity.ok(String.format("Order with product %s deleted", id));
     }
