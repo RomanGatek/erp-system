@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/order")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -73,9 +73,8 @@ public class OrderController {
     @PostMapping("/create")
     public ResponseEntity<String> createOrder(@RequestBody OrderDto orderDto) {
         try{
-            Order order = new Order();
             orderService.createOrder(orderDto);
-            return ResponseEntity.ok(String.format("Order %s created", order));
+            return ResponseEntity.ok(String.format("Order created"));
         }catch (ResponseStatusException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
