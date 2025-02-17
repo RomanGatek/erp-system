@@ -1,10 +1,12 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,23 +39,27 @@ public class OrderController {
     }
 
     @GetMapping("/cost-between")
-    public ResponseEntity<List<Order>> getOrdersByCost(
+    public ResponseEntity<String> getOrdersByCost(
             @RequestParam Long start,
             @RequestParam Long end) {
-        List<Order> orders = orderService.getOrdersByCostBetween(start, end);
-        if (orders == null) {
-            return ResponseEntity.notFound().build();
-        }return ResponseEntity.ok(orders);
+        try {
+            List<Order> orders = orderService.getOrdersByCostBetween(start, end);
+            return ResponseEntity.ok(orders.toString());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/date-between")
-    public ResponseEntity<List<Order>> getOrdersByDateBetween(
+    public ResponseEntity<String> getOrdersByDateBetween(
             @RequestParam LocalDateTime start,
             @RequestParam LocalDateTime end) {
-        List<Order> orders = orderService.getOrdersByDateBetween(start, end);
-        if (orders == null) {
-            return ResponseEntity.notFound().build();
-        }return ResponseEntity.ok(orders);
+        try {
+            List<Order> orders = orderService.getOrdersByDateBetween(start, end);
+            return ResponseEntity.ok(orders.toString());
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/by-product")
@@ -65,21 +71,35 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createOrder(@RequestBody Order order) {
-        orderService.createOrder(order);
-        return ResponseEntity.ok(String.format("Order %s created", order));
+    public ResponseEntity<String> createOrder(@RequestBody OrderDto orderDto) {
+        try{
+            Order order = new Order();
+            orderService.createOrder(orderDto);
+            return ResponseEntity.ok(String.format("Order %s created", order));
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<String> updateOrder(@PathVariable Long id, @RequestBody Order order) {
-        orderService.updateOrder(id, order);
-        return ResponseEntity.ok(String.format("Order %s updated", order));
+        try{
+            orderService.updateOrder(id, order);
+            return ResponseEntity.ok(String.format("Order %s updated", order));
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
-        return ResponseEntity.ok(String.format("Order %s deleted", id));
+        try{
+            orderService.deleteOrder(id);
+            return ResponseEntity.ok(String.format("Order %s deleted", id));
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/delete-orders-with-product/{id}")
