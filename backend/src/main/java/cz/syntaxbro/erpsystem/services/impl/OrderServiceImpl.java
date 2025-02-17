@@ -95,7 +95,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void deleteOrder(Long id) {
-        orderRepository.deleteById(id);
+        if(orderRepository.findById(id).isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
+        }else{
+            orderRepository.deleteById(id);
+        }
     }
 
     //delete all orders with witch include order
