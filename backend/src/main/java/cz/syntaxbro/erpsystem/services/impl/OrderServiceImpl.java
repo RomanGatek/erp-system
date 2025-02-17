@@ -45,10 +45,12 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> getOrdersByCostBetween(double start, double end) {
         if (start >= end) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater than end");
-        }else if (start < 0 || end < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start and End must be greater than or equal to 0");
+        }else if (start < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start must be greater or equal to 0");
+        }else if(end < 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal to 0");
         }else {
-        return orderRepository.findByCostBetween(start, end);
+            return orderRepository.findByCostBetween(start, end);
         }
     }
 
