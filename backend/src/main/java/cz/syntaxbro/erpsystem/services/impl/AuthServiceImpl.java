@@ -1,15 +1,20 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.models.dtos.LoginRequest;
 import cz.syntaxbro.erpsystem.models.dtos.SignUpRequest;
+import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.AuthService;
+import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +24,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, SecurityConfig securityConfig, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public void registerUser(SignUpRequest signUpRequest) {
@@ -38,12 +53,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String authenticateUser(LoginRequest loginRequest) {
-        if ("validUserName".equals(loginRequest.getUsername()) &&
-                "validPassword".equals(loginRequest.getPassword())) {
-            return "generated-jwt-token";
-        } else {
+        User user = userRepository.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // user??
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()))
             throw new IllegalArgumentException("Invalid username or password");
-        }
+
+        // UserDetails??
+        return jwtUtil.generateToken(user);
     }
 
     @Override
