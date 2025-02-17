@@ -59,10 +59,10 @@ public class OrderController {
             @RequestParam(name = "end", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         if (start == null) {
-            start = LocalDateTime.now();  // Default start to 1 day ago
+            start = LocalDateTime.now();
         }
         if (end == null) {
-            end = LocalDateTime.now();  // Default end to now
+            end = LocalDateTime.now();
         }
         try {
 
