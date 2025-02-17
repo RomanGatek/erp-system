@@ -7,6 +7,7 @@ import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,6 +23,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final ProductService productService;
 
+    @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
