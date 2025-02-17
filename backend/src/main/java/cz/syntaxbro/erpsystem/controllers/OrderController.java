@@ -120,7 +120,11 @@ public class OrderController {
 
     @DeleteMapping("/delete-orders-with-product/{id}")
     public ResponseEntity<String> deleteOrdersWithProductId(@PathVariable(name = "id") Long id) {
-        orderService.deleteOrderByProductId(id);
-        return ResponseEntity.ok(String.format("Order with product %s deleted", id));
+        try {
+            orderService.deleteOrderByProductId(id);
+            return ResponseEntity.ok(String.format("Orders with product %s deleted", id));
+        }catch (ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

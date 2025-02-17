@@ -105,8 +105,14 @@ public class OrderServiceImpl implements OrderService {
     //delete all orders with witch include order
     @Override
     public void deleteOrderByProductId(Long productId) {
-        Product product = productRepository.findById(productId).get();
-        orderRepository.deleteAll(orderRepository.findByProduct(product));
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            orderRepository.deleteAll(orderRepository.findByProduct(product));
+        }else{
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found with product id " + productId);
+        }
+
     }
 
     // Converts OrderDto to Order with exceptions.
