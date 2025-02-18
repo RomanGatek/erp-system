@@ -1,28 +1,32 @@
 package cz.syntaxbro.erpsystem.configs;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.regex.Pattern;
 
 @Component
 public class PasswordSecurity {
-    //Hash password with algorithm SHA256!
-    public String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error hashing password", e);
-        }
+
+    private final PasswordEncoder passwordEncoder;
+
+    public PasswordSecurity() {
+        this.passwordEncoder = new BCryptPasswordEncoder();// Initialization inside the constructor
     }
 
-    //validate password mast have (1 capital char, 1 special char, 1 number, 10 char min and 32 char max)
-    public boolean passwordValidator(String password){
+    // Password hashing using BCrypt
+    public String hashPassword(String password) {
+        return passwordEncoder.encode(password);
+    }
+
+    // Verify password against stored hash
+    public boolean matches(String rawPassword, String hashedPassword) {
+        return passwordEncoder.matches(rawPassword, hashedPassword);
+    }
+
+    // Password validation (at least 1 uppercase, 1 number, 1 special char, 10-32 characters)
+    public boolean passwordValidator(String password) {
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,32}$";
         return Pattern.matches(passwordPattern, password);
     }

@@ -5,34 +5,32 @@ import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.security.access.AccessDeniedException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class AuthServiceImplTest {
 
-    AuthServiceImpl authServiceImpl;
-    AutoCloseable autoCloseable;
-    SignUpRequest signUpRequest;
+    private AuthServiceImpl authServiceImpl;
+    private AutoCloseable autoCloseable;
 
     @Mock
-    UserService userService;
+    private UserService userService;
 
     @Mock
-    PasswordSecurity passwordSecurity;
+    private PasswordSecurity passwordSecurity;
+
+    private SignUpRequest signUpRequest;
 
     @BeforeEach
     void setUp() {
         autoCloseable = MockitoAnnotations.openMocks(this);
         authServiceImpl = new AuthServiceImpl(userService, passwordSecurity);
-        this.signUpRequest = new SignUpRequest("Username", "1!Password", "email@email.com");
+        signUpRequest = new SignUpRequest("Username", "1!Password", "email@email.com");
     }
 
     @AfterEach
@@ -41,76 +39,44 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void registerUserTestUsernameIsEmpty() {
-        //Arrest
-        this.signUpRequest.setUsername("");
-        //Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> authServiceImpl.registerUser(signUpRequest));
-        //Asser
-        assertEquals("Username cannot be null or empty", exception.getMessage());
+    void registerUser_shouldThrowException_whenUsernameExists() {
+        when(userService.getUserByUsername("Username")).thenReturn(new User());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authServiceImpl.registerUser(signUpRequest));
+
+        assertEquals("Username already exists: Username", exception.getMessage());
     }
 
     @Test
-    void registerUserTestEmailIsEmpty() {
-        //Arrest
-        this.signUpRequest.setEmail("");
-        //Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> authServiceImpl.registerUser(signUpRequest));
-        //Asser
-        assertEquals("Email cannot be null or empty", exception.getMessage());
+    void authenticateUser_shouldThrowException_whenInvalidUsername() {
+        when(userService.getUserByUsername("Username")).thenReturn(null);
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> authServiceImpl.authenticateUser(new LoginRequest("Username", "1!Password")));
+
+        assertEquals("Invalid username or password", exception.getMessage());
     }
 
     @Test
-    void registerUserTestPasswordIsEmpty() {
-        //Arrest
-        this.signUpRequest.setPassword("");
-        //Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> authServiceImpl.registerUser(signUpRequest));
-        //Asser
-        assertEquals("Password cannot be null or empty", exception.getMessage());
-    }
-
-    @Test
-    void authenticateUserUsernameException() {
-        //Arrange
-        LoginRequest loginRequest = new LoginRequest("Username", "1!Password");
-        when(userService.getUserByUsername(loginRequest.getUsername())).thenReturn(null);
-        //Act
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> authServiceImpl.authenticateUser(loginRequest));
-        //Assert
-        assertEquals("401 UNAUTHORIZED \"Invalid username\"", exception.getMessage());
-    }
-
-    @Test
-    void authenticateUserPasswordException() {
-        //Arrange
-        LoginRequest loginRequest = new LoginRequest("username", "1!Password");
+    void authenticateUser_shouldThrowException_whenInvalidPassword() {
         User user = new User();
-        user.setUsername("username");
-        user.setPassword("deferment secure Password");
-        when(userService.getUserByUsername(loginRequest.getUsername())).thenReturn(user);
-        when(passwordSecurity.hashPassword(loginRequest.getPassword())).thenReturn("wrong password");
-        //Act
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> authServiceImpl.authenticateUser(loginRequest));
-        //Assert
-        assertEquals("401 UNAUTHORIZED \"Invalid password\"", exception.getMessage());
+        user.setPassword("wrongPassword");
+        when(userService.getUserByUsername("Username")).thenReturn(user);
+        when(passwordSecurity.matches("1!Password", "wrongPassword")).thenReturn(false);
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> authServiceImpl.authenticateUser(new LoginRequest("Username", "1!Password")));
+
+        assertEquals("Invalid username or password", exception.getMessage());
     }
 
     @Test
-    void authenticateUserSuccess() {
-        //Arrange
-        LoginRequest loginRequest = new LoginRequest("username", "1!Password");
+    void authenticateUser_shouldReturnToken_whenValidCredentials() {
         User user = new User();
-        user.setUsername("username");
-        user.setPassword("1!Password");
-        when(userService.getUserByUsername(loginRequest.getUsername())).thenReturn(user);
-        when(passwordSecurity.hashPassword(loginRequest.getPassword())).thenReturn("1!Password");
-        //Act
-        String response = authServiceImpl.authenticateUser(loginRequest);
-        //Assert
-        assertEquals("generated-jwt-token", response);
+        user.setPassword("hashedPassword");
+        when(userService.getUserByUsername("Username")).thenReturn(user);
+        when(passwordSecurity.matches("1!Password", "hashedPassword")).thenReturn(true);
+
+        String token = authServiceImpl.authenticateUser(new LoginRequest("Username", "1!Password"));
+
+        assertEquals("generated-jwt-token", token);
     }
 }

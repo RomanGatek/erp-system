@@ -2,6 +2,7 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.configs.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,7 @@ class UserControllerTest {
     private UserController userController;
 
     private UserDto testUser;
+    private CreateUserRequest createUserRequest;
 
     /**
      * Setup method that runs before each test case.
@@ -40,14 +42,19 @@ class UserControllerTest {
     @BeforeEach
     void setUp() {
         testUser = new UserDto(
-                1L,              // User ID
-                "testUser",      // Username
-                "Test",          // First name
-                "User",          // Last name
-                "password", //Password
+                1L,               // User ID
+                "testUser",       // Username
+                "Test",           // First name
+                "User",           // Last name
+                "password",       // Password
                 "test@example.com", // Email
-                true,            // Active status
+                true,             // Active status
                 Set.of("ROLE_USER") // Assigned roles
+        );
+
+        createUserRequest = new CreateUserRequest(
+                "testUser", "StrongPassword1!", "test@example.com",
+                "Test", "User", true, Set.of("ROLE_USER")
         );
     }
 
@@ -80,7 +87,6 @@ class UserControllerTest {
      */
     @Test
     void getUsers_shouldReturnEmptyList_whenNoUsers() {
-
         when(userService.getAllUsers()).thenReturn(Collections.emptyList());
 
         ResponseEntity<List<UserDto>> response = userController.getUsers();
@@ -105,7 +111,6 @@ class UserControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getUsername()).isEqualTo("testUser");
 
-
         verify(userService, times(1)).getUserById(1L);
     }
 
@@ -120,5 +125,54 @@ class UserControllerTest {
         assertThrows(RuntimeException.class, () -> userController.getUserById(1L));
 
         verify(userService, times(1)).getUserById(1L);
+    }
+
+    /**
+     * Test case: Successfully creating a new user.
+     * Expected result: HTTP 201 Created.
+     */
+    @Test
+    void createUser_shouldReturnCreatedUser() {
+        when(userService.createUser(createUserRequest)).thenReturn(testUser);
+
+        ResponseEntity<UserDto> response = userController.createUser(createUserRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getUsername()).isEqualTo(createUserRequest.getUsername());
+
+        verify(userService, times(1)).createUser(createUserRequest);
+    }
+
+    /**
+     * Test case: Successfully updating a user.
+     * Expected result: HTTP 200 OK and updated user.
+     */
+    @Test
+    void updateUser_shouldReturnUpdatedUser() {
+        when(userService.updateUser(1L, testUser)).thenReturn(testUser);
+
+        ResponseEntity<UserDto> response = userController.updateUser(1L, testUser);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getUsername()).isEqualTo(testUser.getUsername());
+
+        verify(userService, times(1)).updateUser(1L, testUser);
+    }
+
+    /**
+     * Test case: Successfully deleting a user.
+     * Expected result: HTTP 204 No Content.
+     */
+    @Test
+    void deleteUser_shouldReturnNoContent() {
+        doNothing().when(userService).deleteUser(1L);
+
+        ResponseEntity<Void> response = userController.deleteUser(1L);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        verify(userService, times(1)).deleteUser(1L);
     }
 }
