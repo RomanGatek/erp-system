@@ -57,7 +57,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // TODO UserDetails?? or something, idk
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities());
