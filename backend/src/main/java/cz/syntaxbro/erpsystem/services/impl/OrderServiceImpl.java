@@ -153,8 +153,6 @@ public class OrderServiceImpl implements OrderService {
         List<String> list = Arrays.stream(Order.Status.values())
                 .map(Enum::name)
                 .toList();
-        list.forEach(System.out::println);
-        System.out.println(orderDto.getStatus().toString());
         if(orderDto.getStatus() == null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status cannot be null");
         } else if (!list.contains(orderDto.getStatus().toString())) {
