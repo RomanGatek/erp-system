@@ -13,16 +13,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderDto {
-    @NotBlank(message = "Amount is required")
-    private int amount;
-    @NotBlank(message = "Cost is required")
-    private double cost;
-    @NotBlank(message = "Status is required")
-    @NonNull
+
+    private Integer amount;
+
+    private Double cost;
+
     private Order.Status status;
-    @NonNull
+
     private LocalDateTime orderTime;
-    @NotBlank(message = "Product is required")
-    @NonNull
+
     private Long productId;
 }
