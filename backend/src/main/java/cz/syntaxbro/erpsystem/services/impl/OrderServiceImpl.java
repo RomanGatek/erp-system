@@ -12,9 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -115,21 +118,77 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+
+
     // Converts OrderDto to Order with exceptions.
     private Order mapToEntity(OrderDto orderDto, Order order) {
-        order.setAmount(orderDto.getAmount());
-        order.setCost(orderDto.getCost());
-        order.setStatus(orderDto.getStatus());
-        order.setOrderTime(orderDto.getOrderTime());
-        order.setProduct(createdById(orderDto.getProductId()));
+        setAmount(orderDto, order);
+        setProduct(orderDto, order);
+        setCost(orderDto, order);
+        setStatus(orderDto, order);
+        setOrderTime(orderDto, order);
         return order;
+    }
+
+    //Validate Amount
+    private void setAmount(OrderDto orderDto, Order order){
+        if(orderDto.getAmount() == null || orderDto.getAmount() <= 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount cannot be null, must be greater than 0");
+        }else {
+            order.setAmount(orderDto.getAmount());
+        }
+    }
+
+    //Validate Cost
+    private void setCost(OrderDto orderDto, Order order){
+        if(orderDto.getCost() == null || orderDto.getCost() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost cannot be null, must be greater than 0");
+        }else{
+            order.setCost(orderDto.getCost());
+        }
+    }
+
+    //Validate Status
+    private void setStatus(OrderDto orderDto, Order order){
+        List<String> list = Arrays.stream(Order.Status.values())
+                .map(Enum::name)
+                .toList();
+        list.forEach(System.out::println);
+        System.out.println(orderDto.getStatus().toString());
+        if(orderDto.getStatus() == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status cannot be null");
+        } else if (!list.contains(orderDto.getStatus().toString())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is not valid");
+        } else {
+            order.setStatus(orderDto.getStatus());
+        }
+
+    }
+
+    //Validate OrderTime
+    private void setOrderTime(OrderDto orderDto, Order order){
+        if(orderDto.getOrderTime() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OrderTime cannot be null");
+        } else if (orderDto.getOrderTime().isBefore(LocalDate.now().atStartOfDay())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OrderTime cannot be day older than today");
+        } else{
+            order.setOrderTime(orderDto.getOrderTime());
+        }
+    }
+
+    //Validate Product
+    private void setProduct(OrderDto orderDto, Order order){
+        if(orderDto.getProductId() == null || orderDto.getProductId() <= 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ProductId cannot be null, must be greater than 0");
+        }else{
+            Product product = createdById(orderDto.getProductId());
+            order.setProduct(product);
+        }
     }
 
     //Product created by id exception
     private Product createdById(Long id) {
-        if(id <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product must not be null or less than 1");
-        } else if (!productService.isExistById(id)) {
+        if (!productService.isExistById(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product does not exist");
         } else {
             return productService.getProductById(id);
