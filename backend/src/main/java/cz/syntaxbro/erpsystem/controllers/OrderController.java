@@ -1,47 +1,39 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
+import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.validation.Valid;
-import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order")
 public class OrderController {
 
+
     private final OrderService orderService;
+    private final ProductService productService;
+
 
     @Autowired
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, ProductService productService) {
         this.orderService = orderService;
-    }
-
-    //Metoda na spracovanie chyb validacie
-    private ResponseEntity<Map<String,String>>
-    handleValidationErrors(BindingResult result) {
-        Map<String,String> errors = new HashMap<>();
-        for (FieldError error : result.getFieldErrors()) {
-            errors.put(error.getField(), error.getDefaultMessage());
-        }
-        return ResponseEntity.badRequest().body(errors);
+        this.productService = productService;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+    public ResponseEntity<Order> getOrder(@PathVariable(name = "id") Long id) {
         Order order = orderService.getOrderById(id);
-        if (order == null) {
-            return ResponseEntity.notFound().build();
-        }return ResponseEntity.ok(order);
+        String statusMessage = order.getOrderStatus();
+        return ResponseEntity.ok(order);
     }
 
     @GetMapping("/")
@@ -54,8 +46,8 @@ public class OrderController {
 
     @GetMapping("/cost-between")
     public ResponseEntity<List<Order>> getOrdersByCost(
-            @RequestParam Long start,
-            @RequestParam Long end) {
+            @RequestParam(name = "start") Long start,
+            @RequestParam(name = "end") Long end) {
         List<Order> orders = orderService.getOrdersByCostBetween(start, end);
         if (orders == null) {
             return ResponseEntity.notFound().build();
@@ -64,8 +56,8 @@ public class OrderController {
 
     @GetMapping("/date-between")
     public ResponseEntity<List<Order>> getOrdersByDateBetween(
-            @RequestParam LocalDateTime start,
-            @RequestParam LocalDateTime end) {
+            @RequestParam(name = "start") LocalDateTime start,
+            @RequestParam(name = "end") LocalDateTime end) {
         List<Order> orders = orderService.getOrdersByDateBetween(start, end);
         if (orders == null) {
             return ResponseEntity.notFound().build();
@@ -73,74 +65,48 @@ public class OrderController {
     }
 
     @GetMapping("/by-product")
-    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam Long productId) {
+    public ResponseEntity<List<Order>> getOrdersByProduct(@RequestParam(name = "productId") Long productId) {
         List<Order> orders = orderService.getOrdersByProduct(productId);
         if (orders == null) {
             return ResponseEntity.notFound().build();
         }return ResponseEntity.ok(orders);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createOrder(@Valid @RequestBody Order order,
-                                         BindingResult result) {
-        if (result.hasErrors()){
-            return handleValidationErrors(result);
-        }
-        //Dalsie validacie
-        if (order.getAmount() <= 0){
-            return ResponseEntity.badRequest().body("Order amount must be positive");
-        }
-        if (order.getCost() <= 0){
-            return ResponseEntity.badRequest().body("Order cost must be positive");
-        }
-        if (order.getProduct() == null || order.getProduct().getId() == null){
-            return ResponseEntity.badRequest().body("Valid product must be specified");
-        }
-
-        try {
-            orderService.createOrder(order);
-            return ResponseEntity.ok(String.format("Order created successfully with ID: %d", order.getId()));
-        }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error creating order:" + e.getMessage());
-        }
+    @PostMapping
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderDto orderDto) {
+            Order order = Order.fromOrderDto(orderDto,productService);
+            Order createdOrder = orderService.createOrder(order);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrder(@PathVariable Long id, @Valid @RequestBody Order order, BindingResult result) {
-        if (result.hasErrors()){
-            return handleValidationErrors(result);
+    public ResponseEntity<Order> updateOrder(@PathVariable(name = "id") Long id, @Valid @RequestBody OrderDto orderDto) {
+        Order existingOrder = orderService.getOrderById(id);
+        if (existingOrder == null) {
+            throw new IllegalArgumentException("Order with ID " + id + " not found");
         }
 
-        if (id <= 0) {
-            return ResponseEntity.badRequest().body("Invalid order ID");
-        }
+        // Vytvorenie aktualizovanej objednávky z DTO
+        Order updatedOrder = Order.fromOrderDto(orderDto, productService);
+        updatedOrder.setId(id); // zachovanie pôvodného ID
 
-        //Dodatocne validacie
-        if (order.getAmount() <= 0){
-            return ResponseEntity.badRequest().body("Order amount must be positive");
-        }
-        if (order.getCost() <= 0){
-            return ResponseEntity.badRequest().body("Order cost must be positive");
-        }
-        if (order.getProduct() == null || order.getProduct().getId() == null){
-            return ResponseEntity.badRequest().body("Valid product must be specified");
-        }
-
-        try{
-            orderService.updateOrder(id, order);
-            return ResponseEntity.ok(String.format("Order %d updated successfully", id));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error updating order: " + e.getMessage());
-        }
+        // Aktualizácia a uloženie
+        Order savedOrder = orderService.updateOrder(id, updatedOrder);
+        return ResponseEntity.ok(savedOrder);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrder(@PathVariable Long id) {
+    public ResponseEntity<String> deleteOrder(@PathVariable(name = "id") Long id) {
         if (id <= 0) {
             return ResponseEntity.badRequest().body("Invalid order ID");
         }
 
         try{
+            if (!orderService.existOrderById(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(String.format("Order with ID %d does not exist", id));
+            }
+
             orderService.deleteOrder(id);
             return ResponseEntity.ok(String.format("Order %d deleted successfully", id));
         } catch (Exception e) {
@@ -149,12 +115,16 @@ public class OrderController {
     }
 
     @DeleteMapping("/delete-orders-with-product/{id}")
-    public ResponseEntity<String> deleteOrdersWithProductId(@PathVariable Long id) {
+    public ResponseEntity<String> deleteOrdersWithProductId(@PathVariable(name = "id") Long id) {
         if (id <= 0){
             return ResponseEntity.badRequest().body("Invalid product ID");
         }
 
         try{
+            if (!orderService.existOrderByProductId(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(String.format("Orders with product ID %d does not exist", id));
+            }
             orderService.deleteOrderByProductId(id);
             return ResponseEntity.ok(String.format("Orders with product ID %d deleted successfully", id));
         } catch (Exception e){

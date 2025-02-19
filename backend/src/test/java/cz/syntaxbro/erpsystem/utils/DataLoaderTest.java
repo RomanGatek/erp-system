@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.utils;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
@@ -34,8 +35,8 @@ class DataLoaderTest {
 
     @BeforeEach
     void setUp() {
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordEncoder);
+        PasswordSecurity passwordSecurity = new PasswordSecurity();
+        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity);
         dataLoader.run();
     }
 

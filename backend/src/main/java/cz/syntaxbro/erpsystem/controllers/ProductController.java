@@ -2,10 +2,13 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+
 import java.util.Map;
 
 
@@ -21,32 +24,37 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody Object requestBody) {
-        try {
+    public ResponseEntity<?> createProduct(@Valid @RequestBody Object requestBody) {
+
             // Validácia dátových typov
             if (!(requestBody instanceof Map)) {
-                return ResponseEntity.badRequest().body("Invalid request format");
+                throw new IllegalArgumentException("Invalid request format");
             }
 
             Map<String, Object> productData = (Map<String, Object>) requestBody;
 
             // Validácia name
-            if (!productData.containsKey("name") || !(productData.get("name") instanceof String)) {
-                return ResponseEntity.badRequest().body("Name must be a string");
+            if (!productData.containsKey("name")) {
+                throw new IllegalArgumentException("Name is required");
+            }
+            if (!(productData.get("name") instanceof String)) {
+                throw new IllegalArgumentException("Name must be a string");
             }
 
             // Validácia cost
-            if (!productData.containsKey("cost") ||
-                    !(productData.get("cost") instanceof Number) ||
-                    ((Number) productData.get("cost")).doubleValue() <= 0) {
-                return ResponseEntity.badRequest().body("Cost must be a positive number of type double");
+            if (!productData.containsKey("cost")) {
+                throw new IllegalArgumentException("Cost is required");
+            }
+            if (!(productData.get("cost") instanceof Double)) {
+                throw new IllegalArgumentException("Cost must be a double");
             }
 
             // Validácia quantity
-            if (!productData.containsKey("quantity") ||
-                    !(productData.get("quantity") instanceof Number) ||
-                    ((Number) productData.get("quantity")).intValue() < 0) {
-                return ResponseEntity.badRequest().body("Quantity must be a zero or positive integer");
+            if (!productData.containsKey("quantity")) {
+                throw new IllegalArgumentException("Quantity is required");
+            }
+            if (!(productData.get("quantity") instanceof Integer)) {
+                throw new IllegalArgumentException("Quantity must be an integer");
             }
 
             // Vytvorenie produktu po úspešnej validácii
@@ -58,48 +66,50 @@ public class ProductController {
             Product createdProduct = productService.createProduct(product);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
 
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Validation error: " + e.getMessage());
-        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<Product> getProductById(@PathVariable(name = "id") Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
     @GetMapping("/name/{name}")
-    public ResponseEntity<Product> getProductByName(@PathVariable String name){
+    public ResponseEntity<Product> getProductByName(@PathVariable(name = "name") String name){
         return ResponseEntity.ok(productService.getProductByName(name));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Object requestBody) {
-        try {
+    public ResponseEntity<?> updateProduct(@PathVariable(name = "id") Long id,@Valid @RequestBody Object requestBody) {
+
             // Validácia dátových typov
             if (!(requestBody instanceof Map)) {
-                return ResponseEntity.badRequest().body("Invalid request format");
+                throw new IllegalArgumentException("Invalid request format");
             }
 
             Map<String, Object> productData = (Map<String, Object>) requestBody;
 
-            // Validácia name (ak je poskytnutý)
-            if (productData.containsKey("name") && !(productData.get("name") instanceof String)) {
-                return ResponseEntity.badRequest().body("Name must be a string");
+            // Validácia name
+            if (!productData.containsKey("name")) {
+                throw new IllegalArgumentException("Name is required");
+            }
+            if (!(productData.get("name") instanceof String)) {
+                throw new IllegalArgumentException("Name must be a string");
             }
 
-            // Validácia cost (ak je poskytnutý)
-            if (productData.containsKey("cost") &&
-                    (!(productData.get("cost") instanceof Number) ||
-                            ((Number) productData.get("cost")).doubleValue() <= 0)) {
-                return ResponseEntity.badRequest().body("Cost must be a positive number");
+            // Validácia cost
+            if (!productData.containsKey("cost")) {
+                throw new IllegalArgumentException("Cost is required");
+            }
+            if (!(productData.get("cost") instanceof Double)) {
+                throw new IllegalArgumentException("Cost must be a number");
             }
 
-            // Validácia quantity (ak je poskytnutý)
-            if (productData.containsKey("quantity") &&
-                    (!(productData.get("quantity") instanceof Number) ||
-                            ((Number) productData.get("quantity")).intValue() < 0)) {
-                return ResponseEntity.badRequest().body("Quantity must be a zero or positive integer");
+            // Validácia quantity
+            if (!productData.containsKey("quantity")) {
+                throw new IllegalArgumentException("Quantity is required");
+            }
+            if (!(productData.get("quantity") instanceof Integer)) {
+                throw new IllegalArgumentException("Quantity must be an integer");
             }
 
             // Získanie existujúceho produktu
@@ -119,19 +129,16 @@ public class ProductController {
             Product updatedProduct = productService.updateProduct(id, existingProduct);
             return ResponseEntity.ok(updatedProduct);
 
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Validation error: " + e.getMessage());
-        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProductById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProductById(@PathVariable(name = "id") Long id) {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/name/{name}")
-    public ResponseEntity<Void> deleteProductByName(@PathVariable String name) {
+    public ResponseEntity<Void> deleteProductByName(@PathVariable(name = "name") String name) {
         productService.deleteProductByName(name);
         return ResponseEntity.noContent().build();
     }

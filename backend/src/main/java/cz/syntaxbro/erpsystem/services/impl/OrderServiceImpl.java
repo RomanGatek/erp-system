@@ -2,9 +2,11 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
+import cz.syntaxbro.erpsystem.services.ProductService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,6 +30,26 @@ public class OrderServiceImpl implements OrderService {
         if (orderOptional.isPresent()) {
             return orderOptional.get();
         }return null;
+    }
+
+    @Override
+    public Boolean existOrderById(Long id) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isPresent()) {
+         return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean existOrderByProductId(Long productId) {
+        Optional <Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -55,16 +77,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void createOrder(Order order) {
+    public Order createOrder(Order order) {
         orderRepository.save(order);
+        return order;
     }
 
     @Override
-    public void updateOrder(Long id, Order order) {
+    public Order updateOrder(Long id, Order order) {
         Optional<Order> OrderOptional = orderRepository.findById(id);
         if (OrderOptional.isPresent()) {
             orderRepository.save(order);
         }
+        return order;
     }
 
     @Override

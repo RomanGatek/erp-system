@@ -1,6 +1,8 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,6 +10,10 @@ import java.util.List;
 public interface OrderService {
 
     Order getOrderById(Long id);
+
+    Boolean existOrderById(Long id);
+
+    Boolean existOrderByProductId(Long productId);
 
     List<Order> getOrders();
 
@@ -17,9 +23,9 @@ public interface OrderService {
 
     List<Order> getOrdersByProduct(Long productId);
 
-    void createOrder(Order order);
+    Order createOrder(Order order);
 
-    void updateOrder(Long id, Order order);
+    Order updateOrder(Long id, Order order);
 
     void deleteOrder(Long id);
 

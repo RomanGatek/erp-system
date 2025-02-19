@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.utils;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Permission;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -25,14 +26,16 @@ public class DataLoader implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
+    private PasswordSecurity passwordSecurity;
+
 
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
-                      PermissionRepository permissionRepository, PasswordEncoder passwordEncoder) {
+                      PermissionRepository permissionRepository, PasswordSecurity passwordSecurity) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.passwordSecurity = passwordSecurity;
     }
 
     @Override
@@ -75,7 +78,7 @@ public class DataLoader implements CommandLineRunner {
         if (userFromDb.isEmpty()) {
             User user = new User();
             user.setUsername(username);
-            user.setPassword(passwordEncoder.encode("password123")); // Default password
+            user.setPassword(passwordSecurity.hashPassword("password123")); // Default password
             user.setFirstName(firstName);
             user.setLastName("USER"); // Default last name
             user.setEmail(email);
