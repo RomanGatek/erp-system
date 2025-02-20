@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.resources.services;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.UserService;
@@ -40,16 +41,18 @@ class UserServiceTest {
         role.setName("ROLE_TEST");
         roleRepository.save(role);
 
-        // 2. Create a user
-        UserDto userDto = new UserDto();
-        userDto.setUsername("testuser");
-        userDto.setFirstName("Test");
-        userDto.setLastName("User");
-        userDto.setEmail("testuser@example.com");
-        userDto.setActive(true);
-        userDto.setRoles(Set.of("ROLE_TEST"));
+        // 2. Create a CreateUserRequest (instead of UserDto)
+        CreateUserRequest createUserRequest = new CreateUserRequest(
+                "testuser",  // Username
+                "StrongPassword1!",  // Password
+                "testuser@example.com",  // Email
+                "Test",  // First name
+                "User",  // Last name
+                true,  // Active
+                Set.of("ROLE_TEST")  // Roles
+        );
 
-        UserDto createdUser = userService.createUser(userDto);
+        UserDto createdUser = userService.createUser(createUserRequest);
 
         // 3. Verify that the user was created
         assertThat(createdUser).isNotNull();

@@ -37,7 +37,7 @@ class RoleServiceImplTest {
     @BeforeEach
     void setUp() {
         role = new Role(1L, "ROLE_TEST", new HashSet<>());
-        permission = new Permission(1L, "TEST_PERMISSION");
+        permission = new Permission(1L, "TEST_PERMISSION", new HashSet<>());
     }
 
     @Test
@@ -146,7 +146,7 @@ class RoleServiceImplTest {
     @Test
     void assignPermissionsToRole_ShouldAssignMultiplePermissions() {
         List<Long> permissionIds = List.of(1L, 2L);
-        Permission permission2 = new Permission(2L, "ANOTHER_PERMISSION");
+        Permission permission2 = new Permission(2L, "ANOTHER_PERMISSION", new HashSet<>());
         when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
         when(permissionRepository.findAllById(permissionIds)).thenReturn(List.of(permission, permission2));
         when(roleRepository.save(any(Role.class))).thenReturn(role);

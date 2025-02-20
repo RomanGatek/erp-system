@@ -4,21 +4,19 @@ import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,33 +35,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void registerUser(SignUpRequest signUpRequest) {
-        List.of(
-                Map.entry(signUpRequest.getUsername(), "Username"),
-                Map.entry(signUpRequest.getEmail(), "Email"),
-                Map.entry(signUpRequest.getPassword(), "Password")
-        ).forEach(entry -> {
-            if (entry.getKey() == null || entry.getKey().isEmpty()) {
-                throw new IllegalArgumentException(entry.getValue() + " cannot be null or empty");
+        if (userService.getUserByUsername(signUpRequest.getUsername()) != null) {
+            throw new IllegalArgumentException("Username already exists: " + signUpRequest.getUsername());
+        }
 
-            }else{
-                //convert SignUpRequest to UserDto to create user in db
-                UserDto userDto = new UserDto();
-                userDto.setUsername(signUpRequest.getUsername());
-                userDto.setEmail(signUpRequest.getEmail());
-                userDto.setPassword(signUpRequest.getPassword());
-                userDto.setRoles(Set.of("ROLE_USER"));
-                //create user to db
-                userService.createUser(userDto);
-            }
-        });
+        CreateUserRequest request = new CreateUserRequest();
+        request.setUsername(signUpRequest.getUsername());
+        request.setEmail(signUpRequest.getEmail());
+        request.setPassword(signUpRequest.getPassword());
+        request.setRoles(Set.of("ROLE_USER")); // Default role
+
+        userService.createUser(request);
     }
-
 
     @Override
     public String authenticateUser(LoginRequest loginRequest) {
         User user = userService.getUserByUsername(loginRequest.getUsername());
-        if (user == null || !passwordSecurity.hashPassword(loginRequest.getPassword()).equals(user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        if (user == null || !passwordSecurity.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new AccessDeniedException("Invalid username or password");
         }
         return "generated-jwt-token";
     }
@@ -102,4 +91,5 @@ public class AuthServiceImpl implements AuthService {
         // Mapping the User entity to UserDto using UserMapper.toDto()
         return UserMapper.toDto(currentUser);
     }
+
 }

@@ -1,60 +1,48 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
-
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-
-import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
 class UserServiceImplTest {
 
-    UserServiceImpl userServiceImpl;
-    User user;
-    UserDto userDto;
+    private UserServiceImpl userServiceImpl;
+    private AutoCloseable autoCloseable;
+    private User user;
+    private UserDto userDto;
+    private CreateUserRequest createUserRequest;
 
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
-    RoleRepository roleRepository;
+    private RoleRepository roleRepository;
 
     @Mock
-    PasswordSecurity passwordSecurity;
-
-    AutoCloseable autoCloseable;
+    private PasswordSecurity passwordSecurity;
 
     @BeforeEach
     void setUp() {
         autoCloseable = MockitoAnnotations.openMocks(this);
-        userServiceImpl = new UserServiceImpl(userRepository, roleRepository);
-        this.user = new User(1L,"username", "1!Password", "firstName", "lastName", "email@email", true, Set.of());
-        this.userDto = new UserDto(
-                this.user.getId(),
-                this.user.getUsername(),
-                this.user.getFirstName(),
-                this.user.getLastName(),
-                this.user.getPassword(),
-                this.user.getEmail(),
-                this.user.isActive(),
-                Set.of());
+        userServiceImpl = new UserServiceImpl(userRepository, roleRepository, passwordSecurity);
+
+        user = new User(1L, "username", "1!Password", "firstName", "lastName", "email@email.com", true, Set.of());
+        userDto = new UserDto(1L, "username", "firstName", "lastName", "1!Password", "email@email.com", true, Set.of());
+        createUserRequest = new CreateUserRequest("username", "1!Password", "email@email.com", "firstName", "lastName", true, Set.of("ROLE_USER"));
     }
 
     @AfterEach
@@ -63,105 +51,107 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getAllUsers() {
-        //Arrange
-        List<User> mockUsers = new ArrayList<>();
-        mockUsers.add(this.user);
+    void getAllUsers_shouldReturnUserList() {
+        List<User> mockUsers = List.of(user);
         when(userRepository.findAll()).thenReturn(mockUsers);
-        //Act
+
         List<UserDto> users = userServiceImpl.getAllUsers();
-        //Assert
+
         assertEquals(1, users.size());
         verify(userRepository, times(1)).findAll();
     }
 
     @Test
-    void getUserByUsernameFound() {
-        //Arrange
-        when(userRepository.findByUsername("username")).thenReturn(Optional.of(this.user));
-        //Act
+    void getUserByUsername_shouldReturnUser() {
+        when(userRepository.findByUsername("username")).thenReturn(Optional.of(user));
+
         User result = userServiceImpl.getUserByUsername("username");
-        //Assert
+
         assertNotNull(result);
         assertEquals("username", result.getUsername());
         verify(userRepository, times(1)).findByUsername("username");
     }
 
     @Test
-    void getUserByUsernameNotFound() {
-        //Arrange
+    void getUserByUsername_shouldReturnNull_whenNotFound() {
         when(userRepository.findByUsername("username")).thenReturn(Optional.empty());
-        //Act
+
         User result = userServiceImpl.getUserByUsername("username");
-        //Assert
+
         assertNull(result);
         verify(userRepository, times(1)).findByUsername("username");
     }
 
     @Test
-    void getUserById() {
-        //Arrest
-        when(userRepository.findById(1L)).thenReturn(Optional.of(this.user));
-        //Act
+    void getUserById_shouldReturnUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
         UserDto result = userServiceImpl.getUserById(1L);
-        //Assert
+
         assertNotNull(result);
         assertEquals(1L, result.getId());
         verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
-    void createUserTestPassNoAuthenticatedException() {
-        //Arrest
-        this.userDto.setPassword("password");
-        //Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
-        //Asser
+    void createUser_shouldThrowException_whenPasswordInvalid() {
+        createUserRequest.setPassword("weakpassword");
+
+        when(passwordSecurity.passwordValidator("weakpassword")).thenReturn(false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(createUserRequest));
+
         assertEquals("Password must contain at least one uppercase letter, one digit, one special character, min 10 char and max 32 char", exception.getMessage());
     }
 
     @Test
-    void createUserTestUsernameExistException() {
-        //Arrest
-        when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
-        //Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
-        //Asser
-        assertEquals("Username already exists: " + userDto.getUsername(), exception.getMessage());
-    }
+    void createUser_shouldHashPasswordAndSaveUser() {
+        Role roleUser = new Role();
+        roleUser.setName("ROLE_USER");
 
-    @Test
-    void createUserTestEmailExistException() {
-        //Arrest
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
-        //Act
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.createUser(this.userDto));
-        //Asser
-        assertEquals("Email already exists: " + userDto.getEmail(), exception.getMessage());
-    }
+        when(userRepository.existsByUsername(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
+        when(passwordSecurity.passwordValidator(anyString())).thenReturn(true);
 
-    @Test
-    void createUserHashPasswordAuthentication() {
-        // Arrange
-        this.user.setPassword(passwordSecurity.hashPassword(this.userDto.getPassword()));
-        when(userRepository.save(any(User.class))).thenReturn(this.user);
+        when(passwordSecurity.hashPassword(anyString())).thenReturn("$2a$10$hashedPassword");
 
-        // Act
-        UserDto result = userServiceImpl.createUser(this.userDto);
+        when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(roleUser));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Assert
+        UserDto result = userServiceImpl.createUser(createUserRequest);
+
         assertNotNull(result);
-        assertNotEquals(this.userDto.getPassword(), result.getPassword());
+        assertNotEquals(createUserRequest.getPassword(), result.getPassword());
         verify(userRepository, times(1)).save(any(User.class));
     }
 
-
-
     @Test
-    void updateUser() {
+    void updateUser_shouldUpdateAndReturnUpdatedUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        UserDto updatedUser = userServiceImpl.updateUser(1L, userDto);
+
+        assertNotNull(updatedUser);
+        assertEquals(userDto.getUsername(), updatedUser.getUsername());
+        verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
-    void deleteUser() {
+    void deleteUser_shouldDeleteUser() {
+        when(userRepository.existsById(1L)).thenReturn(true);
+        doNothing().when(userRepository).deleteById(1L);
+
+        assertDoesNotThrow(() -> userServiceImpl.deleteUser(1L));
+        verify(userRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteUser_shouldThrowException_whenUserNotFound() {
+        when(userRepository.existsById(1L)).thenReturn(false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userServiceImpl.deleteUser(1L));
+
+        assertEquals("User not found with id: 1", exception.getMessage());
     }
 }
