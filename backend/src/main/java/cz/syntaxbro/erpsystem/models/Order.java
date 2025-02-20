@@ -1,8 +1,6 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.deser.std.NumberDeserializers;
 import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.persistence.*;
@@ -33,11 +31,9 @@ public class Order {
     private Product product;
 
     @Column(nullable = false)
-    @JsonDeserialize(using = NumberDeserializers.IntegerDeserializer.class)
     private int amount;
 
     @Column(nullable = false)
-    @JsonDeserialize(using = NumberDeserializers.DoubleDeserializer.class)
     private Double cost;
 
     @Column(nullable = false)
@@ -91,7 +87,7 @@ public class Order {
         if (productId == null) {
             throw new IllegalArgumentException("Product ID is required");
         }
-        if (!(productId instanceof Integer)) {
+        if(!(productId instanceof Integer)) {
             throw new IllegalArgumentException("Product ID must be an Integer");
         }
         if (productId <= 0) {
