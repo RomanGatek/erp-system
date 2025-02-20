@@ -13,13 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderDto {
-
-
     private Long id;
 
-
     private Long productId;
-
 
     @JsonDeserialize(using = OrderDeserializers.StringDeserializer.class)
     private String productName;

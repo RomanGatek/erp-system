@@ -27,29 +27,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long id) {
         Optional<Order> orderOptional =  orderRepository.findById(id);
-        if (orderOptional.isPresent()) {
-            return orderOptional.get();
-        }return null;
+        return orderOptional.orElse(null);
     }
 
     @Override
     public Boolean existOrderById(Long id) {
         Optional<Order> orderOptional = orderRepository.findById(id);
-        if (orderOptional.isPresent()) {
-         return true;
-        } else {
-            return false;
-        }
+        return orderOptional.isPresent();
     }
 
     @Override
     public Boolean existOrderByProductId(Long productId) {
         Optional <Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            return true;
-        } else {
-            return false;
-        }
+        return productOptional.isPresent();
     }
 
     @Override

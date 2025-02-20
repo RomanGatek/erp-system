@@ -1,7 +1,10 @@
 package cz.syntaxbro.erpsystem.controllers;
 
+import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.validates.ProductRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 import java.util.Map;
+import java.util.Optional;
 
 
 @RestController
@@ -17,55 +21,18 @@ import java.util.Map;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ProductRepository productRepository) {
         this.productService = productService;
+        this.productRepository = productRepository;
     }
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@Valid @RequestBody Object requestBody) {
-
-            // Validácia dátových typov
-            if (!(requestBody instanceof Map)) {
-                throw new IllegalArgumentException("Invalid request format");
-            }
-
-            Map<String, Object> productData = (Map<String, Object>) requestBody;
-
-            // Validácia name
-            if (!productData.containsKey("name")) {
-                throw new IllegalArgumentException("Name is required");
-            }
-            if (!(productData.get("name") instanceof String)) {
-                throw new IllegalArgumentException("Name must be a string");
-            }
-
-            // Validácia cost
-            if (!productData.containsKey("cost")) {
-                throw new IllegalArgumentException("Cost is required");
-            }
-            if (!(productData.get("cost") instanceof Double)) {
-                throw new IllegalArgumentException("Cost must be a double");
-            }
-
-            // Validácia quantity
-            if (!productData.containsKey("quantity")) {
-                throw new IllegalArgumentException("Quantity is required");
-            }
-            if (!(productData.get("quantity") instanceof Integer)) {
-                throw new IllegalArgumentException("Quantity must be an integer");
-            }
-
-            // Vytvorenie produktu po úspešnej validácii
-            Product product = new Product();
-            product.setName((String) productData.get("name"));
-            product.setCost(((Number) productData.get("cost")).doubleValue());
-            product.setQuantity(((Number) productData.get("quantity")).intValue());
-
-            Product createdProduct = productService.createProduct(product);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
-
+    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequest requestBody) {
+        Product createdProduct = productService.createProduct(requestBody);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 
     @GetMapping("/{id}")
@@ -79,56 +46,12 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable(name = "id") Long id,@Valid @RequestBody Object requestBody) {
-
-            // Validácia dátových typov
-            if (!(requestBody instanceof Map)) {
-                throw new IllegalArgumentException("Invalid request format");
-            }
-
-            Map<String, Object> productData = (Map<String, Object>) requestBody;
-
-            // Validácia name
-            if (!productData.containsKey("name")) {
-                throw new IllegalArgumentException("Name is required");
-            }
-            if (!(productData.get("name") instanceof String)) {
-                throw new IllegalArgumentException("Name must be a string");
-            }
-
-            // Validácia cost
-            if (!productData.containsKey("cost")) {
-                throw new IllegalArgumentException("Cost is required");
-            }
-            if (!(productData.get("cost") instanceof Double)) {
-                throw new IllegalArgumentException("Cost must be a number");
-            }
-
-            // Validácia quantity
-            if (!productData.containsKey("quantity")) {
-                throw new IllegalArgumentException("Quantity is required");
-            }
-            if (!(productData.get("quantity") instanceof Integer)) {
-                throw new IllegalArgumentException("Quantity must be an integer");
-            }
-
-            // Získanie existujúceho produktu
-            Product existingProduct = productService.getProductById(id);
-
-            // Aktualizácia len poskytnutých polí
-            if (productData.containsKey("name")) {
-                existingProduct.setName((String) productData.get("name"));
-            }
-            if (productData.containsKey("cost")) {
-                existingProduct.setCost(((Number) productData.get("cost")).doubleValue());
-            }
-            if (productData.containsKey("quantity")) {
-                existingProduct.setQuantity(((Number) productData.get("quantity")).intValue());
-            }
-
-            Product updatedProduct = productService.updateProduct(id, existingProduct);
-            return ResponseEntity.ok(updatedProduct);
-
+    public Product updateProduct(@PathVariable(name = "id") Long id, @Valid @RequestBody Product product) {
+        Optional<Product> ProductOptional = productRepository.findById(id);
+        if (ProductOptional.isPresent()) {
+            productRepository.save(product);
+        }
+        return product;
     }
 
     @DeleteMapping("/{id}")

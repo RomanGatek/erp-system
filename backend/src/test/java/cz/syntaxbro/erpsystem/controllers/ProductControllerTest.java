@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.validates.ProductRequest;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,12 +36,14 @@ class ProductControllerTest {
     private Product goodProduct;
     private Product badProduct;
     private Product updatedProduct;
+    private ProductRequest productRequest;
 
     @BeforeEach
     void setUp() {
         goodProduct = new Product(1L, "Product Name", 12.12, 1);
         badProduct = new Product(1L, "", 12.12, 1);
         updatedProduct = new Product(1L, "New Product Name", 12.13, 2);
+        productRequest = new ProductRequest("Product Name", 12.12, 1);
     }
 
     /**
@@ -50,7 +53,7 @@ class ProductControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void createProductOkTest() throws Exception {
-        when(productService.createProduct(any(Product.class)))
+        when(productService.createProduct(any(ProductRequest.class)))
                 .thenReturn(goodProduct);
 
         mockMvc.perform(post("/api/products")
@@ -58,7 +61,7 @@ class ProductControllerTest {
                         .content(objectMapper.writeValueAsString(goodProduct)))
                 .andExpect(status().isCreated());
 
-        verify(productService, times(1)).createProduct(any(Product.class));
+        verify(productService, times(1)).createProduct(any(ProductRequest.class));
     }
 
     /**
@@ -68,7 +71,7 @@ class ProductControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void createProductWrongDataTest() throws Exception {
-        when(productService.createProduct(any(Product.class)))
+        when(productService.createProduct(any(ProductRequest.class)))
                 .thenReturn(badProduct);
 
         mockMvc.perform(post("/api/products")
@@ -76,7 +79,7 @@ class ProductControllerTest {
                         .content(objectMapper.writeValueAsString(badProduct)))
                 .andExpect(status().isBadRequest());
 
-        verify(productService, times(0)).createProduct(any(Product.class));
+        verify(productService, times(0)).createProduct(any(ProductRequest.class));
     }
 
     /**
@@ -130,7 +133,7 @@ class ProductControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void updateProductOkTest() throws Exception {
-        when(productService.updateProduct(updatedProduct.getId(), updatedProduct))
+        when(productService.updateProduct(updatedProduct.getId(), productRequest))
                 .thenReturn(updatedProduct);
 
         mockMvc.perform(put("/api/products/" + goodProduct.getId())
@@ -143,7 +146,7 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.quantity").value(updatedProduct.getQuantity()));;
 
         verify(productService, times(1))
-                .updateProduct(updatedProduct.getId(), updatedProduct);
+                .updateProduct(updatedProduct.getId(), productRequest);
     }
 
     /**

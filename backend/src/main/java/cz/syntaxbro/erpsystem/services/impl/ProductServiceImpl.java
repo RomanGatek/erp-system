@@ -3,11 +3,10 @@ package cz.syntaxbro.erpsystem.services.impl;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.validates.ProductRequest;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import static org.springframework.data.util.Optionals.ifPresentOrElse;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -21,8 +20,12 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    public Product createProduct(Product product) {
-        return productRepository.save(product);
+    public Product createProduct(ProductRequest request) {
+        Product newProduct = new Product();
+        newProduct.setName(request.getName());
+        newProduct.setCost(request.getCost());
+        newProduct.setQuantity(request.getQuantity());
+        return productRepository.save(newProduct);
     }
 
     @Override
@@ -38,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) {
+    public Product updateProduct(Long id, ProductRequest product) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
                     existingProduct.setName(product.getName());
