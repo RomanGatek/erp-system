@@ -22,12 +22,10 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final ValidatorFactory validatorFactory;
 
     @Autowired
-    public OrderController(OrderService orderService, ValidatorFactory validatorFactory) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.validatorFactory = validatorFactory;
     }
 
     @GetMapping("/{id}")
