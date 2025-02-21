@@ -18,14 +18,14 @@ public class OrderDto {
 
     private Integer amount;
 
-    @NotBlank
-    @Size(min = 1, message = "Cost cannot be null, must be greater than 0")
+    @NotBlank(message = "Cost cannot be null, or empty")
+    @Size(min = 1, message = "Cost must be greater than 0")
     private Double cost;
 
-    @NotBlank
+    @NotBlank(message = "Status cannot be null or empty")
     private Order.Status status;
 
-    @NotBlank
+    @NotBlank(message = "Date cannot be null, must be greater than 0")
     @FutureOrPresent
     private LocalDateTime orderTime;
 

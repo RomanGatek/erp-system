@@ -7,11 +7,13 @@ import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
-import cz.syntaxbro.erpsystem.validates.orders.CostRange;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
@@ -46,27 +49,21 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getOrdersByCostBetween(double start, double end) {
-        CostRange costRange = new CostRange(start, end);
-        return orderRepository.findByCostBetween(
-                getValidatedCostRange(costRange).getStartCost(),
-                getValidatedCostRange(costRange).getEndCost());
-    }
-
-    private CostRange getValidatedCostRange(@Valid CostRange range){
-        return range;
+    public List<Order> getOrdersByCostBetween(
+            @NotEmpty @Min(value = 0, message = "Cost must be grater or equal with 0") double start,
+            @NotEmpty @Min(value = 0, message = "Cost must be grater or equal with 0") double end) {
+        if (start > end) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost must be grater or equal with 0");
+        }
+        return orderRepository.findByCostBetween(start, end);
     }
 
     @Override
-    public List<Order> getOrdersByDateBetween(LocalDateTime start, LocalDateTime end) {
+    public List<Order> getOrdersByDateBetween(@NotEmpty @FutureOrPresent LocalDateTime start,
+                                              @NotEmpty @FutureOrPresent LocalDateTime end) {
         if (end.isBefore(start)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal than start");
-        }
-        else if(orderRepository.findByDateBetween(start, end).isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No orders found");
-        }else{
-            return orderRepository.findByDateBetween(start,end);
-        }
+        }return orderRepository.findByDateBetween(start,end);
     }
 
     @Override
@@ -90,38 +87,36 @@ public class OrderServiceImpl implements OrderService {
             Order order = orderOptional.get();
             Order mappedOrder = mapToEntity(orderDto, order);
             orderRepository.save(mappedOrder);
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT, "Order updated");
-        }else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
+
     }
 
     @Override
     public void deleteOrder(Long id) {
-        if(orderRepository.findById(id).isEmpty()){
+        if(getOrderById(id) != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
-        }else{
-            orderRepository.deleteById(id);
         }
+        orderRepository.deleteById(id);
+
     }
 
     //delete all orders with witch include order
     @Override
     public void deleteOrderByProductId(Long productId) {
         Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            orderRepository.deleteAll(orderRepository.findByProduct(product));
-        }else{
+        if (productOptional.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found with product id " + productId);
         }
+        Product product = productOptional.get();
+        orderRepository.deleteAll(orderRepository.findByProduct(product));
     }
 
 
 
     // Converts OrderDto to Order with exceptions.
     private Order mapToEntity(OrderDto orderDto, Order order) {
-        setAmount(orderDto, order);
+        order.setAmount(orderDto.getAmount());
         setProduct(orderDto, order);
         order.setCost(orderDto.getCost());
         setStatus(orderDto, order);
@@ -129,57 +124,37 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-    //Validate Amount
-    private void setAmount(OrderDto orderDto, Order order){
-        if(orderDto.getAmount() == null || orderDto.getAmount() <= 0){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount cannot be null, must be greater than 0");
-        }else {
-            order.setAmount(orderDto.getAmount());
-        }
-    }
-
     //Validate Status
     private void setStatus(OrderDto orderDto, Order order){
         List<String> list = Arrays.stream(Order.Status.values())
                 .map(Enum::name)
                 .toList();
-        if(orderDto.getStatus() == null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status cannot be null");
-        } else if (!list.contains(orderDto.getStatus().toString())) {
+        if (!list.contains(orderDto.getStatus().toString())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is not valid");
-        } else {
-            order.setStatus(orderDto.getStatus());
         }
-
+        order.setStatus(orderDto.getStatus());
     }
 
     //Validate OrderTime
     private void setOrderTime(OrderDto orderDto, Order order){
-        if(orderDto.getOrderTime() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OrderTime cannot be null");
-        } else if (orderDto.getOrderTime().isBefore(LocalDate.now().atStartOfDay())) {
+        if (orderDto.getOrderTime().isBefore(LocalDate.now().atStartOfDay())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OrderTime cannot be day older than today");
-        } else{
-            order.setOrderTime(orderDto.getOrderTime());
         }
+        order.setOrderTime(orderDto.getOrderTime());
+
     }
 
     //Validate Product
     private void setProduct(OrderDto orderDto, Order order){
-        if(orderDto.getProductId() == null || orderDto.getProductId() <= 0){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ProductId cannot be null, must be greater than 0");
-        }else{
-            Product product = createdById(orderDto.getProductId());
-            order.setProduct(product);
-        }
+        Product product = createdById(orderDto.getProductId());
+        order.setProduct(product);
     }
 
     //Product created by id exception
     private Product createdById(Long id) {
         if (!productService.isExistById(id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product does not exist");
-        } else {
-            return productService.getProductById(id);
         }
+        return productService.getProductById(id);
     }
 }
