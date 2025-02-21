@@ -7,9 +7,6 @@ import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Validated
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
@@ -39,8 +35,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order getOrderById(Long id) {
-        Optional<Order> orderOptional =  orderRepository.findById(id);
-        return orderOptional.orElse(null);
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order not found"));
     }
 
     @Override
@@ -50,8 +46,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByCostBetween(
-            @NotEmpty @Min(value = 0, message = "Cost must be grater or equal with 0") double start,
-            @NotEmpty @Min(value = 0, message = "Cost must be grater or equal with 0") double end) {
+            double start,
+            double end) {
         if (start > end) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost must be grater or equal with 0");
         }
@@ -59,8 +55,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getOrdersByDateBetween(@NotEmpty @FutureOrPresent LocalDateTime start,
-                                              @NotEmpty @FutureOrPresent LocalDateTime end) {
+    public List<Order> getOrdersByDateBetween(LocalDateTime start,
+                                              LocalDateTime end) {
         if (end.isBefore(start)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal than start");
         }return orderRepository.findByDateBetween(start,end);
@@ -83,18 +79,17 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void updateOrder(Long id, OrderDto orderDto) {
         Optional<Order> orderOptional = orderRepository.findById(id);
-        if (orderOptional.isPresent()) {
-            Order order = orderOptional.get();
-            Order mappedOrder = mapToEntity(orderDto, order);
-            orderRepository.save(mappedOrder);
+        if (orderOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
-
+        Order order = orderOptional.get();
+        Order mappedOrder = mapToEntity(orderDto, order);
+        orderRepository.save(mappedOrder);
     }
 
     @Override
     public void deleteOrder(Long id) {
-        if(getOrderById(id) != null) {
+        if(getOrderById(id) == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
         orderRepository.deleteById(id);
