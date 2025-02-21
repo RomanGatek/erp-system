@@ -7,6 +7,8 @@ import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.validates.orders.CostRange;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -46,15 +47,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByCostBetween(double start, double end) {
-        if (start >= end) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater than end");
-        }else if (start < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start must be greater or equal to 0");
-        }else if(end < 0){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal to 0");
-        }else {
-            return orderRepository.findByCostBetween(start, end);
-        }
+        CostRange costRange = new CostRange(start, end);
+        return orderRepository.findByCostBetween(
+                getValidatedCostRange(costRange).getStartCost(),
+                getValidatedCostRange(costRange).getEndCost());
+    }
+
+    private CostRange getValidatedCostRange(@Valid CostRange range){
+        return range;
     }
 
     @Override
@@ -115,7 +115,6 @@ public class OrderServiceImpl implements OrderService {
         }else{
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found with product id " + productId);
         }
-
     }
 
 
@@ -124,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
     private Order mapToEntity(OrderDto orderDto, Order order) {
         setAmount(orderDto, order);
         setProduct(orderDto, order);
-        setCost(orderDto, order);
+        order.setCost(orderDto.getCost());
         setStatus(orderDto, order);
         setOrderTime(orderDto, order);
         return order;
@@ -136,15 +135,6 @@ public class OrderServiceImpl implements OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount cannot be null, must be greater than 0");
         }else {
             order.setAmount(orderDto.getAmount());
-        }
-    }
-
-    //Validate Cost
-    private void setCost(OrderDto orderDto, Order order){
-        if(orderDto.getCost() == null || orderDto.getCost() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost cannot be null, must be greater than 0");
-        }else{
-            order.setCost(orderDto.getCost());
         }
     }
 
