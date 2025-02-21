@@ -1,14 +1,13 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.validates.OrderRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -32,7 +31,6 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrder(@PathVariable(name = "id") Long id) {
         Order order = orderService.getOrderById(id);
-        String statusMessage = order.getOrderStatus();
         return ResponseEntity.ok(order);
     }
 
@@ -73,26 +71,15 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderDto orderDto) {
-            Order order = Order.fromOrderDto(orderDto,productService);
-            Order createdOrder = orderService.createOrder(order);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderRequest requestBody) {
+            Order createdOrder = orderService.createOrder(requestBody);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Order> updateOrder(@PathVariable(name = "id") Long id, @Valid @RequestBody OrderDto orderDto) {
-        Order existingOrder = orderService.getOrderById(id);
-        if (existingOrder == null) {
-            throw new IllegalArgumentException("Order with ID " + id + " not found");
-        }
-
-        // Vytvorenie aktualizovanej objednávky z DTO
-        Order updatedOrder = Order.fromOrderDto(orderDto, productService);
-        updatedOrder.setId(id); // zachovanie pôvodného ID
-
-        // Aktualizácia a uloženie
-        Order savedOrder = orderService.updateOrder(id, updatedOrder);
-        return ResponseEntity.ok(savedOrder);
+    public ResponseEntity<Order> updateOrder(@PathVariable(name = "id") Long id, @Valid @RequestBody OrderRequest requestBody) {
+        Order updatedOrder = orderService.updateOrder(id, requestBody);
+        return ResponseEntity.ok(updatedOrder);
     }
 
     @DeleteMapping("/{id}")

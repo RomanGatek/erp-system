@@ -2,11 +2,11 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
-import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.validates.OrderRequest;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -67,18 +67,29 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createOrder(Order order) {
-        orderRepository.save(order);
-        return order;
+    public Order createOrder(OrderRequest request) {
+        Order newOrder = new Order();
+        newOrder.setCost(request.getCost());
+        newOrder.setAmount(request.getAmount());
+        newOrder.setProduct(request.getProduct());
+        newOrder.setOrderTime(request.getOrderTime());
+        newOrder.setStatus(request.getStatus());
+        return orderRepository.save(newOrder);
+
     }
 
     @Override
-    public Order updateOrder(Long id, Order order) {
-        Optional<Order> OrderOptional = orderRepository.findById(id);
-        if (OrderOptional.isPresent()) {
-            orderRepository.save(order);
-        }
-        return order;
+    public Order updateOrder(Long id, OrderRequest request) {
+        return orderRepository.findById(id)
+                .map(existingOrder -> {
+                    existingOrder.setCost(request.getCost());
+                    existingOrder.setAmount(request.getAmount());
+                    existingOrder.setProduct(request.getProduct());
+                    existingOrder.setOrderTime(request.getOrderTime());
+                    existingOrder.setStatus(request.getStatus());
+                    return orderRepository.save(existingOrder);
+                }). orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
+
     }
 
     @Override
