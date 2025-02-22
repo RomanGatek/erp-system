@@ -17,7 +17,12 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired private JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
+
+    @Autowired
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,20 +35,13 @@ public class SecurityConfig {
                 ))
 
                 .authorizeHttpRequests(auth -> auth
-                        // API endpoint rules
-                        .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
-                        .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
-                        .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
-                        .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
-
-                        // UI-based routes
-                        .requestMatchers("/admin/**").hasRole("ADMIN") // Web admin panel
-                        .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/user/**").hasAnyRole("ADMIN", "MANAGER", "USER")
-                        .requestMatchers("/guest/**").permitAll() // Public web pages
-                        .anyRequest().authenticated() // Everything else requires authentication
-
+                    // API endpoint rules
+                    .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
+                    .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
+                    .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
+                    .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
+                    .anyRequest().authenticated() // Everything else requires authentication
                 )
                 // JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
