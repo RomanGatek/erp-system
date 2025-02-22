@@ -19,7 +19,6 @@ public class ProductRequest {
     public double cost;
 
     @NotNull(message = "Quantity is required")
-    @PositiveOrZero(message = "Product quantity must be zero or positive")
-    @Digits(integer = 10, fraction = 0, message = "Quantity must be a integer")
+    @Min(value= 0, message = "Value must be min 0")
     public int quantity;
 }

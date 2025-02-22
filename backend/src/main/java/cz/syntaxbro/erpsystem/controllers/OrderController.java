@@ -2,7 +2,6 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.services.OrderService;
-import cz.syntaxbro.erpsystem.services.ProductService;
 import cz.syntaxbro.erpsystem.validates.OrderRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +18,11 @@ public class OrderController {
 
 
     private final OrderService orderService;
-    private final ProductService productService;
 
 
     @Autowired
-    public OrderController(OrderService orderService, ProductService productService) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.productService = productService;
     }
 
     @GetMapping("/{id}")
