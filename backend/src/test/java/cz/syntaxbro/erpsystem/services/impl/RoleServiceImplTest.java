@@ -47,7 +47,7 @@ class RoleServiceImplTest {
         List<Role> roles = roleService.getAllRoles();
 
         assertThat(roles).isNotNull().hasSize(1);
-        assertThat(roles.get(0).getName()).isEqualTo("ROLE_TEST");
+        assertThat(roles.getFirst().getName()).isEqualTo("ROLE_TEST");
 
         verify(roleRepository, times(1)).findAll();
     }

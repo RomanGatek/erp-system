@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,9 +18,9 @@ public interface OrderService {
 
     List<Order> getOrdersByProduct(Long productId);
 
-    void createOrder(Order order);
+    Order createdOrder(OrderDto orderDto);
 
-    void updateOrder(Long id, Order order);
+    void updateOrder(Long id, OrderDto orderDto);
 
     void deleteOrder(Long id);
 
