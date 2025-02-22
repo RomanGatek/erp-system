@@ -43,6 +43,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
                     .anyRequest().authenticated() // Everything else requires authentication
                 )
+
                 // JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout

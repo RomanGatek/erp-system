@@ -1,10 +1,12 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
+import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,12 +24,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordSecurity security;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordSecurity security) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.security = security;
     }
 
     @Override
@@ -44,19 +46,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto createUser(UserDto userDto) {
-        if (userRepository.existsByUsername(userDto.getUsername())) {
-            throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
+    public UserDto createUser(CreateUserRequest createUserRequest) {
+        if (userRepository.existsByUsername(createUserRequest.getUsername())) {
+            throw new IllegalArgumentException("Username already exists: " + createUserRequest.getUsername());
         }
-        if (userRepository.existsByEmail(userDto.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + userDto.getEmail());
+        if (userRepository.existsByEmail(createUserRequest.getEmail())) {
+            throw new IllegalArgumentException("Email already exists: " + createUserRequest.getEmail());
         }
 
-        User user = mapToEntity(userDto, new User());
+
+        User user = mapToEntity(createUserRequest, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        user.setPassword(passwordEncoder.encode("defaultPassword"));
+        user.setPassword(security.hashPassword("defaultPassword"));
 
-        Set<Role> roles = userDto.getRoles().stream()
+        Set<Role> roles = createUserRequest.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)
                         .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
                 .collect(Collectors.toSet());
@@ -67,7 +70,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto updateUser(Long id, UserDto userDto) {
+    public UserDto updateUser(Long id, CreateUserRequest userDto) {
         User user = getUserByIdOrThrow(id);
         mapToEntity(userDto, user);
         User updatedUser = userRepository.save(user);
@@ -89,7 +92,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // Converts UserDto to User entity by setting attributes and resolving roles.
-    private User mapToEntity(UserDto userDto, User user) {
+    private User mapToEntity(CreateUserRequest userDto, User user) {
         user.setUsername(userDto.getUsername());
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
