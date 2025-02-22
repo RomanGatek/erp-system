@@ -23,6 +23,7 @@ index.beforeEach((to, from, next) => {
   if (to.path !== '/auth' && !token) {
     next('/auth');
   } else {
+    // auth/me
     next();
   }
 });
