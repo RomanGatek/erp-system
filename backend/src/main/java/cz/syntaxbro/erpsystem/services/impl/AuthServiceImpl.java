@@ -1,14 +1,15 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.models.dtos.LoginRequest;
-import cz.syntaxbro.erpsystem.models.dtos.SignUpRequest;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import cz.syntaxbro.erpsystem.utils.UserMapper;
+import cz.syntaxbro.erpsystem.validates.LoginRequest;
+import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,9 +26,16 @@ import java.util.stream.Collectors;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private JwtUtil jwtUtil;
-    @Autowired private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordSecurity security;
+
+    @Autowired
+    public AuthServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, PasswordSecurity security) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.security = security;
+    }
 
     @Override
     public void registerUser(SignUpRequest signUpRequest) {
@@ -50,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        if (!security.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
 

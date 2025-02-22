@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.models.dtos.LoginRequest;
-import cz.syntaxbro.erpsystem.models.dtos.SignUpRequest;
+import cz.syntaxbro.erpsystem.validates.LoginRequest;
+import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import jakarta.validation.Valid;
@@ -23,8 +23,12 @@ public class AuthController {
     // User Registration
     @PostMapping("/public/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignUpRequest signUpRequest) {
-        authService.registerUser(signUpRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+        try {
+            authService.registerUser(signUpRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     // User Login

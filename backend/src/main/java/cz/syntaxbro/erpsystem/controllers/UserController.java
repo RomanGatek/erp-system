@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -39,13 +41,22 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    // Admin-created user
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
-        logger.info("Creating user {}", userDto);
-        UserDto createdUser = userService.createUser(userDto);
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+        logger.info("Creating user {}", request);
+        UserDto createdUser = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> importUsers(@RequestParam("file") MultipartFile file) {
+        userService.importUsersFromCsv(file);
+        return ResponseEntity.ok("Users imported successfully");
+    }
+
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

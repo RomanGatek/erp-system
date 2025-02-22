@@ -1,6 +1,8 @@
 # Pomocné soubory a složky
 HELP.md
 
+.idea/
+
 # Gradle
 .gradle/
 backend/build/

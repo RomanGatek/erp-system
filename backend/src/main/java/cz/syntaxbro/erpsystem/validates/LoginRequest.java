@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.models.dtos;
+package cz.syntaxbro.erpsystem.validates;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
