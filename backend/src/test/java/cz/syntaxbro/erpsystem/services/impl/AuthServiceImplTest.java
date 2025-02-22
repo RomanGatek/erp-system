@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.services.impl;
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import org.junit.jupiter.api.*;
@@ -24,12 +25,13 @@ class AuthServiceImplTest {
     @Mock
     private PasswordSecurity passwordSecurity;
 
+    private JwtUtil jwtUtil;
     private SignUpRequest signUpRequest;
 
     @BeforeEach
     void setUp() {
         autoCloseable = MockitoAnnotations.openMocks(this);
-        authServiceImpl = new AuthServiceImpl(userService, passwordSecurity);
+        authServiceImpl = new AuthServiceImpl(userService, jwtUtil, passwordSecurity);
         signUpRequest = new SignUpRequest("Username", "1!Password", "email@email.com");
     }
 

@@ -56,6 +56,8 @@ class UserControllerTest {
                 "testUser", "StrongPassword1!", "test@example.com",
                 "Test", "User", true, Set.of("ROLE_USER")
         );
+
+
     }
 
     /**
@@ -150,15 +152,15 @@ class UserControllerTest {
      */
     @Test
     void updateUser_shouldReturnUpdatedUser() {
-        when(userService.updateUser(1L, testUser)).thenReturn(testUser);
+        when(userService.updateUser(1L, createUserRequest)).thenReturn(testUser);
 
-        ResponseEntity<UserDto> response = userController.updateUser(1L, testUser);
+        ResponseEntity<UserDto> response = userController.updateUser(1L, createUserRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getUsername()).isEqualTo(testUser.getUsername());
 
-        verify(userService, times(1)).updateUser(1L, testUser);
+        verify(userService, times(1)).updateUser(1L, createUserRequest);
     }
 
     /**

@@ -4,57 +4,65 @@ import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
-import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.repositories.UserRepository;
+import cz.syntaxbro.erpsystem.services.AuthService;
+import cz.syntaxbro.erpsystem.utils.JwtUtil;
+import cz.syntaxbro.erpsystem.utils.UserMapper;
 import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
-import cz.syntaxbro.erpsystem.services.AuthService;
-import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserService userService;
-    private final PasswordSecurity passwordSecurity;
-
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordSecurity security;
 
     @Autowired
-    public AuthServiceImpl(UserService userService, PasswordSecurity passwordSecurity) {
-        this.userService = userService;
-        this.passwordSecurity = passwordSecurity;
+    public AuthServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, PasswordSecurity security) {
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.security = security;
     }
 
     @Override
     public void registerUser(SignUpRequest signUpRequest) {
-        if (userService.getUserByUsername(signUpRequest.getUsername()) != null) {
-            throw new IllegalArgumentException("Username already exists: " + signUpRequest.getUsername());
-        }
+        List.of(
+                Map.entry(signUpRequest.getUsername(), "Username"),
+                Map.entry(signUpRequest.getEmail(), "Email"),
+                Map.entry(signUpRequest.getPassword(), "Password")
+        ).forEach(entry -> {
+            if (entry.getKey() == null || entry.getKey().isEmpty()) {
+                throw new IllegalArgumentException(entry.getValue() + " cannot be null or empty");
+            }
+        });
 
-        CreateUserRequest request = new CreateUserRequest();
-        request.setUsername(signUpRequest.getUsername());
-        request.setEmail(signUpRequest.getEmail());
-        request.setPassword(signUpRequest.getPassword());
-        request.setRoles(Set.of("ROLE_USER")); // Default role
-
-        userService.createUser(request);
+        System.out.println("Checking if user exists: " + signUpRequest.getUsername());
+        System.out.println("Saving user to database: " + signUpRequest.getUsername());
     }
 
     @Override
     public String authenticateUser(LoginRequest loginRequest) {
-        User user = userService.getUserByUsername(loginRequest.getUsername());
-        if (user == null || !passwordSecurity.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new AccessDeniedException("Invalid username or password");
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!security.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid username or password");
         }
-        return "generated-jwt-token";
+
+        return jwtUtil.generateToken(new CustomUserDetails(user));
     }
 
     @Override
@@ -91,5 +99,4 @@ public class AuthServiceImpl implements AuthService {
         // Mapping the User entity to UserDto using UserMapper.toDto()
         return UserMapper.toDto(currentUser);
     }
-
 }

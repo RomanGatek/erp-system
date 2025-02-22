@@ -67,4 +67,9 @@ public class ProductServiceImpl implements ProductService {
                         () -> { throw new EntityNotFoundException("Product not found with name: " + name); }
                 );
     }
+
+    @Override
+    public boolean isExistById(Long id) {
+        return productRepository.findById(id).isPresent();
+    }
 }

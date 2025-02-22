@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from './views/Home.vue';
-import Auth from './views/Auth.vue';
-import Users from './components/Users.vue';
-import Products from './components/Products.vue';
-import Inventory from './components/Inventory.vue';
+import Users from "@/components/Users.vue";
+import Products from "@/components/Products.vue";
+import Inventory from "@/components/Inventory.vue";
+import Home from "@/views/Home.vue";
+import Auth from "@/views/Auth.vue";
 
 const routes = [
   { path: '/', component: Home },
@@ -13,12 +13,12 @@ const routes = [
   { path: '/inventory', component: Inventory }
 ];
 
-const router = createRouter({
+const index = createRouter({
   history: createWebHistory(),
   routes
 });
 
-router.beforeEach((to, from, next) => {
+index.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
   if (to.path !== '/auth' && !token) {
     next('/auth');
@@ -27,4 +27,4 @@ router.beforeEach((to, from, next) => {
   }
 });
 
-export default router;
+export default index;

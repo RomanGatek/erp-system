@@ -39,10 +39,10 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 
-    @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        return ResponseEntity.ok(productService.createProduct(product));
-    }
+//    @PostMapping
+//    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+//        return ResponseEntity.ok(productService.createProduct(product));
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {

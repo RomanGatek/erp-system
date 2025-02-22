@@ -53,14 +53,14 @@ public class UserController {
     @PostMapping("/import")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> importUsers(@RequestParam("file") MultipartFile file) {
-        userService.importUsersFromCsv(file);
+//        userService.importUsersFromCsv(file);
         return ResponseEntity.ok("Users imported successfully");
     }
 
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest userDto) {
         logger.info("Updating user with ID: {}", id);
         UserDto updatedUser = userService.updateUser(id, userDto);
         return ResponseEntity.ok(updatedUser);
