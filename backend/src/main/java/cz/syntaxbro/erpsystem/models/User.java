@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,45 +48,4 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toSet());
-    }
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.username;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return this.isActive;
-    }
-
-    // unimplemented
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    // unimplemented
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    // unimplemented
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
 }

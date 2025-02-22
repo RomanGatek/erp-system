@@ -37,7 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
                         .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
-                        .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
+                        .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
                         .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
 
                         // UI-based routes
