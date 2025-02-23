@@ -26,14 +26,14 @@ public class DataLoader implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
-    private final PasswordSecurity passwordSecurity;
+    private final PasswordEncoder encoder;
 
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
-                      PermissionRepository permissionRepository, PasswordSecurity passwordSecurity) {
+                      PermissionRepository permissionRepository, PasswordEncoder encoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
-        this.passwordSecurity = passwordSecurity;
+        this.encoder = encoder;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class DataLoader implements CommandLineRunner {
         if (userFromDb.isEmpty()) {
             User user = new User();
             user.setUsername(username);
-            user.setPassword(passwordSecurity.encode("password123")); // Default password
+            user.setPassword(encoder.encode("password123")); // Default password
             user.setFirstName(firstName);
             user.setLastName("USER"); // Default last name
             user.setEmail(email);

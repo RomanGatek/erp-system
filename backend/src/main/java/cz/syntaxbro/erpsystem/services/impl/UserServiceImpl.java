@@ -24,12 +24,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordSecurity security;
+    private final PasswordEncoder encoder;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordSecurity security) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder encoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.security = security;
+        this.encoder = encoder;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
 
         User user = mapToEntity(createUserRequest, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        user.setPassword(security.encode("defaultPassword"));
+        user.setPassword(encoder.encode("defaultPassword"));
 
         Set<Role> roles = createUserRequest.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)
