@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.controllers;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.Min;
@@ -88,15 +89,19 @@ public class OrderController {
     }
 
     @GetMapping("/by-product")
-    public ResponseEntity<List<Object>> getOrdersByProduct(
+    public ResponseEntity<List<Order>> getOrdersByProduct(
             @RequestParam(value = "productId", defaultValue = "0")
             @NotNull(message = "Product id cant be null")
             Long productId) {
-        try{
-            return ResponseEntity.ok(List.of(orderService.getOrdersByProduct(productId)));
-        }catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(List.of(e.getMessage()));
-        }
+
+            return ResponseEntity.ok(orderService.getOrdersByProduct(productId));
+
+
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<String> error(){
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/create")
