@@ -21,6 +21,7 @@ public class PasswordSecurity implements PasswordEncoder {
             String rawPassword = password.toString();
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
+
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error hashing password", e);
@@ -37,6 +38,7 @@ public class PasswordSecurity implements PasswordEncoder {
     // Password validation (at least 1 uppercase, 1 number, 1 special char, 10-32 characters)
     public boolean passwordValidator(String password) {
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,32}$";
+
         return Pattern.matches(passwordPattern, password);
     }
 
