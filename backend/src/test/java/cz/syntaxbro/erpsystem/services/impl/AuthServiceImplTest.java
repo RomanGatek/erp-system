@@ -2,14 +2,16 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import cz.syntaxbro.erpsystem.validates.LoginRequest;
 import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -20,19 +22,27 @@ class AuthServiceImplTest {
     private AutoCloseable autoCloseable;
 
     @Mock
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Mock
     private PasswordSecurity passwordSecurity;
 
+    @Mock
     private JwtUtil jwtUtil;
+
     private SignUpRequest signUpRequest;
+    private User user;
 
     @BeforeEach
     void setUp() {
         autoCloseable = MockitoAnnotations.openMocks(this);
-        authServiceImpl = new AuthServiceImpl(userService, jwtUtil, passwordSecurity);
+        authServiceImpl = new AuthServiceImpl(userRepository, jwtUtil, passwordSecurity);
+
         signUpRequest = new SignUpRequest("Username", "1!Password", "email@email.com");
+
+        user = new User();
+        user.setEmail("email@email.com");
+        user.setPassword("hashedPassword");
     }
 
     @AfterEach
@@ -41,43 +51,43 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void registerUser_shouldThrowException_whenUsernameExists() {
-        when(userService.getUserByUsername("Username")).thenReturn(new User());
+    void registerUser_shouldNotThrowException_whenUsernameExists() {
+        when(userRepository.findByEmail(signUpRequest.getEmail())).thenReturn(Optional.of(user));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authServiceImpl.registerUser(signUpRequest));
+        assertDoesNotThrow(() -> authServiceImpl.registerUser(signUpRequest));
 
-        assertEquals("Username already exists: Username", exception.getMessage());
+        verify(userRepository, never()).findByEmail(signUpRequest.getEmail());
     }
+
 
     @Test
     void authenticateUser_shouldThrowException_whenInvalidUsername() {
-        when(userService.getUserByUsername("Username")).thenReturn(null);
+        when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.empty());
 
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> authServiceImpl.authenticateUser(new LoginRequest("Username", "1!Password")));
+        UsernameNotFoundException exception = assertThrows(UsernameNotFoundException.class,
+                () -> authServiceImpl.authenticateUser(new LoginRequest("email@email.com", "1!Password")));
 
-        assertEquals("Invalid username or password", exception.getMessage());
+        assertEquals("User not found", exception.getMessage());
     }
 
     @Test
     void authenticateUser_shouldThrowException_whenInvalidPassword() {
-        User user = new User();
-        user.setPassword("wrongPassword");
-        when(userService.getUserByUsername("Username")).thenReturn(user);
-        when(passwordSecurity.matches("1!Password", "wrongPassword")).thenReturn(false);
+        when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.of(user));
+        when(passwordSecurity.matches("1!Password", "hashedPassword")).thenReturn(false);
 
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> authServiceImpl.authenticateUser(new LoginRequest("Username", "1!Password")));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authServiceImpl.authenticateUser(new LoginRequest("email@email.com", "1!Password")));
 
         assertEquals("Invalid username or password", exception.getMessage());
     }
 
     @Test
     void authenticateUser_shouldReturnToken_whenValidCredentials() {
-        User user = new User();
-        user.setPassword("hashedPassword");
-        when(userService.getUserByUsername("Username")).thenReturn(user);
+        when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.of(user));
         when(passwordSecurity.matches("1!Password", "hashedPassword")).thenReturn(true);
+        when(jwtUtil.generateToken(any())).thenReturn("generated-jwt-token");
 
-        String token = authServiceImpl.authenticateUser(new LoginRequest("Username", "1!Password"));
+        String token = authServiceImpl.authenticateUser(new LoginRequest("email@email.com", "1!Password"));
 
         assertEquals("generated-jwt-token", token);
     }
