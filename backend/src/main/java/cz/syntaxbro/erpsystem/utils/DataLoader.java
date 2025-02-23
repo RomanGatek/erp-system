@@ -76,7 +76,7 @@ public class DataLoader implements CommandLineRunner {
         if (userFromDb.isEmpty()) {
             User user = new User();
             user.setUsername(username);
-            user.setPassword(passwordSecurity.hashPassword("password123")); // Default password
+            user.setPassword(passwordSecurity.encode("password123")); // Default password
             user.setFirstName(firstName);
             user.setLastName("USER"); // Default last name
             user.setEmail(email);

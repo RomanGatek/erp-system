@@ -1,28 +1,37 @@
 package cz.syntaxbro.erpsystem.configs;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.regex.Pattern;
 
 @Component
-public class PasswordSecurity {
+public class PasswordSecurity implements PasswordEncoder {
 
-    private final PasswordEncoder passwordEncoder;
-
-    public PasswordSecurity() {
-        this.passwordEncoder = new BCryptPasswordEncoder();// Initialization inside the constructor
+    @Override
+    public String encode(CharSequence password) {
+        try {
+            String rawPassword = password.toString();
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing password", e);
+        }
     }
 
-    // Password hashing using BCrypt
-    public String hashPassword(String password) {
-        return passwordEncoder.encode(password);
-    }
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        String receivedHash = this.encode(rawPassword.toString());
 
-    // Verify password against stored hash
-    public boolean matches(String rawPassword, String hashedPassword) {
-        return passwordEncoder.matches(rawPassword, hashedPassword);
+        return encodedPassword.equals(receivedHash);
     }
 
     // Password validation (at least 1 uppercase, 1 number, 1 special char, 10-32 characters)
@@ -30,4 +39,6 @@ public class PasswordSecurity {
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,32}$";
         return Pattern.matches(passwordPattern, password);
     }
+
+
 }
