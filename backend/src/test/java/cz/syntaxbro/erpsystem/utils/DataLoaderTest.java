@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.utils;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
@@ -7,35 +8,48 @@ import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
+@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class DataLoaderTest {
+
+    @Mock
+    private PasswordSecurity passwordSecurity;
+
+    @InjectMocks
+    private DataLoader dataLoader;
+
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
-    private DataLoader dataLoader;
 
-    @Autowired
-    DataLoaderTest(RoleRepository roleRepository, UserRepository userRepository, PermissionRepository permissionRepository) {
+    DataLoaderTest(@org.springframework.beans.factory.annotation.Autowired RoleRepository roleRepository,
+                   @org.springframework.beans.factory.annotation.Autowired UserRepository userRepository,
+                   @org.springframework.beans.factory.annotation.Autowired PermissionRepository permissionRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
     }
 
-
     @BeforeEach
     void setUp() {
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordEncoder);
+        when(passwordSecurity.hashPassword(anyString())).thenReturn("hashedPassword");
+
+        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity);
         dataLoader.run();
     }
 
