@@ -30,13 +30,14 @@ public class SecurityConfig {
                 ))
 
                 .authorizeHttpRequests(auth -> auth
-                    // API endpoint rules
-                    .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
-                    .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
-                    .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
-                    .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
-                    .anyRequest().authenticated() // Everything else requires authentication
+                        // API endpoint rules
+                        .requestMatchers("/api/auth/public/**").permitAll() // Allow public API endpoints
+                        .requestMatchers("/api/csrf-token").permitAll() // Allow csrf-token endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // Secure API for ADMIN
+                        .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER") // Secure API for MANAGER
+                        .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "MANAGER", "USER") // Secure API for users
+                        .requestMatchers("/api/**").authenticated() // Default rule: all /api/** must be authenticated
+                        .anyRequest().authenticated() // Everything else requires authentication
                 )
 
                 // JWT filter
