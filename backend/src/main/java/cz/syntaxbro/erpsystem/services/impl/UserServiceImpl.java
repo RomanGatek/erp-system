@@ -56,10 +56,11 @@ public class UserServiceImpl implements UserService {
 
         User user = mapToEntity(createUserRequest, new User());
         // Here we set the password - you can use the password from the DTO if available, or the default password
-        user.setPassword(encoder.encode("defaultPassword"));
+        user.setPassword(encoder.encode(createUserRequest.getPassword()));
+        user.setActive(false);
 
         Set<Role> roles = createUserRequest.getRoles().stream()
-                .map(roleName -> roleRepository.findByName(roleName)
+                .map(roleName -> roleRepository.findByName("ROLE_" + roleName.toUpperCase())
                         .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
                 .collect(Collectors.toSet());
         user.setRoles(roles);

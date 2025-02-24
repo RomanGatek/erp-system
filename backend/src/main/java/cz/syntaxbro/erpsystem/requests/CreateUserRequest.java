@@ -1,9 +1,6 @@
 package cz.syntaxbro.erpsystem.requests;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,7 +31,8 @@ public class CreateUserRequest {
 
     private String firstName;
     private String lastName;
-    private boolean isActive = true;
+    private boolean isActive;
 
+    @NotEmpty(message = "Roles is required field")
     private Set<String> roles;
 }
