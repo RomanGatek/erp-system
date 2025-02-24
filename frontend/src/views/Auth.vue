@@ -5,9 +5,9 @@
       <form @submit.prevent="isLogin ? login() : register()" class="space-y-6">
         <div>
           <input
-            type="text"
-            v-model="username"
-            placeholder="Username"
+            type="email"
+            v-model="email"
+            placeholder="Email"
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
@@ -78,17 +78,29 @@ export default {
     },
     async login() {
       try {
-        const token = await login(this.username, this.password);
-        localStorage.setItem('token', token);
+        const token = await login(this.email, this.password);
+        if (!token) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Login failed',
+            text: 'Your authorization token are not valid.'
+          });
+          return;
+        }
         Swal.fire({
           icon: 'success',
           title: 'Login Successful',
           text: 'You have been successfully logged in!',
+        }).then((after) => {
+            if (after.isConfirmed) {
+              console.log("TOKEN: " + token);
+              localStorage.setItem('token', token);
+              this.$router.push('/');
+            }
         });
-        this.$router.push('/');
       } catch (error) {
         console.error('Login failed', error);
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Login Failed',
           text: 'Invalid username or password. Please try again.',
@@ -97,7 +109,7 @@ export default {
     },
     async register() {
       if (this.password !== this.confirmPassword) {
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Registration Failed',
           text: 'Passwords do not match. Please try again.',
@@ -106,7 +118,7 @@ export default {
       }
       try {
         await register(this.username, this.email, this.password);
-        Swal.fire({
+        await Swal.fire({
           icon: 'success',
           title: 'Registration Successful',
           text: 'You have been successfully registered!',
@@ -114,7 +126,7 @@ export default {
         this.isLogin = true;
       } catch (error) {
         console.error('Registration failed', error);
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Registration Failed',
           text: 'An error occurred during registration. Please try again.',

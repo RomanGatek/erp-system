@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.validates;
+package cz.syntaxbro.erpsystem.requests;
 
 
 import jakarta.validation.constraints.Email;

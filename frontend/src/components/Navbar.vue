@@ -35,7 +35,7 @@ export default {
         title: 'Logout Successful',
         text: 'You have been successfully logged out!',
       });
-      this.$router.push('/login');
+      this.$router.push('/auth');
     }
   },
   watch: {
