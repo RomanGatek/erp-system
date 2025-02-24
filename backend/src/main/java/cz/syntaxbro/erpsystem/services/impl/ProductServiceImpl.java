@@ -7,8 +7,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static org.springframework.data.util.Optionals.ifPresentOrElse;
-
 @Service
 public class ProductServiceImpl implements ProductService {
 

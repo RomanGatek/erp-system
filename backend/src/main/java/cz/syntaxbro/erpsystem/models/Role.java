@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+
 import java.util.HashSet;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import java.util.Set;
 
 @Entity

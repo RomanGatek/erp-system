@@ -1,9 +1,9 @@
 package cz.syntaxbro.erpsystem.controllers;
 
+import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.dtos.ProductDto;
 import cz.syntaxbro.erpsystem.services.ProductService;
-import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

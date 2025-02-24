@@ -5,8 +5,8 @@ import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.services.RoleService;
-import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;

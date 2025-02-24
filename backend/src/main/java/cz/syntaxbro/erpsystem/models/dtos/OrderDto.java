@@ -1,7 +1,10 @@
 package cz.syntaxbro.erpsystem.models.dtos;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

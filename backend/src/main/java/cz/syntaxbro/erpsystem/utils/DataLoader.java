@@ -1,6 +1,5 @@
 package cz.syntaxbro.erpsystem.utils;
 
-import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Permission;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;

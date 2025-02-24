@@ -4,7 +4,6 @@ import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
-import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,9 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.validates.LoginRequest;
-import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.services.AuthService;
+import cz.syntaxbro.erpsystem.validates.LoginRequest;
+import cz.syntaxbro.erpsystem.validates.SignUpRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
