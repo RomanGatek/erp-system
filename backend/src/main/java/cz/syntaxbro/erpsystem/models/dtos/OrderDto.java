@@ -28,7 +28,7 @@ public class OrderDto {
     @FutureOrPresent
     private LocalDateTime orderTime;
 
-    @NotNull
-    @Min(1)
+    @NotNull(message = "Status cannot be null")
+    @Min(value = 1, message = "Product ID must be greater than 0")
     private Long productId;
 }
