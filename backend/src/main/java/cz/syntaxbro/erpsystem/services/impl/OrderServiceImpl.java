@@ -76,14 +76,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateOrder(Long id, OrderDto orderDto) {
+    public Order updateOrder(Long id, OrderDto orderDto) {
         Optional<Order> orderOptional = orderRepository.findById(id);
         if (orderOptional.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
         Order order = orderOptional.get();
         Order mappedOrder = mapToEntity(orderDto, order);
-        orderRepository.save(mappedOrder);
+        return orderRepository.save(mappedOrder);
     }
 
     @Override
