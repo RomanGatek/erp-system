@@ -63,11 +63,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByProduct(Long productId) {
-        Optional<Product> product = productRepository.findById(productId);
-        if (product.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product does not exist");
-        }
-        return orderRepository.findByProduct(product.get());
+        Product product = productRepository.findById(productId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Product does not exist"));
+        return orderRepository.findByProduct(product);
     }
 
     @Override
