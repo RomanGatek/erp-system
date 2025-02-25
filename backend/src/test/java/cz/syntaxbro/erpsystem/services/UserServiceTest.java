@@ -102,7 +102,7 @@ class UserServiceTest {
         user1.setEmail("user1@example.com");
         user1.setActive(true);
         user1.setRoles(Set.of(role));
-        user1.setPassword(passwordSecurity.hashPassword("password123"));
+        user1.setPassword(passwordSecurity.encode("password123"));
         userRepository.save(user1);
         log.info("User '{}' created.", user1.getUsername());
 
@@ -113,7 +113,7 @@ class UserServiceTest {
         user2.setEmail("user2@example.com");
         user2.setActive(true);
         user2.setRoles(Set.of(role));
-        user2.setPassword(passwordSecurity.hashPassword("password123"));
+        user2.setPassword(passwordSecurity.encode("password123"));
         userRepository.save(user2);
         log.info("User '{}' created.", user2.getUsername());
 
