@@ -1,6 +1,6 @@
 // stores/user.js
 import { defineStore } from 'pinia'
-import api from '@/services/api' // Import your axios instance
+import {user as api} from '@/services/api' // Import your axios instance
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -73,19 +73,23 @@ export const useUserStore = defineStore('user', {
       this.loading = true
       try {
         const response = await api.get('/users')
-        this.users = response.data
+        this.users = response
       } catch (error) {
-        this.error = error.response.data.message || error.message
+        this.error = error.response.message || error.message
       } finally {
         this.loading = false
       }
     },
     async addUser(user) {
       try {
-        await api.post('/users', user)
+        const payload = {...user, roles: ["ROLE_USER"]};
+
+        console.log("payload: ", payload)
+
+        await api.post('/users', payload)
         await this.fetchUsers()
       } catch (error) {
-        this.error = error.response.data.message || error.message
+        this.error = error.response.message || error.message
       }
     },
     async updateUser(user) {
@@ -95,7 +99,7 @@ export const useUserStore = defineStore('user', {
         this.isEditing = false
         this.editedUserIndex = null
       } catch (error) {
-        this.error = error.response.data.message || error.message
+        this.error = error.response.message || error.message
       }
     },
     async deleteUser(userId) {
@@ -103,7 +107,7 @@ export const useUserStore = defineStore('user', {
         await api.delete(`/users/${userId}`)
         await this.fetchUsers()
       } catch (error) {
-        this.error = error.response.data.message || error.message
+        this.error = error.response.message || error.message
       }
     },
     editUser(index) {

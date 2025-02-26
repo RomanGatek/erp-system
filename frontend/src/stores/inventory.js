@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api from '@/services/api'
+import {user as api} from '@/services/api' // Import your axios instance
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({

@@ -32,8 +32,8 @@ const editedUserIndex = ref(null)
 const searchInput = ref('')
 
 const tableHeaders = [
-  { field: 'first_name', label: 'Jméno', sortable: true },
-  { field: 'last_name', label: 'Příjmení', sortable: true },
+  { field: 'firstName', label: 'Jméno', sortable: true },
+  { field: 'lastName', label: 'Příjmení', sortable: true },
   { field: 'email', label: 'Email', sortable: true },
   { field: 'username', label: 'Uživatelské jméno', sortable: true },
   { field: 'active', label: 'Aktivní', sortable: true },
@@ -154,7 +154,7 @@ const handleSearch = () => {
                 @input="handleSearch"
                 type="text"
                 placeholder="Hledat..."
-                class="w-full bg-transparent border-none p-0 focus:ring-0 text-sm placeholder-gray-400"
+                class="outline-none w-full bg-transparent border-none p-0 focus:ring-0 text-sm placeholder-gray-400"
               />
             </div>
           </div>
@@ -221,9 +221,9 @@ const handleSearch = () => {
               class="hover:bg-gray-50 transition-colors"
             >
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                {{ user.first_name }}
+                {{ user.firstName }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">{{ user.last_name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-600">{{ user.lastName }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">{{ user.email }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">{{ user.username }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
