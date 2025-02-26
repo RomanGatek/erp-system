@@ -1,6 +1,5 @@
 package cz.syntaxbro.erpsystem.services;
 
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
@@ -64,7 +63,7 @@ class UserServiceTest {
         log.info("Password in CreateUserRequest: {}", createUserRequest.getPassword());
 
         // 3. Create a user
-        UserDto createdUser = userService.createUser(createUserRequest);
+        User createdUser = userService.createUser(createUserRequest);
         log.info("Password of the created user: {}", createdUser.getPassword());
 
         // 4. Verify that the user was created
@@ -102,7 +101,7 @@ class UserServiceTest {
         user1.setEmail("user1@example.com");
         user1.setActive(true);
         user1.setRoles(Set.of(role));
-        user1.setPassword(passwordSecurity.hashPassword("password123"));
+        user1.setPassword(passwordSecurity.encode("password123"));
         userRepository.save(user1);
         log.info("User '{}' created.", user1.getUsername());
 
@@ -113,15 +112,15 @@ class UserServiceTest {
         user2.setEmail("user2@example.com");
         user2.setActive(true);
         user2.setRoles(Set.of(role));
-        user2.setPassword(passwordSecurity.hashPassword("password123"));
+        user2.setPassword(passwordSecurity.encode("password123"));
         userRepository.save(user2);
         log.info("User '{}' created.", user2.getUsername());
 
         // 3. Verify that both users are retrieved
-        List<UserDto> users = userService.getAllUsers();
+        List<User> users = userService.getAllUsers();
 
         assertThat(users).hasSize(2);
-        assertThat(users).extracting(UserDto::getUsername).containsExactlyInAnyOrder("user1", "user2");
+        assertThat(users).extracting(User::getUsername).containsExactlyInAnyOrder("user1", "user2");
 
         log.info("Test shouldReturnAllUsers PASSED.");
     }

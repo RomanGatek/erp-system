@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.utils;
 
+import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Permission;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -25,10 +26,10 @@ public class DataLoader implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
-    private final PasswordEncoder encoder;
+    private final PasswordSecurity encoder;
 
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
-                      PermissionRepository permissionRepository, PasswordEncoder encoder) {
+                      PermissionRepository permissionRepository, PasswordSecurity encoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
@@ -49,9 +50,24 @@ public class DataLoader implements CommandLineRunner {
         Role userRole = createRoleIfNotExists("ROLE_USER", Set.of(viewProfile));
 
         // Create users
-        createUserIfNotExists("admin", "Admin", "admin@example.com", Set.of(adminRole));
-        createUserIfNotExists("manager", "Manager", "manager@example.com", Set.of(managerRole));
-        createUserIfNotExists("user", "Regular", "user@example.com", Set.of(userRole));
+        createUserIfNotExists(
+                "administrator",
+                "_0",
+                "admin@example.com",
+                Set.of(adminRole)
+        );
+        createUserIfNotExists(
+                "manager",
+                "_1",
+                "manager@example.com",
+                Set.of(managerRole)
+        );
+        createUserIfNotExists(
+                "user",
+                "_2",
+                "user@example.com",
+                Set.of(userRole)
+        );
     }
 
     private Permission createPermissionIfNotExists(String permissionName) {
@@ -75,9 +91,9 @@ public class DataLoader implements CommandLineRunner {
         if (userFromDb.isEmpty()) {
             User user = new User();
             user.setUsername(username);
-            user.setPassword(encoder.encode("password123")); // Default password
+            user.setPassword(encoder.encode("P&ssw0rd123@")); // Default password
             user.setFirstName(firstName);
-            user.setLastName("USER"); // Default last name
+            user.setLastName("_"); // Default last name
             user.setEmail(email);
             user.setActive(true); // Default active status
             user.setRoles(roles);

@@ -1,7 +1,8 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.configs.SecurityConfig;
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.models.Role;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +34,7 @@ class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
-    private UserDto testUser;
+    private User testUser;
     private CreateUserRequest createUserRequest;
 
     /**
@@ -41,22 +43,21 @@ class UserControllerTest {
      */
     @BeforeEach
     void setUp() {
-        testUser = new UserDto(
-                1L,               // User ID
-                "testUser",       // Username
-                "Test",           // First name
-                "User",           // Last name
-                "password",       // Password
-                "test@example.com", // Email
-                true,             // Active status
-                Set.of("ROLE_USER") // Assigned roles
-        );
+        testUser = User.builder()
+                .id(1L)
+                .username("tetUser")
+                .firstName("Test")
+                .lastName("User")
+                .password("Password123@")
+                .email("test@example.com")
+                .isActive(true)
+                .roles(Set.of(new Role("USER")))
+                .build();
 
         createUserRequest = new CreateUserRequest(
                 "testUser", "StrongPassword1!", "test@example.com",
                 "Test", "User", true, Set.of("ROLE_USER")
         );
-
 
     }
 
@@ -68,7 +69,7 @@ class UserControllerTest {
     void getUsers_shouldReturnListOfUsers() {
         when(userService.getAllUsers()).thenReturn(List.of(testUser));
 
-        ResponseEntity<List<UserDto>> response = userController.getUsers();
+        ResponseEntity<List<User>> response = userController.getUsers();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody())
@@ -91,7 +92,7 @@ class UserControllerTest {
     void getUsers_shouldReturnEmptyList_whenNoUsers() {
         when(userService.getAllUsers()).thenReturn(Collections.emptyList());
 
-        ResponseEntity<List<UserDto>> response = userController.getUsers();
+        ResponseEntity<List<User>> response = userController.getUsers();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull().isEmpty();
@@ -105,13 +106,13 @@ class UserControllerTest {
      */
     @Test
     void getUserById_shouldReturnUserDto_whenUserExists() {
-        when(userService.getUserById(1L)).thenReturn(testUser);
+        when(userService.getUserById(1L)).thenReturn(Optional.of(testUser));
 
-        ResponseEntity<UserDto> response = userController.getUserById(1L);
+        ResponseEntity<Optional<User>> response = userController.getUserById(1L);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getUsername()).isEqualTo("testUser");
+        assertThat(response.getBody().get().getUsername()).isEqualTo("testUser");
 
         verify(userService, times(1)).getUserById(1L);
     }
@@ -137,7 +138,7 @@ class UserControllerTest {
     void createUser_shouldReturnCreatedUser() {
         when(userService.createUser(createUserRequest)).thenReturn(testUser);
 
-        ResponseEntity<UserDto> response = userController.createUser(createUserRequest);
+        ResponseEntity<User> response = userController.createUser(createUserRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
@@ -154,7 +155,7 @@ class UserControllerTest {
     void updateUser_shouldReturnUpdatedUser() {
         when(userService.updateUser(1L, createUserRequest)).thenReturn(testUser);
 
-        ResponseEntity<UserDto> response = userController.updateUser(1L, createUserRequest);
+        ResponseEntity<User> response = userController.updateUser(1L, createUserRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();

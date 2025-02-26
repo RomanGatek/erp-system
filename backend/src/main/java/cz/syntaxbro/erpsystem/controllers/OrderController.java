@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -102,7 +102,7 @@ public class OrderController {
     public ResponseEntity<Object> createOrder(
             @RequestBody
             @Valid
-            OrderDto orderDto) {
+            OrderRequest orderDto) {
         try{
             Order createdOrder = orderService.createdOrder(orderDto);
             return ResponseEntity.ok("Order is created \n" + createdOrder);
@@ -119,7 +119,7 @@ public class OrderController {
             Long id,
             @RequestBody
             @Valid
-            OrderDto orderDto) {
+            OrderRequest orderDto) {
         try{
             orderService.updateOrder(id, orderDto);
             return ResponseEntity.ok("Order is updated \n" + orderDto);

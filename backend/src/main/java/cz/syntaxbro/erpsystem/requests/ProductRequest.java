@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.models.dtos;
+package cz.syntaxbro.erpsystem.requests;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 @Data
-public class ProductDto {
+public class ProductRequest {
 
     @NotBlank(message = "Product name is required")
     private String name;

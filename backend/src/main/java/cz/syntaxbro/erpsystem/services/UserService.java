@@ -1,18 +1,21 @@
 package cz.syntaxbro.erpsystem.services;
 
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
-    List<UserDto> getAllUsers();
+    List<User> getAllUsers();
 
-    UserDto getUserById(Long id);
+    Optional<User> getUserById(Long id);
 
-    UserDto createUser(CreateUserRequest createUserRequest);
+    User createUser(CreateUserRequest createUserRequest);
 
-    UserDto updateUser(Long id, CreateUserRequest userDto);
+    User updateUser(Long id, CreateUserRequest userDto);
 
     void deleteUser(Long id);
+
+    User getUserByEmail(String email);
 }

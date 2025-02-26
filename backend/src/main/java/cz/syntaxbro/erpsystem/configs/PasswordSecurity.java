@@ -28,14 +28,12 @@ public class PasswordSecurity implements PasswordEncoder {
     @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
         String receivedHash = this.encode(rawPassword.toString());
-
         return encodedPassword.equals(receivedHash);
     }
 
     // Password validation (at least 1 uppercase, 1 number, 1 special char, 10-32 characters)
     public boolean passwordValidator(String password) {
-        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,32}$";
-
+        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[\\W+])[\\w\\W+]{10,32}$";
         return Pattern.matches(passwordPattern, password);
     }
 

@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import jakarta.validation.Valid;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,26 +28,26 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<List<UserDto>> getUsers() {
+    public ResponseEntity<List<User>> getUsers() {
         logger.info("Fetching all users");
-        List<UserDto> users = userService.getAllUsers();
+        List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+    public ResponseEntity<Optional<User>> getUserById(@PathVariable Long id) {
         logger.info("Fetching user with id {}", id);
-        UserDto user = userService.getUserById(id);
+        var user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
     // Admin-created user
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserRequest request) {
         logger.info("Creating user {}", request);
-        UserDto createdUser = userService.createUser(request);
+        User createdUser = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
@@ -60,9 +61,9 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest userDto) {
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest userDto) {
         logger.info("Updating user with ID: {}", id);
-        UserDto updatedUser = userService.updateUser(id, userDto);
+        User updatedUser = userService.updateUser(id, userDto);
         return ResponseEntity.ok(updatedUser);
     }
 

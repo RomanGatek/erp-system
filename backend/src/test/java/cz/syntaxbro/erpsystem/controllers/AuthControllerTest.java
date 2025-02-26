@@ -1,8 +1,9 @@
 package cz.syntaxbro.erpsystem.controllers;
 
+import cz.syntaxbro.erpsystem.models.Role;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class AuthControllerTest {
 
     private SignUpRequest signUpRequest;
     private LoginRequest loginRequest;
-    private UserDto userDto;
+    private User userDto;
 
     @TestConfiguration
     static class AuthServiceTestConfig {
@@ -57,7 +58,7 @@ class AuthControllerTest {
     void setUp() {
         signUpRequest = new SignUpRequest("testUser", "password", "test@example.com");
         loginRequest = new LoginRequest("testUser", "password");
-        userDto = new UserDto(1L, "testUser", "Test", "User","pass", "test@example.com", true, Set.of("ROLE_USER"));
+        userDto = new User(1L, "testUser", "Test", "User","pass", "test@example.com", true, Set.of(new Role("ROLE_USER")));
     }
 
     /**

@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.exceptions;
 
-import cz.syntaxbro.erpsystem.models.dtos.ProductDto;
+import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
@@ -8,12 +8,12 @@ public class ProductDtoValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> productClass){
-        return ProductDto.class.equals(productClass);
+        return ProductRequest.class.equals(productClass);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        ProductDto productDto = (ProductDto) target;
+        ProductRequest productDto = (ProductRequest) target;
         if (productDto.getName() != null && !(productDto.getName() instanceof String)) {
             errors.rejectValue("name","type.mismatch","Name must be a string");
         }

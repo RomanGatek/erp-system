@@ -2,7 +2,7 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
 import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.dtos.ProductDto;
+import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductDto productDTO) {
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productDTO) {
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setCost(productDTO.getCost());
