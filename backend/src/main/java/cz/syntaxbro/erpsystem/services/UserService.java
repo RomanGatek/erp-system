@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services;
 
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 
@@ -15,4 +16,6 @@ public interface UserService {
     UserDto updateUser(Long id, CreateUserRequest userDto);
 
     void deleteUser(Long id);
+
+    User getUserByEmail(String email);
 }
