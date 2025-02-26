@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.configs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -52,6 +53,8 @@ public class SecurityConfig {
                         "/api/auth/public/signup",
                         "/api/auth/public/logout"
                 ))*/
+
+                .cors(Customizer.withDefaults())
 
                 .csrf(csfr -> csfr.disable())
 
