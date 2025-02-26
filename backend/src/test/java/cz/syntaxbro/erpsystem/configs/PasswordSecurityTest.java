@@ -1,6 +1,5 @@
 package cz.syntaxbro.erpsystem.configs;
 
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

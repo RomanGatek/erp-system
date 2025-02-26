@@ -3,11 +3,10 @@ package cz.syntaxbro.erpsystem.services.impl;
 import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.services.AuthService;
+import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.JwtUtil;
-import cz.syntaxbro.erpsystem.utils.UserMapper;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +27,14 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordSecurity security;
+    private final UserService userService;
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, PasswordSecurity security) {
+    public AuthServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, PasswordSecurity security, UserService userService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.security = security;
+        this.userService = userService;
     }
 
     @Override
@@ -65,37 +66,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserDto getCurrentUser() {
+    public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
             throw new IllegalStateException("No authenticated user found");
         }
 
         // Get role names as Set<String>
-        Set<String> currentRoleNames = authentication.getAuthorities().stream()
+        Set<Role> currentRoleNames = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toSet());
-
-        // Convert role names to Role objects
-        Set<Role> roles = currentRoleNames.stream()
-                .map(roleName -> {
-                    Role role = new Role();
-                    role.setName(roleName);
-                    return role;
-                })
+                .map(Role::new)
                 .collect(Collectors.toSet());
 
         // Create an instance of the User entity and set the necessary fields
         User currentUser = new User();
-        currentUser.setId(1L);  // Sample value, normally obtained dynamically
-        currentUser.setUsername(authentication.getName());
-        currentUser.setFirstName("current_firstName");
-        currentUser.setLastName("current_lastName");
-        currentUser.setEmail("current_user@exampler.com");
-        currentUser.setActive(true);
-        currentUser.setRoles(roles);
-
+        Object principal = authentication.getPrincipal();
+        User curentUser = new User();
+        if (principal instanceof CustomUserDetails) {
+            String username = ((CustomUserDetails) principal).getUsername();
+            curentUser = userService.getUserByEmail(username);
+        }
         // Mapping the User entity to UserDto using UserMapper.toDto()
-        return UserMapper.toDto(currentUser);
+        return currentUser;
     }
 }

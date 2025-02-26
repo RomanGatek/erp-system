@@ -2,7 +2,7 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
@@ -68,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createdOrder(OrderDto orderDto) {
+    public Order createdOrder(OrderRequest orderDto) {
         //map to OrderDto to Order
         Order createdOrder = mapToEntity(orderDto, new Order());
         orderRepository.save(createdOrder);
@@ -76,7 +76,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateOrder(Long id, OrderDto orderDto) {
+    public void updateOrder(Long id, OrderRequest orderDto) {
         Optional<Order> orderOptional = orderRepository.findById(id);
         if (orderOptional.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
@@ -109,7 +109,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     // Converts OrderDto to Order with exceptions.
-    private Order mapToEntity(OrderDto orderDto, Order order) {
+    private Order mapToEntity(OrderRequest orderDto, Order order) {
         order.setAmount(orderDto.getAmount());
         setProduct(orderDto, order);
         order.setCost(orderDto.getCost());
@@ -119,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     //Validate Status
-    private void setStatus(OrderDto orderDto, Order order){
+    private void setStatus(OrderRequest orderDto, Order order){
         List<String> list = Arrays.stream(Order.Status.values())
                 .map(Enum::name)
                 .toList();
@@ -130,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     //Validate OrderTime
-    private void setOrderTime(OrderDto orderDto, Order order){
+    private void setOrderTime(OrderRequest orderDto, Order order){
         if (orderDto.getOrderTime().isBefore(LocalDate.now().atStartOfDay())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OrderTime cannot be day older than today");
         }
@@ -139,7 +139,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     //Validate Product
-    private void setProduct(OrderDto orderDto, Order order){
+    private void setProduct(OrderRequest orderDto, Order order){
         Product product = createdById(orderDto.getProductId());
         order.setProduct(product);
     }

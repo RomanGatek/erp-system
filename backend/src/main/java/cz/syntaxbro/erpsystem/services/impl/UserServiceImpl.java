@@ -2,18 +2,17 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
-import cz.syntaxbro.erpsystem.utils.UserMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,20 +31,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(UserMapper::toDto)
-                .collect(Collectors.toList());
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     @Override
-    public UserDto getUserById(Long id) {
-        User user = getUserByIdOrThrow(id);
-        return UserMapper.toDto(user);
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
     @Override
-    public UserDto createUser(CreateUserRequest createUserRequest) {
+    public Optional<User> getUserById(Long id) {
+        return getUserByIdOrThrow(id);
+    }
+
+    @Override
+    public User createUser(CreateUserRequest createUserRequest) {
         if (userRepository.existsByUsername(createUserRequest.getUsername())) {
             throw new IllegalArgumentException("Username already exists: " + createUserRequest.getUsername());
         }
@@ -53,28 +54,19 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already exists: " + createUserRequest.getEmail());
         }
 
-
         User user = mapToEntity(createUserRequest, new User());
-        // Here we set the password - you can use the password from the DTO if available, or the default password
         user.setPassword(encoder.encode(createUserRequest.getPassword()));
-        user.setActive(false);
-
-        Set<Role> roles = createUserRequest.getRoles().stream()
-                .map(roleName -> roleRepository.findByName("ROLE_" + roleName.toUpperCase())
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
-                .collect(Collectors.toSet());
-        user.setRoles(roles);
-
-        User savedUser = userRepository.save(user);
-        return UserMapper.toDto(savedUser);
+        return userRepository.save(user);
     }
 
     @Override
-    public UserDto updateUser(Long id, CreateUserRequest userDto) {
-        User user = getUserByIdOrThrow(id);
-        mapToEntity(userDto, user);
-        User updatedUser = userRepository.save(user);
-        return UserMapper.toDto(updatedUser);
+    public User updateUser(Long id, CreateUserRequest userDto) {
+        var optionalUser = getUserByIdOrThrow(id);
+        if (optionalUser.isPresent()) {
+            var user = mapToEntity(userDto, optionalUser.get());
+            return userRepository.save(user);
+        }
+        throw new IllegalArgumentException("User not found: " + id);
     }
 
     @Override
@@ -86,9 +78,12 @@ public class UserServiceImpl implements UserService {
     }
 
     // Helper method to get the user by ID or throw an exception if the user does not exist.
-    private User getUserByIdOrThrow(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+    private Optional<User> getUserByIdOrThrow(Long id) {
+        return Optional.of(userRepository
+                .findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id)
+            )
+        );
     }
 
     // Converts UserDto to User entity by setting attributes and resolving roles.
@@ -97,10 +92,11 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
 
         if (userDto.getRoles() != null) {
             Set<Role> roles = userDto.getRoles().stream()
-                    .map(roleName -> roleRepository.findByName(roleName)
+                    .map(roleName -> roleRepository.findByName("ROLE_" + roleName.toUpperCase())
                             .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
                     .collect(Collectors.toSet());
             user.setRoles(roles);

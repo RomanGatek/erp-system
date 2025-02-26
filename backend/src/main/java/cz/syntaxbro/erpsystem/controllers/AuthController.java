@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.models.dtos.UserDto;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
@@ -41,8 +41,8 @@ public class AuthController {
     // Fetching the current user
     @GetMapping("/user/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserDto> getCurrentUser() {
-        UserDto currentUser = authService.getCurrentUser();
+    public ResponseEntity<User> getCurrentUser() {
+        User currentUser = authService.getCurrentUser();
         return ResponseEntity.ok(currentUser);
     }
 }

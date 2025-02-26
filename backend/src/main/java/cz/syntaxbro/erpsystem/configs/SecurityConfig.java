@@ -47,11 +47,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // Disable csrf for login, logout, signup
-                .csrf(csrf -> csrf.ignoringRequestMatchers(
+/*                .csrf(csrf -> csrf.ignoringRequestMatchers(
                         "/api/auth/public/login",
                         "/api/auth/public/signup",
                         "/api/auth/public/logout"
-                ))
+                ))*/
+
+                .csrf(csfr -> csfr.disable())
 
                 .authorizeHttpRequests(auth -> auth
                         // API endpoint rules

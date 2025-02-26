@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.models.dtos;
+package cz.syntaxbro.erpsystem.requests;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import jakarta.validation.constraints.FutureOrPresent;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderDto {
+public class OrderRequest {
 
     private Integer amount;
 
