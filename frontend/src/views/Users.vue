@@ -9,8 +9,8 @@ defineOptions({
 
 const userStore = useUserStore()
 const newUser = reactive({
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   username: '',
   password: '',
@@ -20,8 +20,8 @@ const isEditing = ref(false)
 const isModalOpen = ref(false)
 const isAddUserModalOpen = ref(false)
 const selectedUser = reactive({
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   username: '',
   password: '',
@@ -69,8 +69,8 @@ onMounted(async () => {
 const addUser = async () => {
   await userStore.addUser({ ...newUser })
   Object.assign(newUser, {
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     username: '',
     password: '',
@@ -108,8 +108,8 @@ const deleteUser = async (userId) => {
 const cancelAddUser = () => {
   isAddUserModalOpen.value = false
   Object.assign(newUser, {
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     username: '',
     password: '',
@@ -324,13 +324,13 @@ const handleSearch = () => {
               <form @submit.prevent="addUser" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                   <input
-                    v-model="newUser.first_name"
+                    v-model="newUser.firstName"
                     type="text"
                     placeholder="Jméno"
                     class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
                   />
                   <input
-                    v-model="newUser.last_name"
+                    v-model="newUser.lastName"
                     type="text"
                     placeholder="Příjmení"
                     class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
@@ -414,13 +414,13 @@ const handleSearch = () => {
               <h2 class="text-2xl font-bold text-gray-800 mb-4">Edit User</h2>
               <div class="grid grid-cols-2 gap-4 mb-4">
                 <input
-                  v-model="selectedUser.first_name"
+                  v-model="selectedUser.firstName"
                   type="text"
                   placeholder="Jméno"
                   class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500"
                 />
                 <input
-                  v-model="selectedUser.last_name"
+                  v-model="selectedUser.lastName"
                   type="text"
                   placeholder="Příjmení"
                   class="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500"

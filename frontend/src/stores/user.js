@@ -82,10 +82,7 @@ export const useUserStore = defineStore('user', {
     },
     async addUser(user) {
       try {
-        const payload = {...user, roles: ["ROLE_USER"]};
-
-        console.log("payload: ", payload)
-
+        const payload = {...user, roles: ["admin"]};
         await api.post('/users', payload)
         await this.fetchUsers()
       } catch (error) {
