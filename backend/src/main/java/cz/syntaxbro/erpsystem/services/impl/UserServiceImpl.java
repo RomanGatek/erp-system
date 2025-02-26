@@ -85,6 +85,11 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
     // Helper method to get the user by ID or throw an exception if the user does not exist.
     private User getUserByIdOrThrow(Long id) {
         return userRepository.findById(id)
@@ -107,4 +112,5 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
+
 }
