@@ -67,20 +67,57 @@ body {
     background-color 0.5s;
   line-height: 1.6;
   font-family:
-    Inter,
+    'Inter',
+    system-ui,
     -apple-system,
-    BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
     'Helvetica Neue',
+    Arial,
     sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Nové styly pro tabulky */
+table {
+  font-size: 13px;
+}
+
+th {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+td {
+  font-weight: 400;
+}
+
+/* Modernější styly pro nadpisy */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Přidáme modernější styly pro inputy */
+input,
+select,
+textarea {
+  font-size: 13px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Přidáme modernější styly pro tlačítka */
+button {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }

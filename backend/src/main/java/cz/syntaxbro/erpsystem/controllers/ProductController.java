@@ -3,13 +3,17 @@ package cz.syntaxbro.erpsystem.controllers;
 import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.dtos.ProductDto;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -17,10 +21,12 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ProductRepository productRepository) {
         this.productService = productService;
+        this.productRepository = productRepository;
     }
 
     @InitBinder("productDto")
@@ -37,6 +43,11 @@ public class ProductController {
 
         Product createdProduct = productService.createProduct(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+    }
+
+    @GetMapping
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
 //    @PostMapping
