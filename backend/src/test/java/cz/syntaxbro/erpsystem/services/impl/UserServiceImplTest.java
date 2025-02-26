@@ -111,7 +111,7 @@ class UserServiceImplTest {
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordSecurity.passwordValidator(anyString())).thenReturn(true);
-        when(passwordSecurity.hashPassword(anyString())).thenReturn("$2a$10$hashedPassword");
+        when(passwordSecurity.encode(anyString())).thenReturn("$2a$10$hashedPassword");
         when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(roleUser));
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
