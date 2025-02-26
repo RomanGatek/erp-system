@@ -38,7 +38,7 @@ export const useUserStore = defineStore('user', {
             String(user.first_name || '')
               .toLowerCase()
               .includes(searchValue) ||
-            String(user.last_name || '')
+            String(user.lastName || '')
               .toLowerCase()
               .includes(searchValue) ||
             String(user.email || '')
@@ -91,11 +91,21 @@ export const useUserStore = defineStore('user', {
     },
     async updateUser(user) {
       try {
-        await api.put(`/users/${user.id}`, user)
+        console.log("user", {...user})
+        await api.put(`/users/${user.id}`, {
+          lastName: user.lastName,
+          firstName: user.firstName,
+          email: user.email,
+          username: user.username,
+          roles: ["admin"],
+          active: user.active,
+          password: user.password,
+        })
         await this.fetchUsers()
         this.isEditing = false
         this.editedUserIndex = null
       } catch (error) {
+        console.log(error.response.data)
         this.error = error.response.message || error.message
       }
     },

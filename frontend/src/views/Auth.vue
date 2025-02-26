@@ -93,7 +93,7 @@ export default {
           text: 'You have been successfully logged in!',
         }).then((after) => {
             if (after.isConfirmed) {
-              console.log("TOKEN: " + token);
+              console.log({ token });
               localStorage.setItem('token', token);
               this.$router.push('/');
             }

@@ -15,6 +15,7 @@ const newUser = reactive({
   username: '',
   password: '',
   active: true,
+  roles: []
 })
 const isEditing = ref(false)
 const isModalOpen = ref(false)
@@ -26,10 +27,15 @@ const selectedUser = reactive({
   username: '',
   password: '',
   active: true,
+  roles: []
 })
 const editedUserIndex = ref(null)
 
 const searchInput = ref('')
+
+if (userStore.error) {
+  console.log(userStore.error)
+}
 
 const tableHeaders = [
   { field: 'firstName', label: 'Jméno', sortable: true },
@@ -75,6 +81,7 @@ const addUser = async () => {
     username: '',
     password: '',
     active: true,
+    roles: []
   })
   isAddUserModalOpen.value = false
 }
@@ -114,6 +121,7 @@ const cancelAddUser = () => {
     username: '',
     password: '',
     active: true,
+    roles: []
   })
 }
 
@@ -180,7 +188,6 @@ const handleSearch = () => {
           </button>
         </div>
       </div>
-
       <!-- Table -->
       <div class="overflow-hidden rounded-lg border border-gray-100">
         <table class="w-full">

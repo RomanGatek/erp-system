@@ -1,11 +1,14 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.partials.UserPartial;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,10 +64,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(Long id, CreateUserRequest userDto) {
+    public User updateUser(Long id, UserPartial userDto) {
+        System.out.println("updateUser + " + userDto);
         var optionalUser = getUserByIdOrThrow(id);
         if (optionalUser.isPresent()) {
-            var user = mapToEntity(userDto, optionalUser.get());
+            User user = optionalUser.get();
+
+            user.setUsername(userDto.getUsername());
+            user.setEmail(userDto.getEmail());
+            user.setFirstName(userDto.getFirstName());
+            user.setLastName(userDto.getLastName());
+            user.setActive(userDto.isActive());
+            user.setRoles(userDto.getRoles()
+                    .stream()
+                    .map(roleRepository::findByName)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get).collect(Collectors.toSet()));
+
             return userRepository.save(user);
         }
         throw new IllegalArgumentException("User not found: " + id);
