@@ -21,6 +21,11 @@ export const useMeStore = defineStore('me', {
       this.user = null
       this.error = null
     },
+    async logout() {
+      localStorage.removeItem('token')
+      this.user = null
+      this.error = null
+    },
     async updateProfile(profileData) {
       try {
         const response = await axios.put('/api/me', profileData)

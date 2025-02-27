@@ -18,9 +18,9 @@ const routes = [
     component: Profile,
     meta: { requiresAuth: true }
   },
-  { path: '/users', component: Users },
-  { path: '/products', component: Products },
-  { path: '/inventory', component: Inventory },
+  { path: '/users', component: Users, meta: { requiresAuth: true }   },
+  { path: '/products', component: Products, meta: { requiresAuth: true } },
+  { path: '/inventory', component: Inventory, meta: { requiresAuth: true } },
   {
     path: '/unauthorized',
     name: 'Unauthorized',
@@ -46,14 +46,11 @@ router.beforeEach(async (to, from, next) => {
     return next('/unauthorized')
   }
 
-  if (!token && to.path !== '/auth') {
-    return next('/auth')
-  }
+  console.log("authenticated", meStore.user?.username)
 
   if (!meStore.user) {
     try {
       await meStore.fetchMe(token)
-      console.log("authenticated", meStore.user)
     } catch (error) {
       notify({
         type: 'error',
@@ -70,11 +67,11 @@ router.beforeEach(async (to, from, next) => {
   const userRoles = Object.values(meStore.user?.roles ?? []).map(role => role.name)
 
   if (to.path === '/users' && !userRoles.includes('ROLE_ADMIN')) {
-    return next('/')
+    return next('/unauthorized')
   }
 
   if ((to.path === '/products' || to.path === '/inventory') && !userRoles.includes('ROLE_MANAGER')) {
-    return next('/')
+    return next('/unauthorized')
   }
 
   next()

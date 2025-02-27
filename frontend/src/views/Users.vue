@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { notify } from '@kyvg/vue3-notification'
 import DataTable from '@/components/common/DataTable.vue'
@@ -62,6 +62,48 @@ const tableHeaders = [
 const loading = ref(false)
 const error = ref('')
 
+// Přidáme state pro serverové chyby
+const serverErrors = ref({
+  firstName: '',
+  lastName: '',
+  email: '',
+  username: '',
+  password: '',
+  roles: '',
+  general: ''
+})
+
+// Funkce pro vyčištění chyb
+const clearServerErrors = () => {
+  serverErrors.value = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    username: '',
+    password: '',
+    roles: '',
+    general: ''
+  }
+}
+
+// Zpracování chyb ze serveru
+const handleServerValidationErrors = (error) => {
+  clearServerErrors()
+  
+  if (!error.response?.data) {
+    serverErrors.value.general = 'An unexpected error occurred'
+    return
+  }
+
+  const { field: errorField, message: errorMessage } = error.response.data
+
+  if (errorField) {
+    serverErrors.value[errorField] = errorMessage
+  } else {
+    serverErrors.value.general = errorMessage
+  }
+}
+
 onMounted(async () => {
   loading.value = true
   try {
@@ -77,17 +119,22 @@ onMounted(async () => {
 })
 
 const addUser = async () => {
-  await userStore.addUser({ ...newUser })
-  Object.assign(newUser, {
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
-    password: '',
-    active: true,
-    roles: []
-  })
-  isAddModalOpen.value = false
+  try {
+    clearServerErrors()
+    await userStore.addUser({ ...newUser })
+    Object.assign(newUser, {
+      firstName: '',
+      lastName: '',
+      email: '',
+      username: '',
+      password: '',
+      active: true,
+      roles: []
+    })
+    isAddModalOpen.value = false
+  } catch (err) {
+    handleServerValidationErrors(err)
+  }
 }
 
 const openEditModal = (index) => {
@@ -107,14 +154,11 @@ const openEditModal = (index) => {
 
 const updateUser = async () => {
   try {
+    clearServerErrors()
     await userStore.updateUser(selectedUser)
     isEditModalOpen.value = false
-  } catch (error) {
-    notify({
-      type: 'error',
-      text: error.message,
-      duration: 5000
-    })
+  } catch (err) {
+    handleServerValidationErrors(err)
   }
 }
 
@@ -184,6 +228,17 @@ const isRoleSelected = (roleName, userRoles) => {
     role.name === `ROLE_${roleName.toUpperCase()}`
   ) || false
 }
+
+// Přidáme watch pro čištění chyb při změně inputů
+watch([
+  () => newUser.firstName,
+  () => newUser.lastName,
+  () => newUser.email,
+  () => newUser.username,
+  () => newUser.password
+], () => {
+  clearServerErrors()
+})
 </script>
 
 <template>
@@ -327,11 +382,15 @@ const isRoleSelected = (roleName, userRoles) => {
             v-model="newUser.firstName"
             placeholder="Jméno"
             label="Jméno"
+            :error="serverErrors.firstName"
+            :class="{ 'border-red-500': serverErrors.firstName }"
           />
           <BaseInput
             v-model="newUser.lastName"
             placeholder="Příjmení"
             label="Příjmení"
+            :error="serverErrors.lastName"
+            :class="{ 'border-red-500': serverErrors.lastName }"
           />
         </div>
         <BaseInput
@@ -339,17 +398,23 @@ const isRoleSelected = (roleName, userRoles) => {
           type="email"
           placeholder="Email"
           label="Email"
+          :error="serverErrors.email"
+          :class="{ 'border-red-500': serverErrors.email }"
         />
         <BaseInput
           v-model="newUser.username"
           placeholder="Uživatelské jméno"
           label="Uživatelské jméno"
+          :error="serverErrors.username"
+          :class="{ 'border-red-500': serverErrors.username }"
         />
         <BaseInput
           v-model="newUser.password"
           type="password"
           placeholder="Heslo"
           label="Heslo"
+          :error="serverErrors.password"
+          :class="{ 'border-red-500': serverErrors.password }"
         />
         <!-- Role selection -->
         <div class="space-y-2">
@@ -374,6 +439,13 @@ const isRoleSelected = (roleName, userRoles) => {
               </span>
             </label>
           </div>
+          <span v-if="serverErrors.roles" class="text-xs text-red-500">
+            {{ serverErrors.roles }}
+          </span>
+        </div>
+        <!-- General Error Message -->
+        <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
+          {{ serverErrors.general }}
         </div>
         <BaseCheckbox
           v-model="newUser.active"
@@ -411,12 +483,16 @@ const isRoleSelected = (roleName, userRoles) => {
             placeholder="Jméno"
             label="Jméno"
             variant="success"
+            :error="serverErrors.firstName"
+            :class="{ 'border-red-500': serverErrors.firstName }"
           />
           <BaseInput
             v-model="selectedUser.lastName"
             placeholder="Příjmení"
             label="Příjmení"
             variant="success"
+            :error="serverErrors.lastName"
+            :class="{ 'border-red-500': serverErrors.lastName }"
           />
         </div>
         <BaseInput
@@ -425,12 +501,16 @@ const isRoleSelected = (roleName, userRoles) => {
           placeholder="Email"
           label="Email"
           variant="success"
+          :error="serverErrors.email"
+          :class="{ 'border-red-500': serverErrors.email }"
         />
         <BaseInput
           v-model="selectedUser.username"
           placeholder="Uživatelské jméno"
           label="Uživatelské jméno"
           variant="success"
+          :error="serverErrors.username"
+          :class="{ 'border-red-500': serverErrors.username }"
         />
         <!-- Role selection -->
         <div class="space-y-2">
@@ -463,6 +543,9 @@ const isRoleSelected = (roleName, userRoles) => {
               </span>
             </label>
           </div>
+          <span v-if="serverErrors.roles" class="text-xs text-red-500">
+            {{ serverErrors.roles }}
+          </span>
         </div>
         <BaseCheckbox
           v-model="selectedUser.active"

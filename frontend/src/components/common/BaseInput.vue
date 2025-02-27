@@ -39,16 +39,14 @@ defineEmits(['update:modelValue'])
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
       :placeholder="placeholder"
-      class="w-full px-3 py-1.5 text-sm border rounded-lg shadow-sm transition-colors duration-200 ease-in-out"
+      class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors"
       :class="[
         error 
-          ? 'border-red-300 focus:ring-red-200 focus:border-red-500' 
-          : variant === 'success'
-          ? 'border-gray-300 focus:ring-green-200 focus:border-green-500'
-          : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500',
-        'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50'
+          ? 'border-red-500 focus:ring-red-200' 
+          : 'border-gray-300 focus:ring-blue-200'
       ]"
+      v-bind="$attrs"
     />
-    <p v-if="error" class="text-xs text-red-600">{{ error }}</p>
+    <span v-if="error" class="text-xs text-red-500">{{ error }}</span>
   </div>
 </template> 

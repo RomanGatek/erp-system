@@ -61,14 +61,45 @@ export default {
     return {
       currentSection: 'hero',
       teamMembers: [
-        { name: 'Jiří Grygerek', role: 'Java Developer' },
-        { name: 'Štefan Pócsik', role: 'Java Developer' },
-        { name: 'Matěj Chaloupka', role: 'Java Developer' },
-        { name: 'Michal Rostislav Rbaniský', role: 'Java Developer' },
-        { name: 'Rastislav Dorčák', role: 'Java Developer' },
-        { name: 'Roman Gaťek', role: 'Java Developer' },
-        { name: 'Timon Arvay', role: 'Java Developer' },
-        { name: 'Christos Stefanakis', role: 'Java Developer' }
+        {
+          name: 'Jiří Grygerek',
+          role: 'Lead Developer',
+          github: 'https://github.com/cooffeeRequired',
+        },
+        {
+          name: 'Štefan Pócsik',
+          role: 'Java Developer',
+          github: 'https://github.com/steve25'
+        },
+        {
+          name: 'Matěj Chaloupka',
+          role: 'Java Developer'
+        },
+        {
+          name: 'Michal Rostislav Rbaniský',
+          role: 'Java Developer',
+          github: 'https://github.com/Michal-30'
+        },
+        {
+          name: 'Rastislav Dorčák',
+          role: 'Java Developer',
+          github: 'https://github.com/Rostja'
+        },
+        {
+          name: 'Roman Gaťek',
+          role: 'Java Developer',
+          github: 'https://github.com/RomanGatek'
+        },
+        {
+          name: 'Timon Arvay',
+          role: 'Java Developer',
+          github: 'https://github.com/0tiy'
+        },
+        {
+          name: 'Christos Stefanakis',
+          role: 'Java Developer',
+          github: 'https://github.com/hristosste86'
+        }
       ]
     }
   },

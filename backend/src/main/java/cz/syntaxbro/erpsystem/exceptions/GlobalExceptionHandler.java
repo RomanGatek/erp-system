@@ -1,5 +1,8 @@
 package cz.syntaxbro.erpsystem.exceptions;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -41,13 +45,24 @@ public class GlobalExceptionHandler {
 
     // Error when entering incorrect information (e.g. username already exists)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
+        var entity = new ErrorEntity("email", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(entity);
     }
 
     // General server error (unexpected errors)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGlobalException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleGlobalException(Exception ex) {
+        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
+        var entity = new ErrorEntity("password", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class ErrorEntity {
+        private String field;
+        private String message;
     }
 }
