@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import {user as api} from '@/services/api' // Import your axios instance
 import { ref, computed } from 'vue'
+import { notify } from '@kyvg/vue3-notification' // Změna importu
 
 export const useProductsStore = defineStore('products', () => {
     const products = ref([])
@@ -53,22 +54,57 @@ export const useProductsStore = defineStore('products', () => {
 
     const addProduct = async (product) => {
         try {
-            console.log(product);
             await api.post('/products', product);
-            await fetchProducts(); // Refresh the product list after adding a new product
+            await fetchProducts();
+            notify({
+                type: 'success',
+                text: 'Produkt byl úspěšně přidán',
+                duration: 5000,
+                speed: 500
+            });
             error.value = null;
         } catch (err) {
             error.value = err.message;
+            notify({
+                type: 'error',
+                text: 'Chyba při přidání produktu: ' + err.message,
+                duration: 5000,
+                speed: 500
+            });
+            throw err;
         }
     }
 
-    const updateProduct = async (product) => {
+    const updateProduct = async (id, productData) => {
         try {
-            await api.put(`/products/${product.id}`, product);
-            await fetchProducts();
+            await api.put(`/products/${id}`, productData);
+            
+            const index = products.value.findIndex(p => p.id === id);
+            if (index !== -1) {
+                products.value[index] = { 
+                    ...products.value[index], 
+                    ...productData,
+                    id
+                };
+            }
+            
+            notify({
+                type: 'success',
+                text: 'Produkt byl úspěšně aktualizován',
+                duration: 5000,
+                speed: 500
+            });
+            
             error.value = null;
         } catch (err) {
             error.value = err.message;
+            notify({
+                type: 'error',
+                text: 'Chyba při aktualizaci produktu: ' + err.message,
+                duration: 5000,
+                speed: 500
+            });
+            throw err;
         }
     }
 
@@ -76,9 +112,22 @@ export const useProductsStore = defineStore('products', () => {
         try {
             await api.delete(`/products/${productId}`);
             await fetchProducts();
+            notify({
+                type: 'success',
+                text: 'Produkt byl úspěšně smazán',
+                duration: 5000,
+                speed: 500
+            });
             error.value = null;
         } catch (err) {
             error.value = err.message;
+            notify({
+                type: 'error',
+                text: 'Chyba při mazání produktu: ' + err.message,
+                duration: 5000,
+                speed: 500
+            });
+            throw err;
         }
     }
 

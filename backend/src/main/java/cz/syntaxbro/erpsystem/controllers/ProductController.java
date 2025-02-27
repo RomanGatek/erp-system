@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
-import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.ProductRequest;
@@ -11,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,24 +29,19 @@ public class ProductController {
         this.productRepository = productRepository;
     }
 
-    @InitBinder("productDto")
-    protected void initBinder(WebDataBinder binder){
-        binder.addValidators(new ProductDtoValidator());
-    }
-
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productDTO) {
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) {
 
         ErpSystemApplication.getLogger().log(Level.INFO,
-                "\u001B[32mCreating product: {0}\u001B[0m", productDTO);
+                "\u001B[32mCreating product: {0}\u001B[0m", productRequest);
 
-
-        Product product = new Product();
-        product.setName(productDTO.getName());
-        product.setCost(productDTO.getCost());
-        product.setQuantity(productDTO.getQuantity());
-
-        Product createdProduct = productService.createProduct(product);
+        Product createdProduct = productService.createProduct(
+                Product.builder()
+                        .name(productRequest.getName())
+                        .price(productRequest.getPrice())
+                        .description(productRequest.getDescription())
+                        .build()
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 

@@ -56,7 +56,7 @@ const tableHeaders = [
   { field: 'username', label: 'Uživatelské jméno', sortable: true },
   { field: 'roles', label: 'Role', sortable: true },
   { field: 'active', label: 'Aktivní', sortable: true },
-  { field: 'actions', label: 'Akce', sortable: false },
+  { field: 'actions', label: 'Akce', sortable: false, class: 'text-right' },
 ]
 
 const loading = ref(false)
@@ -66,22 +66,15 @@ onMounted(async () => {
   loading.value = true
   try {
     await userStore.fetchUsers()
-    error.value = ''
+    if (useUserStore.error) {
+      error.value = useUserStore.error
+    }
   } catch (err) {
     error.value = 'Nepodařilo se načíst data uživatelů: ' + err.message
   } finally {
     loading.value = false
   }
 })
-
-if (userStore.error) {
-  notify({
-    type: 'error',
-    text: userStore.error,
-    duration: 5000,
-    speed: 500
-  })
-}
 
 const addUser = async () => {
   await userStore.addUser({ ...newUser })
@@ -292,15 +285,19 @@ const isRoleSelected = (roleName, userRoles) => {
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button
                 @click="openEditModal(index)"
-                class="text-blue-600 hover:text-blue-900 mr-3"
+                class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
               >
-                Edit
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
               </button>
               <button
                 @click="deleteUser(item.id)"
-                class="text-red-600 hover:text-red-900"
+                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
               >
-                Delete
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </td>
           </template>

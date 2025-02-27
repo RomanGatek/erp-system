@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useInventoryStore } from '@/stores/inventory'
-import { notify } from '@kyvg/vue3-notification'
 import DataTable from '@/components/common/DataTable.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
@@ -35,7 +34,7 @@ const tableHeaders = [
   { field: 'productName', label: 'Název produktu', sortable: true },
   { field: 'quantity', label: 'Množství', sortable: true },
   { field: 'location', label: 'Lokace', sortable: true },
-  { field: 'actions', label: 'Akce', sortable: false },
+  { field: 'actions', label: 'Akce', sortable: false, class: 'text-right' },
 ]
 
 const loading = ref(false)
@@ -44,23 +43,16 @@ const error = ref('')
 onMounted(async () => {
   loading.value = true
   try {
-    await inventoryStore.fetchInventory()
-    error.value = ''
+    await inventoryStore.fetchItems()
+    if (inventoryStore.error) {
+      error.value = inventoryStore.error
+    }
   } catch (err) {
     error.value = 'Nepodařilo se načíst data inventáře: ' + err.message
   } finally {
     loading.value = false
   }
 })
-
-if (inventoryStore.error) {
-  notify({
-    type: 'error',
-    text: inventoryStore.error,
-    duration: 5000,
-    speed: 500
-  })
-}
 
 const addItem = async () => {
   await inventoryStore.addItem({ ...newItem })
@@ -120,10 +112,11 @@ const totalPages = computed(() =>
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-      <!-- Status bar -->
+      <!-- Přesuneme StatusBar nad hlavní obsah, aby byl vždy viditelný -->
       <StatusBar
         :error="error"
         :loading="loading"
+        class="mb-4"
       />
 
       <div class="flex justify-between items-center mb-6">
@@ -163,29 +156,10 @@ const totalPages = computed(() =>
       </div>
 
       <!-- Empty state -->
-      <div v-else-if="!inventoryStore.paginatedItems.length" class="text-center py-12">
-        <div class="flex flex-col items-center">
-          <div class="text-gray-400 mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-12 w-12"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              />
-            </svg>
-          </div>
-          <div class="text-sm text-gray-600">
-            Showing 1 to 0 of 0 entries
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        v-else-if="!inventoryStore.paginatedItems.length"
+        message="Žádné itemy k zobrazení"
+      />
 
       <!-- Data table -->
       <template v-else>
@@ -210,15 +184,19 @@ const totalPages = computed(() =>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button
                 @click="openEditModal(index)"
-                class="text-blue-600 hover:text-blue-900 mr-3"
+                class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
               >
-                Edit
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
               </button>
               <button
                 @click="deleteItem(item.id)"
-                class="text-red-600 hover:text-red-900"
+                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
               >
-                Delete
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </td>
           </template>

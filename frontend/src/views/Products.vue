@@ -58,7 +58,37 @@
           :sorting="productsStore.sorting"
           :on-edit="openEditModal"
           :on-delete="deleteProduct"
-        />
+        >
+          <template #row="{ item, index }">
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+              {{ item.name }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+              {{ item.price }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+              {{ item.description }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button
+                @click="openEditModal(item)"
+                class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+              <button
+                @click="deleteProduct(item.id)"
+                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </td>
+          </template>
+        </DataTable>
 
         <Pagination
           :current-page="productsStore.pagination.currentPage"
@@ -188,6 +218,7 @@ const newProduct = reactive({
 })
 
 const selectedProduct = reactive({
+  id: null,
   name: '',
   price: null,
   description: ''
@@ -197,7 +228,7 @@ const tableHeaders = [
   { field: 'name', label: 'Název', sortable: true },
   { field: 'price', label: 'Cena', sortable: true },
   { field: 'description', label: 'Popis', sortable: false },
-  { field: 'actions', label: 'Akce', sortable: false },
+  { field: 'actions', label: 'Akce', sortable: false, class: 'text-right' },
 ]
 
 const loading = ref(false)
@@ -207,7 +238,9 @@ onMounted(async () => {
   loading.value = true
   try {
     await productsStore.fetchProducts()
-    error.value = ''
+    if (productsStore.error) {
+      error.value = productsStore.error
+    }
   } catch (err) {
     error.value = 'Nepodařilo se načíst data produktů: ' + err.message
   } finally {
@@ -241,16 +274,26 @@ const addProduct = async () => {
   isAddModalOpen.value = false
 }
 
-const openEditModal = (index) => {
+const openEditModal = (product) => {
   isEditModalOpen.value = true
-  selectedProduct.name = productsStore.products[index].name
-  selectedProduct.price = productsStore.products[index].price
-  selectedProduct.description = productsStore.products[index].description
+  selectedProduct.id = product.id
+  selectedProduct.name = product.name
+  selectedProduct.price = product.price
+  selectedProduct.description = product.description
 }
 
 const updateProduct = async () => {
-  await productsStore.updateProduct(selectedProduct)
-  isEditModalOpen.value = false
+  try {
+    await productsStore.updateProduct(selectedProduct.id, {
+      name: selectedProduct.name,
+      price: selectedProduct.price,
+      description: selectedProduct.description
+    })
+    isEditModalOpen.value = false
+  } catch (error) {
+    console.error('Failed to update product:', error)
+    // Ponecháme modal otevřený v případě chyby
+  }
 }
 
 const cancelEdit = () => {

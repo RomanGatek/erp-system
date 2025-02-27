@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp } from 'vue/dist/vue.esm-bundler';
 import { createPinia } from 'pinia'
 import Notifications from '@kyvg/vue3-notification'
 

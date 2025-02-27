@@ -48,7 +48,8 @@ export const useInventoryStore = defineStore('inventory', () => {
       items.value = response.data
       error.value = null
     } catch (err) {
-      error.value = err.response?.data?.message || err.message
+      console.log(err.message)
+      error.value = err.message
     }
   }
 
@@ -57,7 +58,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       await api.post('/inventory', item)
       await fetchItems()
     } catch (err) {
-      error.value = err.response?.data?.message || err.message
+      error.value = err.response?.data || err.message
     }
   }
 
@@ -66,7 +67,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       await api.put(`/inventory/${item.id}`, item)
       await fetchItems()
     } catch (err) {
-      error.value = err.response?.data?.message || err.message
+      error.value = err.response?.data || err.message
     }
   }
 
@@ -75,7 +76,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       await api.delete(`/inventory/${itemId}`)
       await fetchItems()
     } catch (err) {
-      error.value = err.response?.data?.message || err.message
+      error.value = err.response?.data || err.message
     }
   }
 
