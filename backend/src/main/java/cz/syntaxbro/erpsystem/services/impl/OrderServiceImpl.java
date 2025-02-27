@@ -35,7 +35,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long id) {
         return orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
     }
 
     @Override
@@ -63,8 +63,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getOrdersByProduct(Long productId) {
-        Product createdProduct = createdById(productId);
-        return orderRepository.findByProduct(createdProduct);
+        Product product = productRepository.findById(productId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Product does not exist"));
+        return orderRepository.findByProduct(product);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.requests.OrderRequest;
+import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,16 +27,12 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getOrder(
+    public ResponseEntity<Order> getOrder(
             @PathVariable(name = "id")
             @NotNull(message = "ID can't be null")
             Long id) {
-        try {
             Order order = orderService.getOrderById(id);
             return ResponseEntity.ok(order);
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 
     @GetMapping("/")
@@ -46,7 +41,7 @@ public class OrderController {
     }
 
     @GetMapping("/cost-between")
-    public ResponseEntity<List<Object>> getOrdersByCost(
+    public ResponseEntity<List<Order>> getOrdersByCost(
             @RequestParam(value = "start", defaultValue = "0")
             @NotNull
             @Min(value = 0, message = "Cost must be grater or equal with 0")
@@ -55,16 +50,12 @@ public class OrderController {
             @NotNull
             @Min(value = 0, message = "Cost must be grater or equal with 0")
             double end) {
-        try {
             List<Order> orders = orderService.getOrdersByCostBetween(start, end);
-            return ResponseEntity.ok(List.of(orders));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(List.of(e.getMessage()));
-        }
+            return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/date-between")
-    public ResponseEntity<List<Object>> getOrdersByDateBetween(
+    public ResponseEntity<List<Order>> getOrdersByDateBetween(
             @RequestParam(name = "start", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime start,
@@ -78,77 +69,53 @@ public class OrderController {
         if (end == null) {
             end = LocalDateTime.now().with(LocalTime.MAX);
         }
-        try {
-            List<Order> orders = orderService.getOrdersByDateBetween(start, end);
-            return ResponseEntity.ok(List.of(orders));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(List.of(e.getMessage()));
-        }
+        List<Order> orders = orderService.getOrdersByDateBetween(start, end);
+        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/by-product")
-    public ResponseEntity<List<Object>> getOrdersByProduct(
+    public ResponseEntity<List<Order>> getOrdersByProduct(
             @RequestParam(value = "productId", defaultValue = "0")
             @NotNull(message = "Product id cant be null")
             Long productId) {
-        try{
-            return ResponseEntity.ok(List.of(orderService.getOrdersByProduct(productId)));
-        }catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(List.of(e.getMessage()));
-        }
+        List<Order> orders = orderService.getOrdersByProduct(productId);
+        return ResponseEntity.ok(orders);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Object> createOrder(
+    public ResponseEntity<Order> createOrder(
             @RequestBody
             @Valid
-            OrderRequest orderDto) {
-        try{
-            Order createdOrder = orderService.createdOrder(orderDto);
-            return ResponseEntity.ok("Order is created \n" + createdOrder);
-        }catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-
+            OrderDto orderDto) {
+        Order createdOrder = orderService.createdOrder(orderDto);
+        return ResponseEntity.ok(createdOrder);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateOrder(
+    public ResponseEntity<String> updateOrder(
             @PathVariable(name = "id")
             @NotNull
             Long id,
             @RequestBody
             @Valid
-            OrderRequest orderDto) {
-        try{
-            orderService.updateOrder(id, orderDto);
-            return ResponseEntity.ok("Order is updated \n" + orderDto);
-        }catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+            OrderDto orderDto) {
+        orderService.updateOrder(id, orderDto);
+        return ResponseEntity.ok("Order with id " + id + " is updated");
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteOrder(
             @PathVariable(name = "id") Long id) {
-        try{
             orderService.deleteOrder(id);
-            return ResponseEntity.ok(String.format("Order with id %s is deleted", id));
-        }catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(String.format("Order with id %s is deleted", id));
     }
 
     @DeleteMapping("/delete-orders-with-product/{id}")
-    public ResponseEntity<List<Object>> deleteOrdersWithProductId(
+    public ResponseEntity<String> deleteOrdersWithProductId(
             @PathVariable(name = "id")
             @NotNull
             Long id) {
-        try {
             orderService.deleteOrderByProductId(id);
-            return ResponseEntity.ok(List.of(String.format("Orders with product %s deleted", id)));
-        }catch (ResponseStatusException e) {
-            return ResponseEntity.badRequest().body(List.of(e.getMessage()));
-        }
+            return ResponseEntity.ok("Orders with product id " + id + " are deleted");
     }
 }

@@ -19,7 +19,7 @@ class PasswordSecurityTest {
                 "testUser",      // Username
                 "Test",          // First name
                 "User",          // Last name
-                passwordSecurity.hashPassword("password"), //Password
+                passwordSecurity.encode("password"), //Password
                 "test@example.com", // Email
                 true,            // Active status
                 Set.of("ROLE_USER") // Assigned roles
