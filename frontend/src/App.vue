@@ -7,7 +7,9 @@
     
     <!-- Hlavní obsah -->
     <div class="relative z-10 flex flex-col min-h-screen">
-      <Navbar class="flex-shrink-0" />
+
+      <Navbar v-if="isAuthenticated" class="flex-shrink-0" />
+      
       <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <router-view v-slot="{ Component }" class="w-full h-full">
           <transition
@@ -31,12 +33,22 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
+import { ref, computed } from "vue";
+import { useMeStore } from "./stores/me";
 
 export default {
   name: 'App',
   components: {
     Navbar,
     Footer
+  },
+  setup() {
+    const meStore = useMeStore();
+    const isAuthenticated = computed(() => meStore.user);
+
+    return {
+      isAuthenticated
+    }
   }
 }
 </script>

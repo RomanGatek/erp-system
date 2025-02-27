@@ -42,11 +42,17 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   const meStore = useMeStore()
 
-  if (to.meta.requiresAuth && !token) {
-    return next('/unauthorized')
+  if (to.path === '/auth' && token) {
+    return next('/')
   }
 
-  console.log("authenticated", meStore.user?.username)
+  if (to.path === '/auth') {
+    return next()
+  }
+
+  if (!token) {
+    return next('/auth')
+  }
 
   if (!meStore.user) {
     try {

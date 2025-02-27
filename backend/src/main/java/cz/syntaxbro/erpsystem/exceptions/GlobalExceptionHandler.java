@@ -10,9 +10,13 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 @ControllerAdvice
@@ -20,13 +24,13 @@ public class GlobalExceptionHandler {
 
     // Input data validation errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(
+    public ResponseEntity<Set<ErrorEntity>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+        Set<ErrorEntity> errors = new HashSet<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+            var fieldError = ((FieldError) error).getField();
+            var entity = new ErrorEntity(fieldError, error.getDefaultMessage());
+            errors.add(entity);
         });
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
@@ -55,8 +59,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorEntity> handleGlobalException(Exception ex) {
         ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
+        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getClass().getName());
         var entity = new ErrorEntity("password", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorEntity> handleResourceNotFoundException(NoResourceFoundException ex) {
+        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
+        var entity = new ErrorEntity("resource", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(entity);
     }
 
     @AllArgsConstructor

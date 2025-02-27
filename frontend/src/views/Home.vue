@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full w-full flex items-center justify-center">
+  <div class="w-full flex items-center justify-center">
     <transition
       name="section"
       mode="out-in"
@@ -16,15 +16,17 @@
         <div class="flex gap-4 justify-center">
           <button 
             @click="currentSection = 'team'"
-            class="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            class="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
           >
-            Who Are We?
+            <span class="relative z-10">Who Are We?</span>
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </button>
           <button 
             @click="currentSection = 'about'"
-            class="px-8 py-4 bg-white bg-opacity-50 backdrop-blur-sm text-gray-700 rounded-lg text-lg font-medium hover:bg-opacity-70 transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+            class="group px-6 py-3 bg-white/15 backdrop-blur-lg text-gray-700 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
           >
-            About Course
+            <span class="relative z-10">About Course</span>
+            <div class="absolute inset-0 bg-gradient-to-r from-gray-500/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </button>
         </div>
       </div>
@@ -103,6 +105,24 @@ export default {
       ]
     }
   },
+  watch: {
+    '$route.query.section': {
+      immediate: true,
+      handler(newSection) {
+        if (newSection) {
+          this.currentSection = newSection
+          setTimeout(() => {
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            })
+          }, 100)
+        } else {
+          this.currentSection = 'hero'
+        }
+      }
+    }
+  },
   methods: {
     getInitials(name) {
       return name
@@ -117,7 +137,7 @@ export default {
 
 <style scoped>
 .h-full {
-  min-height: calc(100vh - 13rem); /* Přibližná výška pro navbar a footer */
+  min-height: calc(100vh - 4rem); /* Upravíme výšku */
 }
 
 .text-gradient {
@@ -267,4 +287,16 @@ export default {
 .grid > div:nth-child(1) { animation-delay: 0.2s; }
 .grid > div:nth-child(2) { animation-delay: 0.4s; }
 .grid > div:nth-child(3) { animation-delay: 0.6s; }
+
+/* Přidáme smooth scroll pro celou stránku */
+:root {
+  scroll-behavior: smooth;
+}
+
+/* Zajistíme, že obsah bude vždy viditelný */
+.section-enter-active,
+.section-leave-active {
+  position: absolute;
+  width: 100%;
+}
 </style>

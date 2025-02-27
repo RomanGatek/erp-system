@@ -21,7 +21,7 @@ class Api {
   }
 
   async post(url, data = {}) {
-    return await this.api.post(url, { ...data })
+    return await this.api.post(url, data)
   }
 
   async put(url, data = {}) {

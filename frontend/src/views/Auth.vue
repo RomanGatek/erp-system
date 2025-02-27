@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-[calc(100vh-theme(space.16))] flex items-center justify-center">
+  <div class="min-h-[calc(95dvh-theme(space.20))] flex items-center justify-center">
     <div class="w-[400px] bg-white rounded-3xl p-8">
       <!-- Lock Icon -->
       <div class="flex justify-center mb-6">

@@ -3,10 +3,10 @@
     <div class="flex justify-center mb-16 space-x-4">
       <button 
         @click="$emit('changeSection', 'hero')"
-        class="group px-6 py-3 bg-white/10 backdrop-blur-lg text-gray-700 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
+        class="group px-6 py-3 bg-white/15 backdrop-blur-lg text-gray-700 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
       >
         <span class="relative z-10">Back to Home</span>
-        <div class="absolute inset-0 bg-gradient-to-r from-white/50 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-gray-500/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </button>
       <button 
         @click="$emit('changeSection', 'about')"
@@ -26,7 +26,7 @@
     
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
       <div v-for="member in teamMembers" :key="member.name" 
-        class="group relative bg-white/5 backdrop-blur-2xl rounded-2xl p-6 transition-all duration-500 hover:bg-white/10 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)] overflow-hidden"
+        class="group relative bg-white/10 backdrop-blur-2xl rounded-2xl p-6 transition-all duration-500 hover:bg-white/15 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] overflow-hidden border-b-[3px] border-transparent hover:border-blue-500/50"
       >
         <div class="relative z-10 flex flex-col items-center">
           <!-- Avatar Container -->
@@ -73,7 +73,7 @@
         </div>
 
         <!-- Background Decoration -->
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       </div>
     </div>
   </div>

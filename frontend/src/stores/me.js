@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { user as api } from '@/services/api' 
-import axios from 'axios'
 
 export const useMeStore = defineStore('me', {
   state: () => ({
@@ -28,9 +27,17 @@ export const useMeStore = defineStore('me', {
     },
     async updateProfile(profileData) {
       try {
-        const response = await axios.put('/api/me', profileData)
+        const response = await api.put('auth/user/me', profileData)
         this.user = response.data
         return response.data
+      } catch (error) {
+        throw error
+      }
+    },
+    async updatePassword(pass) {
+      try {
+        const response = await api.post('/auth/user/me/change-password', { password: pass } )
+        this.user = { password: response.data, ...this.user }
       } catch (error) {
         throw error
       }

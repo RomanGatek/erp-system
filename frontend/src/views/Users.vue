@@ -294,78 +294,80 @@ watch([
 
       <!-- Data table -->
       <template v-else>
-        <DataTable
-          :headers="tableHeaders"
-          :items="userStore.paginatedUsers"
-          :sort-by="userStore.setSorting"
-          :sorting="userStore.sorting"
-          :on-edit="openEditModal"
-          :on-delete="deleteUser"
-        >
-          <template #row="{ item, index }">
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-              {{ item.firstName }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ item.lastName }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ item.email }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ item.username }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex gap-1 flex-wrap">
+        <div class="max-h-[500px] overflow-y-auto">
+          <DataTable
+            :headers="tableHeaders"
+            :items="userStore.paginatedUsers"
+            :sort-by="userStore.setSorting"
+            :sorting="userStore.sorting"
+            :on-edit="openEditModal"
+            :on-delete="deleteUser"
+          >
+            <template #row="{ item, index }">
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                {{ item.firstName }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                {{ item.lastName }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                {{ item.email }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                {{ item.username }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex gap-1 flex-wrap">
+                  <span
+                    v-for="role in item.roles"
+                    :key="role.id"
+                    class="px-2 py-1 rounded-full text-xs font-medium"
+                    :class="getRoleStyle(role.name)"
+                  >
+                    {{ formatRoleDisplay(role) }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
                 <span
-                  v-for="role in item.roles"
-                  :key="role.id"
-                  class="px-2 py-1 rounded-full text-xs font-medium"
-                  :class="getRoleStyle(role.name)"
+                  :class="[
+                    'px-2 py-1 rounded-full text-xs font-medium',
+                    item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                  ]"
                 >
-                  {{ formatRoleDisplay(role) }}
+                  {{ item.active ? 'Aktivní' : 'Neaktivní' }}
                 </span>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              <span
-                :class="[
-                  'px-2 py-1 rounded-full text-xs font-medium',
-                  item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-                ]"
-              >
-                {{ item.active ? 'Aktivní' : 'Neaktivní' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button
-                @click="openEditModal(index)"
-                class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
-              <button
-                @click="deleteUser(item.id)"
-                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </td>
-          </template>
-        </DataTable>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="openEditModal(index)"
+                  class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteUser(item.id)"
+                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </td>
+            </template>
+          </DataTable>
 
-        <Pagination
-          :current-page="userStore.pagination.currentPage"
-          :total-pages="totalPages"
-          :total-items="userStore.filteredUsers.length"
-          :start-item="paginationStart"
-          :end-item="paginationEnd"
-          @page-change="userStore.setPage"
-        />
+          <Pagination
+            :current-page="userStore.pagination.currentPage"
+            :total-pages="totalPages"
+            :total-items="userStore.filteredUsers.length"
+            :start-item="paginationStart"
+            :end-item="paginationEnd"
+            @page-change="userStore.setPage"
+          />
+        </div>
       </template>
     </div>
 
