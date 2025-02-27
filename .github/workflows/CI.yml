@@ -19,11 +19,11 @@ jobs:
                 java-version: 21
 
             - name: Make +x for ./gradlew
-              working-directory: ./backend
+              working-directory: ./
               run: chmod +x gradlew
 
             - name: Build and Test (Gradle)
-              working-directory: ./backend
+              working-directory: ./
               run: ./gradlew clean test
 
 
