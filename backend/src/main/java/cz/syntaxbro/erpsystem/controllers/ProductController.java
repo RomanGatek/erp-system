@@ -1,7 +1,9 @@
 package cz.syntaxbro.erpsystem.controllers;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.validation.Valid;
@@ -11,16 +13,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.logging.Level;
+
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ProductRepository productRepository) {
         this.productService = productService;
+        this.productRepository = productRepository;
     }
 
     @InitBinder("productDto")
@@ -30,6 +37,11 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productDTO) {
+
+        ErpSystemApplication.getLogger().log(Level.INFO,
+                "\u001B[32mCreating product: {0}\u001B[0m", productDTO);
+
+
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setCost(productDTO.getCost());
@@ -39,10 +51,10 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 
-//    @PostMapping
-//    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-//        return ResponseEntity.ok(productService.createProduct(product));
-//    }
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productRepository.findAll());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
