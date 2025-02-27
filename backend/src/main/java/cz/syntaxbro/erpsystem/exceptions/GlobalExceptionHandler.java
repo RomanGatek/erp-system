@@ -1,5 +1,11 @@
 package cz.syntaxbro.erpsystem.exceptions;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -7,9 +13,12 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -63,13 +72,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(entity);
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class ErrorEntity {
-        private String field;
-        private String message;
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleDuplicateEntry(DataIntegrityViolationException ex) {
         if (ex.getMessage().contains("Duplicate entry")) {
@@ -100,6 +102,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
         return new ResponseEntity<>(ex.getReason(), ex.getStatusCode());
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public static class ErrorEntity {
+        private String field;
+        private String message;
     }
 
 
