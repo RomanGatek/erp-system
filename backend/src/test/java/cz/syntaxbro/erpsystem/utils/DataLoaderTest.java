@@ -47,7 +47,7 @@ class DataLoaderTest {
 
     @BeforeEach
     void setUp() {
-        when(passwordSecurity.hashPassword(anyString())).thenReturn("hashedPassword");
+        when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
         dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity);
         dataLoader.run();
