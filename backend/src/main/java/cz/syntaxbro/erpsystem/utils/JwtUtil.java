@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.utils;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -8,10 +9,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.logging.Level;
 
 @Component
 public class JwtUtil {
@@ -19,8 +23,6 @@ public class JwtUtil {
     // Injected from application.properties
     @Value("${jwt_secret}")
     private String secret;
-
-    private static final long JWT_EXPIRATION_MS = 3600000;   // 1 hour
 
     // Extractions from JWT
     public String extractUsername(String token) {
@@ -49,11 +51,17 @@ public class JwtUtil {
     }
 
     public String generateToken(Map<String, Object> claims, String username) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.MONTH, 6); // Přidá 1 měsíc
+
+        ErpSystemApplication.getLogger().log(Level.WARNING, "Generated token: {0}", calendar.getTime());
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
+                .expiration(calendar.getTime())
                 .signWith(getSigningKey())
                 .compact();
     }
