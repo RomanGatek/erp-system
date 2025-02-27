@@ -40,8 +40,8 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findById(id)
                 .map(existingProduct -> {
                     existingProduct.setName(product.getName());
-                    existingProduct.setCost(product.getCost());
-                    existingProduct.setQuantity(product.getQuantity());
+                    existingProduct.setDescription(product.getDescription());
+                    existingProduct.setPrice(product.getPrice());
                     return productRepository.save(existingProduct);
                 })
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));

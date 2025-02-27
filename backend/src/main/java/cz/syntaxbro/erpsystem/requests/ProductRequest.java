@@ -11,9 +11,7 @@ public class ProductRequest {
     @NotBlank(message = "Product name is required")
     private String name;
 
-    @Positive(message = "Product cost must be greater than zero")
-    private Double cost;
-
-    @PositiveOrZero(message = "Product quantity must be zero or positive")
-    private Integer quantity;
+    @Positive(message = "Product price must be greater than zero")
+    private Double price;
+    private String description;
 }

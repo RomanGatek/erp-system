@@ -1,15 +1,19 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.exceptions.ProductDtoValidator;
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.logging.Level;
 
 
 @RestController
@@ -17,32 +21,35 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ProductRepository productRepository) {
         this.productService = productService;
-    }
-
-    @InitBinder("productDto")
-    protected void initBinder(WebDataBinder binder){
-        binder.addValidators(new ProductDtoValidator());
+        this.productRepository = productRepository;
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productDTO) {
-        Product product = new Product();
-        product.setName(productDTO.getName());
-        product.setCost(productDTO.getCost());
-        product.setQuantity(productDTO.getQuantity());
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) {
 
-        Product createdProduct = productService.createProduct(product);
+        ErpSystemApplication.getLogger().log(Level.INFO,
+                "\u001B[32mCreating product: {0}\u001B[0m", productRequest);
+
+        Product createdProduct = productService.createProduct(
+                Product.builder()
+                        .name(productRequest.getName())
+                        .price(productRequest.getPrice())
+                        .description(productRequest.getDescription())
+                        .build()
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 
-//    @PostMapping
-//    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-//        return ResponseEntity.ok(productService.createProduct(product));
-//    }
+    @GetMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productRepository.findAll());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
@@ -55,17 +62,20 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<Void> deleteProductById(@PathVariable Long id) {
         productService.deleteProductById(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/name/{name}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<Void> deleteProductByName(@PathVariable String name) {
         productService.deleteProductByName(name);
         return ResponseEntity.noContent().build();

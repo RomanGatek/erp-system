@@ -81,10 +81,9 @@ public class AuthServiceImpl implements AuthService {
         // Create an instance of the User entity and set the necessary fields
         User currentUser = new User();
         Object principal = authentication.getPrincipal();
-        User curentUser = new User();
         if (principal instanceof CustomUserDetails) {
             String username = ((CustomUserDetails) principal).getUsername();
-            curentUser = userService.getUserByEmail(username);
+            currentUser = userService.getUserByEmail(username);
         }
         // Mapping the User entity to UserDto using UserMapper.toDto()
         return currentUser;

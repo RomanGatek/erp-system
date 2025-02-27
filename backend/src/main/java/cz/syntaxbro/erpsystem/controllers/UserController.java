@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.partials.UserPartial;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import jakarta.validation.Valid;
@@ -61,10 +62,10 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest userDto) {
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserPartial userPartial) {
         logger.info("Updating user with ID: {}", id);
-        User updatedUser = userService.updateUser(id, userDto);
-        return ResponseEntity.ok(updatedUser);
+        User updatedUser = userService.updateUser(id, userPartial);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
 
     @DeleteMapping("/{id}")

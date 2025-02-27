@@ -1,138 +1,264 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-      <h1 class="text-4xl font-bold mb-6 text-center text-gray-800">{{ isLogin ? 'Login' : 'Register' }}</h1>
-      <form @submit.prevent="isLogin ? login() : register()" class="space-y-6">
-        <div>
+  <div class="min-h-[calc(95dvh-theme(space.20))] flex items-center justify-center">
+    <div class="w-[400px] bg-white rounded-3xl p-8">
+      <!-- Lock Icon -->
+      <div class="flex justify-center mb-6">
+        <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-width="2" d="M17 11H7V7a5 5 0 0110 0v4zm-5-7a3 3 0 00-3 3v4h6V7a3 3 0 00-3-3zM5 11h14v10H5V11z"/>
+        </svg>
+      </div>
+
+      <!-- Header -->
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 mb-2">
+          {{ isLogin ? 'Welcome back' : 'Create account' }}
+        </h1>
+        <p class="text-gray-600 text-sm">
+          {{ isLogin ? 'Sign in to your account' : 'Sign up for a new account' }}
+        </p>
+      </div>
+
+      <!-- Login Form -->
+      <form v-if="isLogin" @submit.prevent="handleLogin" class="space-y-4" autocomplete="off">
+        <!-- Email Input -->
+        <div class="space-y-1.5">
+          <label class="block text-sm text-gray-700">Email address</label>
           <input
             type="email"
             v-model="email"
-            placeholder="Email"
+            placeholder="admin@example.com"
+            class="w-full px-3 py-2 bg-gray-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            :class="{ 'border-red-500': serverErrors.email, 'border-gray-200': !serverErrors.email }"
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
+          <span v-if="serverErrors.email" class="text-xs text-red-500">{{ serverErrors.email }}</span>
         </div>
-        <div v-if="!isLogin">
-          <input
-            type="email"
-            v-model="email"
-            placeholder="Email"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-          />
-        </div>
-        <div>
-          <input
-            type="password"
+
+        <!-- Password Input -->
+        <div class="space-y-1.5">
+          <label class="block text-sm text-gray-700">Password</label>
+          <PasswordInput
             v-model="password"
-            placeholder="Password"
+            class="bg-gray-50"
+            :error="serverErrors.password"
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
+          <span v-if="serverErrors.password" class="text-xs text-red-500">{{ serverErrors.password }}</span>
         </div>
-        <div v-if="!isLogin">
-          <input
-            type="password"
-            v-model="confirmPassword"
-            placeholder="Confirm Password"
-            required
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-          />
+
+        <!-- General Error Message -->
+        <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
+          {{ serverErrors.general }}
         </div>
-        <div>
-          <button
-            type="submit"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          >
-            {{ isLogin ? 'Login' : 'Register' }}
-          </button>
-        </div>
+
+        <!-- Sign In Button -->
+        <button
+          type="submit"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Sign in
+        </button>
       </form>
-      <div class="text-center mt-4">
-        <button @click="toggleForm" class="text-blue-600 hover:underline">
-          {{ isLogin ? 'Don\'t have an account? Register' : 'Already have an account? Login' }}
+
+      <!-- Register Form -->
+      <form v-else @submit.prevent="handleRegister" class="space-y-4" autocomplete="off">
+        <!-- Email Input -->
+        <div class="space-y-1.5">
+          <label class="block text-sm text-gray-700">Email address</label>
+          <input
+            type="email"
+            v-model="email"
+            placeholder="your@email.com"
+            class="w-full px-3 py-2 bg-gray-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            :class="{ 'border-red-500': serverErrors.email, 'border-gray-200': !serverErrors.email }"
+            required
+          />
+          <span v-if="serverErrors.email" class="text-xs text-red-500">{{ serverErrors.email }}</span>
+        </div>
+
+        <!-- Password Input -->
+        <div class="space-y-1.5">
+          <label class="block text-sm text-gray-700">Password</label>
+          <PasswordInput
+            v-model="password"
+            class="bg-gray-50"
+            :error="serverErrors.password"
+            required
+          />
+          <span v-if="serverErrors.password" class="text-xs text-red-500">{{ serverErrors.password }}</span>
+        </div>
+
+        <!-- Confirm Password Input -->
+        <div class="space-y-1.5">
+          <label class="block text-sm text-gray-700">Confirm Password</label>
+          <PasswordInput
+            v-model="confirmPassword"
+            class="bg-gray-50"
+            :error="serverErrors.confirmPassword"
+            required
+          />
+          <span v-if="serverErrors.confirmPassword" class="text-xs text-red-500">{{ serverErrors.confirmPassword }}</span>
+        </div>
+
+        <!-- General Error Message -->
+        <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
+          {{ serverErrors.general }}
+        </div>
+
+        <!-- Sign Up Button -->
+        <button
+          type="submit"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+          Sign up
+        </button>
+      </form>
+
+      <!-- Toggle Form -->
+      <div class="mt-4 text-center">
+        <button
+          type="button"
+          @click="toggleForm"
+          class="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+        >
+          {{ isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in' }}
         </button>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { login, register } from '../services/auth';
-import Swal from 'sweetalert2';
+<script setup>
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { login, register } from '../services/auth'
+import { useMeStore } from '../stores/me'
+import { notify } from '@kyvg/vue3-notification'
+import PasswordInput from '../components/common/PasswordInput.vue'
 
-export default {
-  name: 'LoginView',
-  data() {
-    return {
-      isLogin: true,
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    }
-  },
-  methods: {
-    toggleForm() {
-      this.isLogin = !this.isLogin;
-    },
-    async login() {
-      try {
-        const token = await login(this.email, this.password);
-        if (!token) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Login failed',
-            text: 'Your authorization token are not valid.'
-          });
-          return;
-        }
-        Swal.fire({
-          icon: 'success',
-          title: 'Login Successful',
-          text: 'You have been successfully logged in!',
-        }).then((after) => {
-            if (after.isConfirmed) {
-              console.log("TOKEN: " + token);
-              localStorage.setItem('token', token);
-              this.$router.push('/');
-            }
-        });
-      } catch (error) {
-        console.error('Login failed', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: 'Invalid username or password. Please try again.',
-        });
-      }
-    },
-    async register() {
-      if (this.password !== this.confirmPassword) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Registration Failed',
-          text: 'Passwords do not match. Please try again.',
-        });
-        return;
-      }
-      try {
-        await register(this.username, this.email, this.password);
-        await Swal.fire({
-          icon: 'success',
-          title: 'Registration Successful',
-          text: 'You have been successfully registered!',
-        });
-        this.isLogin = true;
-      } catch (error) {
-        console.error('Registration failed', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Registration Failed',
-          text: 'An error occurred during registration. Please try again.',
-        });
-      }
-    }
+const router = useRouter()
+const isLogin = ref(true)
+const email = ref('')
+const password = ref('')
+const confirmPassword = ref('')
+
+// Server errors state
+const serverErrors = ref({
+  email: '',
+  password: '',
+  confirmPassword: '',
+  general: ''
+})
+
+// Clear server errors
+const clearServerErrors = () => {
+  serverErrors.value = {
+    email: '',
+    password: '',
+    confirmPassword: '',
+    general: ''
   }
 }
+
+// Handle server validation errors
+const handleServerValidationErrors = (error) => {
+  clearServerErrors()
+  
+  if (!error.response?.data) {
+    serverErrors.value.general = 'An unexpected error occurred'
+    return
+  }
+
+  const { field: errorField, message: errorMessage } = error.response.data
+
+  console.log(errorField, errorMessage)
+
+  if (errorField) {
+    serverErrors.value[errorField] = errorMessage
+  } else {
+    serverErrors.value.general = errorMessage
+  }
+}
+
+const toggleForm = () => {
+  isLogin.value = !isLogin.value
+  clearServerErrors()
+  email.value = ''
+  password.value = ''
+  confirmPassword.value = ''
+}
+
+const handleLogin = async () => {
+  try {
+    clearServerErrors()
+    const token = await login(email.value, password.value)
+    if (!token) {
+      serverErrors.value.general = 'Invalid authentication token'
+      return
+    }
+    localStorage.setItem('token', token)
+    const meStore = useMeStore()
+    await meStore.fetchMe(token)
+    router.push('/')
+    notify({
+      type: 'success',
+      text: 'Successfully logged in',
+      duration: 2000
+    })
+  } catch (err) {
+    handleServerValidationErrors(err)
+    notify({
+      type: 'error',
+      text: serverErrors.value.general || 'Login failed',
+      duration: 5000
+    })
+  }
+}
+
+const handleRegister = async () => {
+  try {
+    clearServerErrors()
+    await register(email.value, password.value, confirmPassword.value)
+    notify({
+      type: 'success',
+      text: 'Successfully registered! Please sign in.',
+      duration: 3000
+    })
+    isLogin.value = true
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+  } catch (err) {
+    handleServerValidationErrors(err)
+    notify({
+      type: 'error',
+      text: serverErrors.value.general || 'Registration failed',
+      duration: 5000
+    })
+  }
+}
+
+// Clear server errors on input change
+watch([email, password, confirmPassword], () => {
+  clearServerErrors()
+})
 </script>
+
+<style scoped>
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

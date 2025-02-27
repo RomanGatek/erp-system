@@ -1,0 +1,24 @@
+package cz.syntaxbro.erpsystem.partials;
+
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
+import java.util.Set;
+
+@Data
+public class UserPartial {
+    @Size(min = 5, max = 50, message = "Username must be between 5 and 50 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
+    private String username;
+
+    @Email(message = "Invalid email format")
+    private String email;
+
+    private String firstName;
+
+    private String lastName;
+
+    private boolean isActive;
+
+    private Set<String> roles;
+}

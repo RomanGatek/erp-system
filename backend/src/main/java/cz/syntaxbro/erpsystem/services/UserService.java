@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.partials.UserPartial;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public interface UserService {
 
     User createUser(CreateUserRequest createUserRequest);
 
-    User updateUser(Long id, CreateUserRequest userDto);
+    User updateUser(Long id, UserPartial userDto);
 
     void deleteUser(Long id);
 

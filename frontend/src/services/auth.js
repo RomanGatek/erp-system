@@ -1,26 +1,10 @@
-import api from './api.js'
-import { AxiosError } from 'axios'
+import { guest, user } from './api'
 
 export async function login(email, password) {
-
-  password = 'password123'
-  email = 'admin@example.com'
-
-  const response = await exceptionHandler(api.post('/auth/public/login', { email, password }));
-  return response.data === undefined ? false : response.data
+  const response = await guest.post('/auth/public/login', { email, password })
+  return response === undefined ? false : response.data
 }
 
 export async function register(username, email, password) {
-  await api.post('/auth/public/login', { username, email, password });
-}
-
-
-async function exceptionHandler(response) {
-  try {
-    return await response;
-  } catch (e) {
-    if (e instanceof AxiosError) {
-      console.error(e.response);
-    }
-  }
+  await user.post('/auth/public/register', { username, email, password })
 }
