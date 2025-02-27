@@ -54,13 +54,13 @@ public class DataLoader implements CommandLineRunner {
                 "administrator",
                 "_0",
                 "admin@example.com",
-                Set.of(adminRole)
+                Set.of(adminRole, userRole, managerRole)
         );
         createUserIfNotExists(
                 "manager",
                 "_1",
                 "manager@example.com",
-                Set.of(managerRole)
+                Set.of(managerRole, userRole)
         );
         createUserIfNotExists(
                 "user",
