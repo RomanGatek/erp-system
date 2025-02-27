@@ -1,16 +1,16 @@
 import { defineStore } from 'pinia'
-import { user as api } from '@/services/api' 
+import { user as api } from '@/services/api'
+import { ref } from 'vue'
 
 export const useMeStore = defineStore('me', {
   state: () => ({
-    user: null,
+    user: ref(null),
     error: null
   }),
   actions: {
-    async fetchMe(token) {
+    async fetchMe() {
       try {
-        const response = await api.get('/auth/user/me', 
-          { headers: { Authorization: `Bearer ${token || localStorage.getItem('token')}` }})
+        const response = await api.get('/auth/user/me')
         this.user = response.data
       } catch (err) {
         this.error = err
@@ -36,8 +36,17 @@ export const useMeStore = defineStore('me', {
     },
     async updatePassword(pass) {
       try {
-        const response = await api.post('/auth/user/me/change-password', { password: pass } )
+        const response = await api.post('/auth/user/me/change-password', { password: pass })
         this.user = { password: response.data, ...this.user }
+      } catch (error) {
+        throw error
+      }
+    },
+    async updateAvatar(formData) {
+      try {
+        const response = await api.post('/auth/user/me/avatar', formData)
+        this.user = response.data
+        return response.data
       } catch (error) {
         throw error
       }

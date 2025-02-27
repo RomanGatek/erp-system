@@ -1,41 +1,38 @@
 import axios from 'axios'
 
+const baseURL = 'http://localhost:8080/api'
 
-class Api {
-  constructor(ip = 'localhost', port = 8080, guest = false) {
-    this.api = axios.create({
-      baseURL: `http://${ip}:${port}/api`,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
-    if (guest) {
-      this.api.defaults.headers.Authorization = null
+// Create user-specific instance
+const user = axios.create({
+  baseURL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// Add request interceptor to add token
+user.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
-  }
+    
+    // Pro FormData automaticky nastaví správný Content-Type
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
 
-  async get(url, params = {}) {
-    return await this.api.get(url, { ...params })
+// Create public instance for non-authenticated requests
+const api = axios.create({
+  baseURL,
+  headers: {
+    'Content-Type': 'application/json'
   }
+})
 
-  async post(url, data = {}) {
-    return await this.api.post(url, data)
-  }
-
-  async put(url, data = {}) {
-    return await this.api.put(url, { ...data })
-  }
-
-  async delete(url) {
-    return await this.api.delete(url)
-  }
-
-  async patch(url, data = {}) {
-    return await this.api.patch(url, { ...data })
-  }
-}
-
-export const guest = new Api('localhost', 8080, true)
-export const user = new Api('localhost', 8080, false)
+export { api, user }
