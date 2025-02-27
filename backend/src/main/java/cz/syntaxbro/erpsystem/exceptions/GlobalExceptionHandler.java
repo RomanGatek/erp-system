@@ -94,11 +94,6 @@ public class GlobalExceptionHandler {
                 .body("Validation failed: " + ex.getMessage());
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> error(){
-        return ResponseEntity.notFound().build();
-    }
-
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
         return new ResponseEntity<>(ex.getReason(), ex.getStatusCode());

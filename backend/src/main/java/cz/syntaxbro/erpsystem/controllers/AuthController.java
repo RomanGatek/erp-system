@@ -9,11 +9,15 @@ import cz.syntaxbro.erpsystem.requests.PasswordChangeRequest;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
+import cz.syntaxbro.erpsystem.services.FileStorageService;
+import cz.syntaxbro.erpsystem.services.impl.FileStorageServiceImp;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,10 +25,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserRepository userRepository;
+    private final FileStorageServiceImp fileStorageService;
 
-    public AuthController(AuthService authService, UserRepository userRepository) {
+    public AuthController(AuthService authService, UserRepository userRepository, FileStorageServiceImp fileStorageService) {
         this.authService = authService;
         this.userRepository = userRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // User Registration
@@ -76,5 +82,32 @@ public class AuthController {
         PasswordSecurity security = new PasswordSecurity();
         currentUser.setPassword(security.encode(passwordForm.getPassword()));
         return ResponseEntity.ok(currentUser);
+    }
+
+    @PostMapping(value = "/user/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<User> updateAvatar(@RequestParam("avatar") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                throw new RuntimeException("Please select a file to upload");
+            }
+
+            // Validate file type
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new RuntimeException("Only image files are allowed");
+            }
+
+            User currentUser = authService.getCurrentUser();
+            String fileName = fileStorageService.storeFile(file, currentUser.getEmail());
+            
+            // Update avatar URL in user profile
+            currentUser.setAvatar("/uploads/" + fileName);
+            User updatedUser = userRepository.save(currentUser);
+            
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not upload avatar: " + e.getMessage());
+        }
     }
 }

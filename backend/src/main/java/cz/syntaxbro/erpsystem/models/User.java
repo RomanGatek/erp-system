@@ -1,18 +1,20 @@
 package cz.syntaxbro.erpsystem.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Data
 @Table(name = "users")
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class User {
 
@@ -21,28 +23,38 @@ public class User {
     private Long id;
 
     @Column(unique = true, nullable = false)
+    @NotBlank(message = "Username is required")
     private String username;
 
     @Column(nullable = false)
+    @NotBlank(message = "Password is required")
+    @JsonIgnore
     private String password;
 
-    @Column(name = "first_name")
+    @Column(nullable = false)
+    @NotBlank(message = "First name is required")
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(nullable = false)
+    @NotBlank(message = "Last name is required")
     private String lastName;
 
     @Column(unique = true, nullable = false)
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @Column(name = "is_active")
-    private boolean isActive;
+    @Column
+    private String avatar;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_role",
+            name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 }
