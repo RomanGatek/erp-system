@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.configs;
+package cz.syntaxbro.erpsystem.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

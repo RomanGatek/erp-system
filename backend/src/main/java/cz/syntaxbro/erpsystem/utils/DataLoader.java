@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.utils;
 
-import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Permission;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.Role;
@@ -11,7 +11,6 @@ import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

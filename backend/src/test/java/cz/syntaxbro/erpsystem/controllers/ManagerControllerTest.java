@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.configs.SecurityConfig;
+import cz.syntaxbro.erpsystem.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;

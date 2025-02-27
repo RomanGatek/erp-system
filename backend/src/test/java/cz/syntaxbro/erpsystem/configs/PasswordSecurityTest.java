@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.configs;
 
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

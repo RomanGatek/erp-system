@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.configs.SecurityConfig;
+import cz.syntaxbro.erpsystem.security.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;

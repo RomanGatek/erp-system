@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
-import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.partials.UserPartial;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
@@ -10,9 +10,6 @@ import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
