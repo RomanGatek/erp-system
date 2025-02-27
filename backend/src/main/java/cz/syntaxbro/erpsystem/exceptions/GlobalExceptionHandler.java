@@ -51,6 +51,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + ex.getMessage());
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<String> handleDuplicateEntry(DataIntegrityViolationException ex) {
+        if (ex.getMessage().contains("Duplicate entry")) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Item with this name already exists.");
+        }
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("A database error occurred.");
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<String> handleValidationException(ConstraintViolationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Validation failed: " + ex.getMessage());
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> error(){
         return ResponseEntity.notFound().build();
