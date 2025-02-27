@@ -59,7 +59,8 @@
 
 <script>
 import { login, register } from '../services/auth';
-import Swal from 'sweetalert2';
+import { useMeStore } from '../stores/me';
+import { notify } from '@kyvg/vue3-notification'
 
 export default {
   name: 'LoginView',
@@ -80,57 +81,63 @@ export default {
       try {
         const token = await login(this.email, this.password);
         if (!token) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Login failed',
-            text: 'Your authorization token are not valid.'
-          });
+          notify({
+            type: 'error',
+            text: 'Vaše autorizační token není platný.',
+            duration: 5000,
+            speed: 500
+          })
           return;
         }
-        Swal.fire({
-          icon: 'success',
-          title: 'Login Successful',
-          text: 'You have been successfully logged in!',
-        }).then((after) => {
-            if (after.isConfirmed) {
-              console.log({ token });
-              localStorage.setItem('token', token);
-              this.$router.push('/');
-            }
-        });
+        localStorage.setItem('token', token);
+        const meStore = useMeStore();
+        await meStore.fetchMe(token)
+        this.$router.push('/');
+
+        notify({
+          type: 'success',
+          text: 'Úspěšně jste se přihlásil.',
+          duration: 2000,
+          speed: 500
+        })
+
       } catch (error) {
+        notify({
+          type: 'error',
+          text: 'Nastala chyba při přihlášení. Chyba: ' + error.response.message || error.message,
+          duration: 5000,
+          speed: 500
+        })
         console.error('Login failed', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: 'Invalid username or password. Please try again.',
-        });
       }
     },
     async register() {
       if (this.password !== this.confirmPassword) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Registration Failed',
-          text: 'Passwords do not match. Please try again.',
-        });
+        notify({
+          type: 'error',
+          text: 'Hesla se neshodují. Prosím zkuste to znovu.',
+          duration: 5000,
+          speed: 500
+        })
         return;
       }
       try {
         await register(this.username, this.email, this.password);
-        await Swal.fire({
-          icon: 'success',
-          title: 'Registration Successful',
-          text: 'You have been successfully registered!',
-        });
+        notify({
+          type: 'success',
+          text: 'Úspěšně jste se zaregistroval.',
+          duration: 5000,
+          speed: 500
+        })
         this.isLogin = true;
       } catch (error) {
         console.error('Registration failed', error);
-        await Swal.fire({
-          icon: 'error',
-          title: 'Registration Failed',
-          text: 'An error occurred during registration. Please try again.',
-        });
+        notify({
+          type: 'error',
+          text: 'Nastala chyba při registraci. Chyba: ' + error.response.message || error.message,
+          duration: 5000,
+          speed: 500
+        })
       }
     }
   }

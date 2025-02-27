@@ -1,6 +1,9 @@
 // stores/user.js
 import { defineStore } from 'pinia'
-import {user as api} from '@/services/api' // Import your axios instance
+import { user as api } from '@/services/api'
+import { useMeStore } from '@/stores/me'
+import { notify } from '@kyvg/vue3-notification'
+
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -72,49 +75,94 @@ export const useUserStore = defineStore('user', {
     async fetchUsers() {
       this.loading = true
       try {
-        const response = await api.get('/users')
-        this.users = response
+        /**@type {{id: number, username: string, email: string, roles: string[], active: boolean}[]}   */
+        const response = (await api.get('/users')).data
+        const me = useMeStore().user
+        this.users = response.filter(user => user.email !== me.email)
       } catch (error) {
-        this.error = error.response.message || error.message
+        this.error = error.response.data || error.data
+        console.log(error)
+        notify({
+          type: 'error',
+          text: 'Nastala chyba při načítání dat. Chyba: ' + error.response.data || error.message,
+          duration: 5000,
+          speed: 500
+        })
       } finally {
         this.loading = false
       }
     },
     async addUser(user) {
       try {
-        const payload = {...user, roles: ["admin"]};
+        console.log(user)
+        const payload = {...user, roles: user.roles.map(role => role.name.replace('ROLE_', ''))};
         await api.post('/users', payload)
         await this.fetchUsers()
+        notify({
+          type: 'success',
+          text: 'Údaje byly úspěšně přidány.',
+          duration: 5000,
+          speed: 500
+        })
       } catch (error) {
+        notify({
+          type: 'error',
+          text: 'Nastala chyba při přidávání dat. Chyba: ' + error.response.data || error.message,
+          duration: 5000,
+          speed: 500
+        })
         this.error = error.response.message || error.message
       }
     },
     async updateUser(user) {
       try {
-        console.log("user", {...user})
         await api.put(`/users/${user.id}`, {
           lastName: user.lastName,
           firstName: user.firstName,
           email: user.email,
           username: user.username,
-          roles: ["admin"],
+          roles: user.roles.map(role => role.name.replace('ROLE_', '')),
           active: user.active,
           password: user.password,
         })
         await this.fetchUsers()
         this.isEditing = false
         this.editedUserIndex = null
+        notify({
+          type: 'success',
+          text: 'Údaje byly úspěšně aktualizovány.',
+          duration: 5000,
+          speed: 500
+        })
       } catch (error) {
+        notify({
+          type: 'error',
+          text: 'Nastala chyba při aktualizování dat.',
+          duration: 5000,
+          speed: 500
+        })
         console.log(error.response.data)
-        this.error = error.response.message || error.message
+        this.error = error.response.data || error.message
       }
     },
     async deleteUser(userId) {
       try {
         await api.delete(`/users/${userId}`)
         await this.fetchUsers()
+        notify({
+          type: 'success',
+          text: 'Údaje byly úspěšně smazány.',
+          duration: 5000,
+          speed: 500
+        })
       } catch (error) {
-        this.error = error.response.message || error.message
+        notify({
+          type: 'error',
+          text: 'Nastala chyba při smazání dat. Chyba: ' + error.response.data || error.message,
+          duration: 5000,
+          speed: 500
+        })
+        this.error = error.response.data || error.message
       }
     },
     editUser(index) {

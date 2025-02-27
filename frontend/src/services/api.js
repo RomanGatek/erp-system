@@ -17,28 +17,23 @@ class Api {
   }
 
   async get(url, params = {}) {
-    const response = await this.api.get(url, { params })
-    return response.data
+    return await this.api.get(url, { ...params })
   }
 
   async post(url, data = {}) {
-    const response = await this.api.post(url, data)
-    return response.data
+    return await this.api.post(url, { ...data })
   }
 
   async put(url, data = {}) {
-    const response = await this.api.put(url, data)
-    return response.data
+    return await this.api.put(url, { ...data })
   }
 
   async delete(url) {
-    const response = await this.api.delete(url)
-    return response.data
+    return await this.api.delete(url)
   }
 
   async patch(url, data = {}) {
-    const response = await this.api.patch(url, data)
-    return response.data
+    return await this.api.patch(url, { ...data })
   }
 }
 
