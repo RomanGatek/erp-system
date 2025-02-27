@@ -44,8 +44,8 @@ public class GlobalExceptionHandler {
 
     // Error with unauthorized access (e.g. wrong password)
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: " + ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleAccessDeniedException(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorEntity("*", ex.getLocalizedMessage()));
     }
 
     // Error when entering incorrect information (e.g. username already exists)
@@ -73,25 +73,25 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<String> handleDuplicateEntry(DataIntegrityViolationException ex) {
+    public ResponseEntity<ErrorEntity> handleDuplicateEntry(DataIntegrityViolationException ex) {
         if (ex.getMessage().contains("Duplicate entry")) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Item with this name already exists.");
+                    .body(new ErrorEntity("*", "Item with this name already exists."));
         }
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("A database error occurred.");
+                .body(new ErrorEntity("*", "A database error occurred."));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleEntityNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorEntity("*", ex.getMessage()));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<String> handleValidationException(ConstraintViolationException ex) {
+    public ResponseEntity<ErrorEntity> handleValidationException(ConstraintViolationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Validation failed: " + ex.getMessage());
+                .body(new ErrorEntity("*", ex.getMessage()));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
