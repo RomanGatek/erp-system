@@ -63,7 +63,7 @@
                   :error="serverErrors.firstName" />
                 <BaseInput v-model="profileForm.lastName" label="Last Name" placeholder="Your last name"
                   :error="serverErrors.lastName" />
-                <BaseInput v-model="profileForm.email" type="email" label="Email Address" placeholder="your@email.com"
+                <BaseInput disabled v-model="profileForm.email" type="email" label="Email Address" placeholder="your@email.com"
                   :error="serverErrors.email" />
                 <BaseInput v-model="profileForm.username" label="Username" placeholder="Username"
                   :error="serverErrors.username" />

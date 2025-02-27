@@ -50,11 +50,6 @@ public class FileStorageServiceImp implements FileStorageService {
 
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-            var f = new File(targetLocation.toString());
-
-            ErpSystemApplication.getLogger().info("Stored file " + f);
-            ErpSystemApplication.getLogger().info("Successfully stored file " + f.exists());
-
             return fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Could not store file " + fileName, ex);
