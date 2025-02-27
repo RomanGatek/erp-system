@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
             user.setActive(userDto.isActive());
             user.setRoles(userDto.getRoles()
                     .stream()
-                    .map(roleRepository::findByName)
+                    .map(role -> roleRepository.findByName("ROLE_" + role.toUpperCase()))
                     .filter(Optional::isPresent)
                     .map(Optional::get).collect(Collectors.toSet()));
 
