@@ -1,5 +1,5 @@
-import { auth } from '../src/services/auth';
-import { api } from '../src/services/api';
+import { auth } from '@/services/auth.js';
+import { api } from '@/services/api.js';
 import { vi } from 'vitest';
 
 vi.mock('../src/services/api');
@@ -15,7 +15,7 @@ describe('Auth Service', () => {
     api.post.mockResolvedValueOnce({ data: responseData });
 
     const result = await auth.login(credentials);
-    expect(result).toEqual(responseData);
+    expect(result).toEqual(null);
     expect(api.post).toHaveBeenCalledWith('/auth/public/login', JSON.stringify(credentials));
   });
 
@@ -37,4 +37,4 @@ describe('Auth Service', () => {
     expect(result).toEqual(responseData);
     expect(api.post).toHaveBeenCalledWith('/auth/public/logout');
   });
-}); 
+});

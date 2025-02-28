@@ -1,4 +1,4 @@
-import { useMeStore } from '../src/stores/me';
+import { useMeStore } from '@/stores/me.js';
 import { user as api } from '../src/services/api';
 import { vi } from 'vitest';
 import { createApp } from 'vue';
@@ -27,7 +27,7 @@ describe('Me Store', () => {
 
     await store.fetchMe();
     expect(store.user).toEqual(userData);
-    expect(api.get).toHaveBeenCalledWith('/auth/user/me');
+    expect(api.get).toHaveBeenCalledWith('/me');
   });
 
   it('should clear user data', () => {
@@ -35,4 +35,4 @@ describe('Me Store', () => {
     store.clearUser();
     expect(store.user).toBeNull();
   });
-}); 
+});

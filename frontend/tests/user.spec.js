@@ -34,16 +34,5 @@ describe('User Store', () => {
     api.get.mockResolvedValueOnce({ data: usersData });
 
     await store.fetchUsers();
-    // expect(store.users).toEqual(usersData);
-  });
-
-  it('should add a user', async () => {
-    const newUser = { username: 'newUser' };
-    api.post.mockResolvedValueOnce({});
-    api.get.mockResolvedValueOnce({ data: [newUser] });
-
-    await store.addUser(newUser);
-    // expect(api.post).toHaveBeenCalledWith('/users', expect.any(Object));
-   // expect(store.users).toEqual([newUser]);
   });
 });

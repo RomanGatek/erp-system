@@ -1,29 +1,9 @@
-import { user, api } from '../src/services/api';
+import { user } from '@/services/api.js';
 import { vi } from 'vitest';
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
-// // Mock the axios instance
-// vi.mock('axios', () => {
-//   const mockAxios = {
-//     create: vi.fn(() => mockAxios),
-//     interceptors: {
-//       request: {
-//         use: vi.fn(),
-//       },
-//     },
-//     defaults: {},
-//   };
-//   return mockAxios;
-// });
 
-// vi.mock('user', () => {
-//   const mockUser = {
-//     create: vi.fn(() => mockUser),
-//     interceptors: { request: { use: vi.fn() }},
-//     defaults: {}
-//   }
-// })
 
 const app = createApp({})
 const pinia = createPinia()

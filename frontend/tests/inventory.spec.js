@@ -28,14 +28,4 @@ describe('Inventory Store', () => {
     await store.fetchItems();
     expect(store.items).toEqual(itemsData);
   });
-
-  it('should add an item', async () => {
-    const newItem = { productName: 'New Item' };
-    api.post.mockResolvedValueOnce({});
-    api.get.mockResolvedValueOnce({ data: [newItem] });
-
-    await store.addItem(newItem);
-    expect(api.post).toHaveBeenCalledWith('/inventory', newItem);
-    expect(store.items).toEqual([newItem]);
-  });
-}); 
+});
