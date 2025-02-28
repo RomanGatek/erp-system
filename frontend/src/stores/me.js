@@ -10,7 +10,7 @@ export const useMeStore = defineStore('me', {
   actions: {
     async fetchMe() {
       try {
-        const response = await api.get('/auth/user/me')
+        const response = await api.get('/me')
         this.user = response.data
       } catch (err) {
         this.error = err
@@ -26,30 +26,18 @@ export const useMeStore = defineStore('me', {
       this.error = null
     },
     async updateProfile(profileData) {
-      try {
-        const response = await api.put('auth/user/me', profileData)
-        this.user = response.data
-        return response.data
-      } catch (error) {
-        throw error
-      }
+      const response = await api.put('/me', profileData)
+      this.user = response.data
+      return response.data
     },
     async updatePassword(pass) {
-      try {
-        const response = await api.post('/auth/user/me/change-password', { password: pass })
-        this.user = { password: response.data, ...this.user }
-      } catch (error) {
-        throw error
-      }
+      const response = await api.post('/me/change-password', { password: pass })
+      this.user = { password: response.data, ...this.user }
     },
     async updateAvatar(formData) {
-      try {
-        const response = await api.post('/auth/user/me/avatar', formData)
-        this.user = response.data
-        return response.data
-      } catch (error) {
-        throw error
-      }
+      const response = await api.post('/me/avatar', formData)
+      this.user = response.data
+      return response.data
     }
   }
 })

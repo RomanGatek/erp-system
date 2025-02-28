@@ -49,7 +49,7 @@ router.beforeEach(async (to, from, next) => {
   if (!meStore.user) {
     try {
       await meStore.fetchMe(token)
-    } catch (_) {
+    } catch {
       notify({
         type: 'error',
         text: 'Vaše session vypršela. Prosím, přihlaste se znovu.',

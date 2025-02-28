@@ -169,6 +169,7 @@ const profileForm = reactive({
   username: '',
   newPassword: '',
   confirmPassword: '',
+  avatar: '',
   notifications: {
     email: true,
     push: true
@@ -251,6 +252,7 @@ const handleAvatarChange = async (event) => {
 const serverErrors = ref({
   firstName: '',
   lastName: '',
+  avatar: '',
   email: '',
   username: '',
   newPassword: '',
@@ -264,6 +266,7 @@ const clearServerErrors = () => {
     firstName: '',
     lastName: '',
     email: '',
+    avatar: '',
     username: '',
     newPassword: '',
     confirmPassword: '',
@@ -289,7 +292,6 @@ const handleServerValidationErrors = (error) => {
       data.forEach(e => {
         const { field, message } = e
         if (field === 'password') {
-          serverErrors.value['confirmPassword'] = message
           serverErrors.value['newPassword'] = message
         } else if (field) {
           serverErrors.value[field] = message
@@ -300,7 +302,6 @@ const handleServerValidationErrors = (error) => {
     } else {
       const { field, message } = data
       if (field === 'password') {
-        serverErrors.value['confirmPassword'] = message
         serverErrors.value['newPassword'] = message
       } else if (field) {
         serverErrors.value[field] = message

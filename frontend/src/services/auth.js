@@ -1,9 +1,15 @@
 import { api } from './api'
 
+/**
+ * @typedef {{accessToken: string, refreshToken: string}} LoginResponse
+ * */
+
 export const auth = {
   async login(credentials) {
     const response = await api.post('/auth/public/login', JSON.stringify(credentials))
-    return response.data
+    /** @type LoginResponse */
+    const data = response.data
+    return data?.accessToken ?? null
   },
 
   async register(userData) {

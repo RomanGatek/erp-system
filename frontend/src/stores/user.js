@@ -32,7 +32,8 @@ export const useUserStore = defineStore('user', {
       return null
     },
     filteredUsers: (state) => {
-      let filtered = [...state.users]
+      // eslint-disable-next-line no-unsafe-optional-chaining
+      let filtered = [...state?.users]
 
       if (state.searchQuery) {
         const searchValue = state.searchQuery.toLowerCase()
