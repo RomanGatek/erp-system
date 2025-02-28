@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { notify } from '@kyvg/vue3-notification'; // Import notification
 
 const baseURL = 'http://localhost:8080/api'
 
@@ -34,5 +35,21 @@ const api = axios.create({
     'Content-Type': 'application/json'
   }
 })
+
+const fetchItems = async () => {
+    try {
+        const response = await api.get('/inventory');
+        items.value = response.data;
+        error.value = null;
+    } catch (err) {
+        console.log(err.message);
+        error.value = err.message;
+        notify({ // Notify user on error
+            type: 'error',
+            text: 'Failed to fetch items: ' + err.message,
+            duration: 5000,
+        });
+    }
+}
 
 export { api, user }
