@@ -13,8 +13,8 @@ import Unauthorized from '@/views/Unauthorized.vue'
 const routes = [
   { path: '/', component: Home },
   { path: '/auth', component: Auth },
-  { 
-    path: '/profile', 
+  {
+    path: '/profile',
     component: Profile,
     meta: { requiresAuth: true }
   },
@@ -42,22 +42,14 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   const meStore = useMeStore()
 
-  if (to.path === '/auth' && token) {
-    return next('/')
-  }
-
-  if (to.path === '/auth') {
-    return next()
-  }
-
-  if (!token) {
-    return next('/auth')
-  }
+  if (to.path === '/auth' && token) return next('/')
+  if (to.path === '/auth') return next()
+  if (!token) return next('/auth')
 
   if (!meStore.user) {
     try {
       await meStore.fetchMe(token)
-    } catch (error) {
+    } catch (_) {
       notify({
         type: 'error',
         text: 'Vaše session vypršela. Prosím, přihlaste se znovu.',

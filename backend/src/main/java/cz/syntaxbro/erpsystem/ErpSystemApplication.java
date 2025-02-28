@@ -1,10 +1,11 @@
 package cz.syntaxbro.erpsystem;
 
 import lombok.Getter;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 @SpringBootApplication
 public class ErpSystemApplication {
@@ -15,6 +16,6 @@ public class ErpSystemApplication {
 
 
     @Getter
-    static Logger logger = Logger.getLogger(ErpSystemApplication.class.getName());
+    static Logger logger = LoggerFactory.getLogger(ErpSystemApplication.class.getName());
 
 }

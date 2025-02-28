@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.logging.Level;
 
 
 @RestController
@@ -32,8 +31,7 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) {
 
-        ErpSystemApplication.getLogger().log(Level.INFO,
-                "\u001B[32mCreating product: {0}\u001B[0m", productRequest);
+        ErpSystemApplication.getLogger().info("\u001B[32mCreating product: {}\u001B[0m", productRequest);
 
         Product createdProduct = productService.createProduct(
                 Product.builder()

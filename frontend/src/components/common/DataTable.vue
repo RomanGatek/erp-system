@@ -1,5 +1,4 @@
 <script setup>
-import { defineProps } from 'vue'
 
 const props = defineProps({
   headers: {
@@ -119,4 +118,4 @@ const props = defineProps({
       </tbody>
     </table>
   </div>
-</template> 
+</template>

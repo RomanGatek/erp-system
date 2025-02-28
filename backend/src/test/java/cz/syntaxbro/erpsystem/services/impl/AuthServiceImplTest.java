@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.services.impl;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
+import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
@@ -25,6 +26,9 @@ class AuthServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private UserService userService;
+
+    @Mock
     private PasswordSecurity passwordSecurity;
 
     @Mock
@@ -36,7 +40,7 @@ class AuthServiceImplTest {
     @BeforeEach
     void setUp() {
         autoCloseable = MockitoAnnotations.openMocks(this);
-        authServiceImpl = new AuthServiceImpl(userRepository, jwtUtil, passwordSecurity);
+        authServiceImpl = new AuthServiceImpl(userRepository, jwtUtil, passwordSecurity, userService);
 
         signUpRequest = new SignUpRequest("Username", "1!Password", "email@email.com");
 

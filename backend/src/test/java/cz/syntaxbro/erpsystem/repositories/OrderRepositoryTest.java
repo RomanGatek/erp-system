@@ -28,8 +28,8 @@ class OrderRepositoryTest {
     @BeforeEach
     void setUp() {
         //Products
-        Product productOne = new Product(null,"ProductOne", 100.0, 10);
-        Product productTwo = new Product(null,"ProductTwo", 200.0, 10);
+        Product productOne = new Product(null,"ProductOne", 100.0, "ProductOne");
+        Product productTwo = new Product(null,"ProductTwo", 200.0, "ProductTwo");
         //save products
         productRepository.save(productOne);
         productRepository.save(productTwo);

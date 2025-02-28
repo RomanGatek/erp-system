@@ -3,9 +3,9 @@ package cz.syntaxbro.erpsystem.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,6 @@ class OrderControllerTest {
 
     private Product product;
     private Order order;
-    private OrderDto orderDto;
     private LocalDateTime now;
     private String dateNow;
     @Autowired
@@ -61,9 +60,8 @@ class OrderControllerTest {
         this.now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         this.dateNow = now.format(formatter);
-        this.product = new Product(1L, "Product Name", 12.12, 1);
-        this.orderDto = new OrderDto(100, 100.0, Order.Status.ORDERED, this.now, product.getId());
-        this.order = new Order(1L, product, orderDto.getAmount(), orderDto.getCost(), orderDto.getStatus(), orderDto.getOrderTime());
+        this.product = new Product(1L, "Product Name", 12.12, "Product Description");
+        this.order = new Order(1L, product, 100, 100d, Order.Status.PREORDER, LocalDateTime.now());
 
     }
 
@@ -74,14 +72,14 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void createProductOkTest() throws Exception {
-        when(orderService.createdOrder(any(OrderDto.class)))
+        when(orderService.createdOrder(any(OrderRequest.class)))
                 .thenReturn(this.order);
 
         mockMvc.perform(post("/api/orders/create")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        verify(orderService, times(1)).createdOrder(any(OrderDto.class));
+        verify(orderService, times(1)).createdOrder(any(OrderRequest.class));
     }
 
     /**
@@ -91,14 +89,14 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void createProductWrongProductNullTest() throws Exception {
-        when(orderService.createdOrder(any(OrderDto.class)))
+        when(orderService.createdOrder(any(OrderRequest.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product ID must be greater than 0"));
 
         mockMvc.perform(post("/api/orders/create")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(orderService, times(0)).createdOrder(any(OrderDto.class));
+        verify(orderService, times(0)).createdOrder(any(OrderRequest.class));
     }
 
     /**
@@ -108,8 +106,8 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void createOrderWithWrongProductID0Test() throws Exception {
-        this.orderDto.setProductId(0L);
-        when(orderService.createdOrder(any(OrderDto.class)))
+        this.order.setProduct(new Product(2L, "Product Name", 12.12, "Product Description"));
+        when(orderService.createdOrder(any(OrderRequest.class)))
                 .thenReturn(this.order);
 
         mockMvc.perform(post("/api/orders/create")
@@ -117,7 +115,7 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString("Product ID must be greater than 0")))
                 .andExpect(status().isBadRequest());
 
-        verify(orderService, times(0)).createdOrder(any(OrderDto.class));
+        verify(orderService, times(0)).createdOrder(any(OrderRequest.class));
     }
 
     /**
@@ -247,7 +245,16 @@ class OrderControllerTest {
     @Test
     @WithMockUser(username = "admin")
     void updateOrder() throws Exception {
-        Mockito.doNothing().when(orderService).updateOrder(1L, this.orderDto);
+
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setStatus(Order.Status.ORDERED);
+        orderRequest.setOrderTime(this.order.getOrderTime());
+        orderRequest.setCost(this.order.getCost());
+        orderRequest.setProductId(this.product.getId());
+        orderRequest.setAmount(this.order.getAmount());
+
+
+        Mockito.doNothing().when(orderService).updateOrder(1L, orderRequest);
         mockMvc.perform(put("/api/orders/1"))
                 .andExpect(status().isOk());
         Mockito.verify(orderService).deleteOrder(1L);

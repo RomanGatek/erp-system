@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -17,6 +19,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
+@EnableMethodSecurity(prePostEnabled = true)
+@PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
 public class OrderController {
 
     private final OrderService orderService;
