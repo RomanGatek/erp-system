@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.configs.SecurityConfig;
+import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.security.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
@@ -36,6 +37,7 @@ class UserControllerTest {
 
     private User testUser;
     private CreateUserRequest createUserRequest;
+    private UserPartial userPartial;
 
     /**
      * Setup method that runs before each test case.
@@ -50,13 +52,17 @@ class UserControllerTest {
                 .lastName("User")
                 .password("Password123@")
                 .email("test@example.com")
-                .isActive(true)
+                .active(true)
                 .roles(Set.of(new Role("USER")))
                 .build();
 
         createUserRequest = new CreateUserRequest(
                 "testUser", "StrongPassword1!", "test@example.com",
                 "Test", "User", true, Set.of("ROLE_USER")
+        );
+
+        userPartial = new UserPartial(
+                "testUser", "test@example.com","Test", "User", true, Set.of("ROLE_USER")
         );
 
     }
@@ -153,15 +159,15 @@ class UserControllerTest {
      */
     @Test
     void updateUser_shouldReturnUpdatedUser() {
-        when(userService.updateUser(1L, createUserRequest)).thenReturn(testUser);
+        when(userService.updateUser(1L, userPartial)).thenReturn(testUser);
 
-        ResponseEntity<User> response = userController.updateUser(1L, createUserRequest);
+        ResponseEntity<User> response = userController.updateUser(1L, userPartial);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getUsername()).isEqualTo(testUser.getUsername());
 
-        verify(userService, times(1)).updateUser(1L, createUserRequest);
+        verify(userService, times(1)).updateUser(1L, userPartial);
     }
 
     /**

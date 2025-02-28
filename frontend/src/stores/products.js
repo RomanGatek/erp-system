@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import {user as api} from '@/services/api' // Import your axios instance
+import {user as api} from '@/services/api'
 import { ref, computed } from 'vue'
-import { notify } from '@kyvg/vue3-notification' // Změna importu
+import { notify } from '@kyvg/vue3-notification'
 
 export const useProductsStore = defineStore('products', () => {
     const products = ref([])
@@ -13,11 +13,10 @@ export const useProductsStore = defineStore('products', () => {
         perPage: 10
     })
 
-    // Filtrované produkty podle vyhledávání
     const filteredProducts = computed(() => {
         if (!searchQuery.value) return products.value
-        
-        return products.value.filter(product => 
+
+        return products.value.filter(product =>
             product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             product.price.toString().includes(searchQuery.value)
         )
@@ -28,7 +27,7 @@ export const useProductsStore = defineStore('products', () => {
         const sorted = [...filteredProducts.value].sort((a, b) => {
             const aValue = a[sorting.value.field]
             const bValue = b[sorting.value.field]
-            
+
             if (sorting.value.direction === 'asc') {
                 return aValue > bValue ? 1 : -1
             }
@@ -78,23 +77,23 @@ export const useProductsStore = defineStore('products', () => {
     const updateProduct = async (id, productData) => {
         try {
             await api.put(`/products/${id}`, productData);
-            
+
             const index = products.value.findIndex(p => p.id === id);
             if (index !== -1) {
-                products.value[index] = { 
-                    ...products.value[index], 
+                products.value[index] = {
+                    ...products.value[index],
                     ...productData,
                     id
                 };
             }
-            
+
             notify({
                 type: 'success',
                 text: 'Produkt byl úspěšně aktualizován',
                 duration: 5000,
                 speed: 500
             });
-            
+
             error.value = null;
         } catch (err) {
             error.value = err.message;

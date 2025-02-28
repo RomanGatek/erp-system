@@ -38,9 +38,9 @@ class ProductControllerTest {
 
     @BeforeEach
     void setUp() {
-        goodProduct = new Product(1L, "Product Name", 12.12, 1);
-        badProduct = new Product(1L, "", 12.12, 1);
-        updatedProduct = new Product(1L, "New Product Name", 12.13, 2);
+        goodProduct = new Product(1L, "Product Name", 12.12, "Good Product");
+        badProduct = new Product(1L, "", 12.12, "Bad Product");
+        updatedProduct = new Product(1L, "New Product Name", 12.13, "Updated Product");
     }
 
     /**
@@ -94,8 +94,8 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(goodProduct.getId()))
                 .andExpect(jsonPath("$.name").value(goodProduct.getName()))
-                .andExpect(jsonPath("$.cost").value(goodProduct.getCost()))
-                .andExpect(jsonPath("$.quantity").value(goodProduct.getQuantity()));
+                .andExpect(jsonPath("$.price").value(goodProduct.getPrice()))
+                .andExpect(jsonPath("$.description").value(goodProduct.getDescription()));
 
         verify(productService, times(1))
                 .getProductById(goodProduct.getId());
@@ -116,8 +116,8 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(goodProduct.getId()))
                 .andExpect(jsonPath("$.name").value(goodProduct.getName()))
-                .andExpect(jsonPath("$.cost").value(goodProduct.getCost()))
-                .andExpect(jsonPath("$.quantity").value(goodProduct.getQuantity()));
+                .andExpect(jsonPath("$.price").value(goodProduct.getPrice()))
+                .andExpect(jsonPath("$.description").value(goodProduct.getDescription()));
 
         verify(productService, times(1))
                 .getProductByName(goodProduct.getName());
@@ -139,8 +139,8 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(updatedProduct.getId()))
                 .andExpect(jsonPath("$.name").value(updatedProduct.getName()))
-                .andExpect(jsonPath("$.cost").value(updatedProduct.getCost()))
-                .andExpect(jsonPath("$.quantity").value(updatedProduct.getQuantity()));;
+                .andExpect(jsonPath("$.price").value(updatedProduct.getPrice()))
+                .andExpect(jsonPath("$.description").value(updatedProduct.getDescription()));
 
         verify(productService, times(1))
                 .updateProduct(updatedProduct.getId(), updatedProduct);

@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.configs;
+package cz.syntaxbro.erpsystem.security;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

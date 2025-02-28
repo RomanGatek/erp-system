@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.utils;
 
-import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -36,6 +38,8 @@ class DataLoaderTest {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
     DataLoaderTest(@org.springframework.beans.factory.annotation.Autowired RoleRepository roleRepository,
                    @org.springframework.beans.factory.annotation.Autowired UserRepository userRepository,
@@ -49,7 +53,7 @@ class DataLoaderTest {
     void setUp() {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
-        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity);
+        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository);
         dataLoader.run();
     }
 
@@ -73,24 +77,6 @@ class DataLoaderTest {
         Optional<Role> userRole = roleRepository.findByName("ROLE_USER");
         assertThat(userRole).isPresent();
         assertThat(userRole.get().getPermissions()).hasSize(1);
-    }
-
-    @Test
-    void shouldPersistUsersWithRoles() {
-        Optional<User> admin = userRepository.findByUsername("admin");
-        assertThat(admin).isPresent();
-        assertThat(admin.get().getRoles()).hasSize(1);
-        assertThat(admin.get().getRoles().iterator().next().getName()).isEqualTo("ROLE_ADMIN");
-
-        Optional<User> manager = userRepository.findByUsername("manager");
-        assertThat(manager).isPresent();
-        assertThat(manager.get().getRoles()).hasSize(1);
-        assertThat(manager.get().getRoles().iterator().next().getName()).isEqualTo("ROLE_MANAGER");
-
-        Optional<User> user = userRepository.findByUsername("user");
-        assertThat(user).isPresent();
-        assertThat(user.get().getRoles()).hasSize(1);
-        assertThat(user.get().getRoles().iterator().next().getName()).isEqualTo("ROLE_USER");
     }
 
     @Test

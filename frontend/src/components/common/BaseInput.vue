@@ -23,6 +23,10 @@ defineProps({
   variant: {
     type: String,
     default: 'primary' // primary, success, warning, danger
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -41,12 +45,15 @@ defineEmits(['update:modelValue'])
       :placeholder="placeholder"
       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors"
       :class="[
-        error 
-          ? 'border-red-500 focus:ring-red-200' 
-          : 'border-gray-300 focus:ring-blue-200'
+        error
+          ? 'border-red-500 focus:ring-red-200'
+          : 'border-gray-300 focus:ring-blue-200',
+        disabled
+          ? '!o bg-gray-200 pointer-events-none cursor-not-allowed text-gray-500'
+          : ''
       ]"
       v-bind="$attrs"
     />
     <span v-if="error" class="text-xs text-red-500">{{ error }}</span>
   </div>
-</template> 
+</template>

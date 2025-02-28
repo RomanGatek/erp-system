@@ -3,8 +3,6 @@ package cz.syntaxbro.erpsystem.exceptions;
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +16,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -38,78 +35,76 @@ public class GlobalExceptionHandler {
 
     // Error when user not found
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleUserNotFoundException(UserNotFoundException ex) {
+        var entity = new ErrorEntity("user", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(entity);
     }
 
     // Error with unauthorized access (e.g. wrong password)
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied: " + ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleAccessDeniedException(AccessDeniedException ex) {
+        var entity = new ErrorEntity("access", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(entity);
     }
 
     // Error when entering incorrect information (e.g. username already exists)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorEntity> handleIllegalArgumentException(IllegalArgumentException ex) {
-        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
-        var entity = new ErrorEntity("email", ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
+        var entity = new ErrorEntity("argument", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(entity);
     }
 
     // General server error (unexpected errors)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorEntity> handleGlobalException(Exception ex) {
-        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
-        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getClass().getName());
-        var entity = new ErrorEntity("password", ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getClass().getName());
+        var entity = new ErrorEntity("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorEntity> handleResourceNotFoundException(NoResourceFoundException ex) {
-        ErpSystemApplication.getLogger().log(Level.WARNING, ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
         var entity = new ErrorEntity("resource", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(entity);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<String> handleDuplicateEntry(DataIntegrityViolationException ex) {
+    public ResponseEntity<ErrorEntity> handleDuplicateEntry(DataIntegrityViolationException ex) {
+        var entity = new ErrorEntity("database", ex.getMessage());
         if (ex.getMessage().contains("Duplicate entry")) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Item with this name already exists.");
+            entity.setMessage("Item with this name already exists.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(entity);
         }
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("A database error occurred.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ErrorEntity> handleEntityNotFound(EntityNotFoundException ex) {
+        var entity = new ErrorEntity("entity", ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(entity);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<String> handleValidationException(ConstraintViolationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Validation failed: " + ex.getMessage());
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> error(){
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<ErrorEntity> handleValidationException(ConstraintViolationException ex) {
+        var entity = new ErrorEntity("validation", ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(entity);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
-        return new ResponseEntity<>(ex.getReason(), ex.getStatusCode());
+    public ResponseEntity<ErrorEntity> handleResponseStatusException(ResponseStatusException ex) {
+        var entity = new ErrorEntity("response", ex.getReason());
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
+        return new ResponseEntity<>(entity, ex.getStatusCode());
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class ErrorEntity {
-        private String field;
-        private String message;
+    public static class UserNotFoundException extends RuntimeException {
+        public UserNotFoundException(String message) {
+            super(message);
+        }
     }
-
-
 }
