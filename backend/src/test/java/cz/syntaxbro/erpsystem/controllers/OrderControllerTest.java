@@ -10,21 +10,27 @@ import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -34,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class OrderControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -41,19 +48,25 @@ class OrderControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @Mock
     private OrderService orderService;
+
+    @InjectMocks
+    private OrderController orderController;
 
     private Product product;
     private Order order;
     private LocalDateTime now;
     private String dateNow;
+
     @Autowired
     private ProductService productService;
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private ProductRepository productRepository;
+
+    private Order testOrder;
 
     @BeforeEach
     void setUp() {
@@ -62,7 +75,10 @@ class OrderControllerTest {
         this.dateNow = now.format(formatter);
         this.product = new Product(1L, "Product Name", 12.12, "Product Description");
         this.order = new Order(1L, product, 100, 100d, Order.Status.PREORDER, LocalDateTime.now());
-
+        this.testOrder = new Order();
+        this.testOrder.setId(1L);
+        this.testOrder.setAmount(5);
+        this.testOrder.setCost(100.0);
     }
 
     /**
@@ -70,14 +86,19 @@ class OrderControllerTest {
         Expected result: HTTP 201.
      */
     @Test
-    @WithMockUser(username = "admin")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void createProductOkTest() throws Exception {
-        when(orderService.createdOrder(any(OrderRequest.class)))
-                .thenReturn(this.order);
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        String orderTime = LocalDateTime.now().plusDays(2).format(formatter);
+        String requestJson = String.format("{\"amount\": 22, \"cost\": 2, \"productId\":1, \"quantity\":2, \"status\":\"PREORDER\", \"orderTime\":\"%s\"}", orderTime);
+
+        when(orderService.createdOrder(any(OrderRequest.class))).thenReturn(this.order);
 
         mockMvc.perform(post("/api/orders/create")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         verify(orderService, times(1)).createdOrder(any(OrderRequest.class));
     }
@@ -260,4 +281,42 @@ class OrderControllerTest {
         Mockito.verify(orderService).deleteOrder(1L);
     }
 
+    @Test
+    @WithMockUser(username = "admin")
+    void createOrder_shouldReturnCreatedOrder() throws Exception {
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setAmount(5);
+        orderRequest.setCost(100.0);
+        when(orderService.createdOrder(any(OrderRequest.class))).thenReturn(testOrder);
+
+        mockMvc.perform(post("/api/orders/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(orderRequest)))
+                .andExpect(status().isCreated());
+
+        verify(orderService, times(1)).createdOrder(any(OrderRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "admin")
+    void getOrderById_shouldReturnOrder() throws Exception {
+        when(orderService.getOrderById(1L)).thenReturn(testOrder);
+
+        mockMvc.perform(get("/api/orders/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(orderService, times(1)).getOrderById(1L);
+    }
+
+    @Test
+    @WithMockUser(username = "admin")
+    void getOrderById_shouldReturnNotFound_whenOrderDoesNotExist() throws Exception {
+        when(orderService.getOrderById(1L)).thenThrow(new RuntimeException("Order not found"));
+
+        mockMvc.perform(get("/api/orders/1"))
+                .andExpect(status().isNotFound());
+
+        verify(orderService, times(1)).getOrderById(1L);
+    }
 }

@@ -2,17 +2,25 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -22,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class ProductControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -29,18 +38,26 @@ class ProductControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @Mock
     private ProductService productService;
+
+    @InjectMocks
+    private ProductController productController;
 
     private Product goodProduct;
     private Product badProduct;
     private Product updatedProduct;
+    private Product testProduct;
 
     @BeforeEach
     void setUp() {
         goodProduct = new Product(1L, "Product Name", 12.12, "Good Product");
         badProduct = new Product(1L, "", 12.12, "Bad Product");
         updatedProduct = new Product(1L, "New Product Name", 12.13, "Updated Product");
+        testProduct = new Product();
+        testProduct.setId(1L);
+        testProduct.setName("Test Product");
+        testProduct.setPrice(10.0);
     }
 
     /**
@@ -178,5 +195,41 @@ class ProductControllerTest {
 
         verify(productService, times(1))
                 .deleteProductByName(goodProduct.getName());
+    }
+
+    @Test
+    void createProduct_shouldReturnCreatedProduct() throws Exception {
+        ProductRequest productRequest = new ProductRequest();
+        productRequest.setName("Test Product");
+        productRequest.setPrice(10.0);
+        when(productService.createProduct(any(Product.class))).thenReturn(testProduct);
+
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(productRequest)))
+                .andExpect(status().isCreated());
+
+        verify(productService, times(1)).createProduct(any(Product.class));
+    }
+
+    @Test
+    void getProductById_shouldReturnProduct() throws Exception {
+        when(productService.getProductById(1L)).thenReturn(testProduct);
+
+        mockMvc.perform(get("/api/products/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(productService, times(1)).getProductById(1L);
+    }
+
+    @Test
+    void getProductById_shouldReturnNotFound_whenProductDoesNotExist() throws Exception {
+        when(productService.getProductById(1L)).thenThrow(new RuntimeException("Product not found"));
+
+        mockMvc.perform(get("/api/products/1"))
+                .andExpect(status().isNotFound());
+
+        verify(productService, times(1)).getProductById(1L);
     }
 }
