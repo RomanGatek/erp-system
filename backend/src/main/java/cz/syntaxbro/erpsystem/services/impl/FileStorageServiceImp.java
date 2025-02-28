@@ -1,14 +1,13 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
-import cz.syntaxbro.erpsystem.configs.FileStorageConfig;
+import cz.syntaxbro.erpsystem.security.FileStorageConfig;
 import cz.syntaxbro.erpsystem.services.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

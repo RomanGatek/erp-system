@@ -5,7 +5,7 @@ import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
-import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import lombok.extern.slf4j.Slf4j;

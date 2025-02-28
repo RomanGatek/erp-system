@@ -1,9 +1,10 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
-import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
+import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.services.UserService;
 import cz.syntaxbro.erpsystem.utils.JwtUtil;

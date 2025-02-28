@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.services.impl;
+package cz.syntaxbro.erpsystem.security.services;
 
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;

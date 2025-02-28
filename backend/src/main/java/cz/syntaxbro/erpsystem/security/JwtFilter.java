@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.configs;
+package cz.syntaxbro.erpsystem.security;
 
 import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import jakarta.servlet.FilterChain;

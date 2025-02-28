@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.configs;
+package cz.syntaxbro.erpsystem.security;
 
 import lombok.Getter;
 import lombok.Setter;
