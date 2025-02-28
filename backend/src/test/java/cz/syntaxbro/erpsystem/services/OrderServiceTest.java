@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.services;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.impl.OrderServiceImpl; // Předpokládáme, že máte implementaci
 import cz.syntaxbro.erpsystem.services.ProductService; // Přidejte import pro ProductService
@@ -26,6 +27,9 @@ public class OrderServiceTest {
 
     @Mock
     private ProductService productService; // Přidejte mock pro ProductService
+
+    @Mock
+    private ProductRepository productRepository;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -55,15 +59,33 @@ public class OrderServiceTest {
 
     @Test
     public void testCreatedOrder() {
+
         OrderRequest orderRequest = new OrderRequest();
-        orderRequest.setAmount(5); // Nastavte platné hodnoty
-        orderRequest.setCost(100.0); // Nastavte platné hodnoty
+        orderRequest.setAmount(5);
+        orderRequest.setCost(100.0);
+        orderRequest.setProductId(1L);
+        orderRequest.setStatus(Order.Status.PREORDER);
+        orderRequest.setOrderTime(LocalDateTime.now().plusDays(2));
 
         Product product = new Product(1L, "New Product", 22.2, "Description");
-        when(productService.isExistById(product.getId())).thenReturn(true); // Mockování metody isExistById
-        when(orderRepository.save(any(Order.class))).thenReturn(new Order(1L, product, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now())); // Mockování uložení objednávky
+
+        when(productService.isExistById(1L)).thenReturn(true);
+        when(productService.getProductById(1L)).thenReturn(product);
+        when(orderRepository.save(any(Order.class)))
+                .thenAnswer(invocation -> {
+                    Order savedOrder = invocation.getArgument(0);
+                    savedOrder.setId(1L);
+                    savedOrder.setProduct(product);
+                    return savedOrder;
+                });
 
         Order result = orderService.createdOrder(orderRequest);
+
+        assertEquals(1L, result.getId());
         assertEquals(product, result.getProduct());
+        assertEquals(5, result.getAmount());
+        assertEquals(100.0, result.getCost());
+        assertEquals(Order.Status.PREORDER, result.getStatus());
+        assertEquals(orderRequest.getOrderTime(), result.getOrderTime());
     }
 } 
