@@ -38,9 +38,9 @@ class ProductControllerTest {
 
     @BeforeEach
     void setUp() {
-        goodProduct = new Product(1L, "Product Name", 12.12, 1);
-        badProduct = new Product(1L, "", 12.12, 1);
-        updatedProduct = new Product(1L, "New Product Name", 12.13, 2);
+        goodProduct = new Product(1L, "Product Name", 12.12, 10);
+        badProduct = new Product(1L, "", 12.12, 10);
+        updatedProduct = new Product(1L, "New Product Name", 12.13, 20);
     }
 
     /**
@@ -140,7 +140,7 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.id").value(updatedProduct.getId()))
                 .andExpect(jsonPath("$.name").value(updatedProduct.getName()))
                 .andExpect(jsonPath("$.cost").value(updatedProduct.getCost()))
-                .andExpect(jsonPath("$.quantity").value(updatedProduct.getQuantity()));;
+                .andExpect(jsonPath("$.quantity").value(updatedProduct.getQuantity()));
 
         verify(productService, times(1))
                 .updateProduct(updatedProduct.getId(), updatedProduct);

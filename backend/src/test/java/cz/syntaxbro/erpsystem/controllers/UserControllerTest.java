@@ -45,7 +45,7 @@ class UserControllerTest {
     void setUp() {
         testUser = User.builder()
                 .id(1L)
-                .username("tetUser")
+                .username("testUser")
                 .firstName("Test")
                 .lastName("User")
                 .password("Password123@")

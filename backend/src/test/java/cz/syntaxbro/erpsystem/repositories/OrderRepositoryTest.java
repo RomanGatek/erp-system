@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 class OrderRepositoryTest {
@@ -18,6 +19,7 @@ class OrderRepositoryTest {
     private final OrderRepository orderRepository;
 
     private final ProductRepository productRepository;
+
 
     @Autowired
     OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository) {
@@ -87,8 +89,7 @@ class OrderRepositoryTest {
     @Test
     void findByProductOrderWithOneResult() {
         // Arrange
-        Product product = productRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        Product product = productRepository.findAll().getFirst();
 
         // Act
         List<Order> orders = orderRepository.findByProduct(product);

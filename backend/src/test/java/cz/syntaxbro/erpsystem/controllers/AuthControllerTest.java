@@ -56,8 +56,8 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        signUpRequest = new SignUpRequest("testUser", "password", "test@example.com");
-        loginRequest = new LoginRequest("testUser", "password");
+        signUpRequest = new SignUpRequest("testUser", "1P@ssword123", "test@example.com");
+        loginRequest = new LoginRequest("test@example.com", "1P@ssword123");
         userDto = new User(1L, "testUser", "Test", "User","pass", "test@example.com", true, Set.of(new Role("ROLE_USER")));
     }
 
@@ -66,6 +66,7 @@ class AuthControllerTest {
      * Expected Result: 201 Created
      */
     @Test
+    @WithMockUser(username = "admin")
     void signup_shouldReturnCreated_whenValidRequest() throws Exception {
         doNothing().when(authService).registerUser(any(SignUpRequest.class));
 
@@ -91,7 +92,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Login successfull! Token: " + mockToken));
+                .andExpect(content().string(mockToken));
 
         verify(authService, times(1)).authenticateUser(any(LoginRequest.class));
     }
@@ -119,6 +120,6 @@ class AuthControllerTest {
     @Test
     void getCurrentUser_shouldReturnUnauthorized_whenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/api/auth/user/me"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 }

@@ -4,6 +4,7 @@ import cz.syntaxbro.erpsystem.configs.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -37,9 +39,10 @@ class DataLoaderTest {
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
 
-    DataLoaderTest(@org.springframework.beans.factory.annotation.Autowired RoleRepository roleRepository,
-                   @org.springframework.beans.factory.annotation.Autowired UserRepository userRepository,
-                   @org.springframework.beans.factory.annotation.Autowired PermissionRepository permissionRepository) {
+    @Autowired
+    DataLoaderTest(RoleRepository roleRepository,
+                   UserRepository userRepository,
+                   PermissionRepository permissionRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
@@ -47,7 +50,7 @@ class DataLoaderTest {
 
     @BeforeEach
     void setUp() {
-        when(passwordSecurity.hashPassword(anyString())).thenReturn("hashedPassword");
+        when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
         dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity);
         dataLoader.run();
@@ -77,7 +80,7 @@ class DataLoaderTest {
 
     @Test
     void shouldPersistUsersWithRoles() {
-        Optional<User> admin = userRepository.findByUsername("admin");
+        Optional<User> admin = userRepository.findByUsername("administrator");
         assertThat(admin).isPresent();
         assertThat(admin.get().getRoles()).hasSize(1);
         assertThat(admin.get().getRoles().iterator().next().getName()).isEqualTo("ROLE_ADMIN");

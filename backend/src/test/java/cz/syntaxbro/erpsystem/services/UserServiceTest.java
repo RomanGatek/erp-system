@@ -49,6 +49,8 @@ class UserServiceTest {
         roleRepository.save(role);
         log.info("Role '{}' created and saved.", role.getName());
 
+
+
         // 2. Create a CreateUserRequest (instead of UserDto)
         CreateUserRequest createUserRequest = new CreateUserRequest(
                 "testuser",  // Username
