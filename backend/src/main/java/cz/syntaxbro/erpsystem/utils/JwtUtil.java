@@ -55,7 +55,7 @@ public class JwtUtil {
         calendar.setTime(new Date());
         calendar.add(Calendar.MONTH, 6); // Přidá 1 měsíc
 
-        ErpSystemApplication.getLogger().log(Level.WARNING, "Generated token: {0}", calendar.getTime());
+        ErpSystemApplication.getLogger().warn("Generated token: {}", calendar.getTime());
 
         return Jwts.builder()
                 .claims(claims)

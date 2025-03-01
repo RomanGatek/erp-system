@@ -1,27 +1,28 @@
 package cz.syntaxbro.erpsystem.controllers;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.partials.UserPartial;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
+@EnableMethodSecurity(prePostEnabled = true) // need to be there if you're using @PreAuthorized
 public class UserController {
 
     private final UserService userService;
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private static final Logger logger = ErpSystemApplication.getLogger();
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -50,13 +51,6 @@ public class UserController {
         logger.info("Creating user {}", request);
         User createdUser = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-    }
-
-    @PostMapping("/import")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> importUsers(@RequestParam("file") MultipartFile file) {
-//        userService.importUsersFromCsv(file);
-        return ResponseEntity.ok("Users imported successfully");
     }
 
 

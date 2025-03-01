@@ -44,7 +44,7 @@ jobs:
 
             - name: Run tests
               working-directory: ./frontend
-              run: bun test
+              run: bun run test
 
             - name: Build Vue aplikaci
               working-directory: ./frontend

@@ -63,7 +63,7 @@
                   :error="serverErrors.firstName" />
                 <BaseInput v-model="profileForm.lastName" label="Last Name" placeholder="Your last name"
                   :error="serverErrors.lastName" />
-                <BaseInput v-model="profileForm.email" type="email" label="Email Address" placeholder="your@email.com"
+                <BaseInput disabled v-model="profileForm.email" type="email" label="Email Address" placeholder="your@email.com"
                   :error="serverErrors.email" />
                 <BaseInput v-model="profileForm.username" label="Username" placeholder="Username"
                   :error="serverErrors.username" />
@@ -169,6 +169,7 @@ const profileForm = reactive({
   username: '',
   newPassword: '',
   confirmPassword: '',
+  avatar: '',
   notifications: {
     email: true,
     push: true
@@ -210,16 +211,39 @@ const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  try {
-    // Zde by byla implementace nahrání avataru
-    notify({
-      type: 'success',
-      text: 'Avatar byl úspěšně změněn'
-    })
-  } catch (error) {
+  // Validate file type and size
+  if (!file.type.startsWith('image/')) {
     notify({
       type: 'error',
-      text: 'Nepodařilo se změnit avatar'
+      text: 'Please select an image file'
+    })
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    notify({
+      type: 'error',
+      text: 'File size should not exceed 5MB'
+    })
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('avatar', file)
+
+  console.log(file);
+
+  try {
+    await meStore.updateAvatar(formData)
+    notify({
+      type: 'success',
+      text: 'Avatar updated successfully'
+    })
+  } catch (error) {
+    console.error('Upload error:', error)
+    notify({
+      type: 'error',
+      text: error.response?.data?.message || 'Failed to update avatar'
     })
   }
 }
@@ -228,6 +252,7 @@ const handleAvatarChange = async (event) => {
 const serverErrors = ref({
   firstName: '',
   lastName: '',
+  avatar: '',
   email: '',
   username: '',
   newPassword: '',
@@ -241,6 +266,7 @@ const clearServerErrors = () => {
     firstName: '',
     lastName: '',
     email: '',
+    avatar: '',
     username: '',
     newPassword: '',
     confirmPassword: '',
@@ -266,7 +292,6 @@ const handleServerValidationErrors = (error) => {
       data.forEach(e => {
         const { field, message } = e
         if (field === 'password') {
-          serverErrors.value['confirmPassword'] = message
           serverErrors.value['newPassword'] = message
         } else if (field) {
           serverErrors.value[field] = message
@@ -277,7 +302,6 @@ const handleServerValidationErrors = (error) => {
     } else {
       const { field, message } = data
       if (field === 'password') {
-        serverErrors.value['confirmPassword'] = message
         serverErrors.value['newPassword'] = message
       } else if (field) {
         serverErrors.value[field] = message

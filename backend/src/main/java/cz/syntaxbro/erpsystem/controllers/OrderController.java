@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -17,6 +19,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
+@EnableMethodSecurity(prePostEnabled = true)
+@PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
 public class OrderController {
 
     private final OrderService orderService;
@@ -86,7 +90,7 @@ public class OrderController {
     public ResponseEntity<Order> createOrder(
             @RequestBody
             @Valid
-            OrderDto orderDto) {
+            OrderRequest orderDto) {
         Order createdOrder = orderService.createdOrder(orderDto);
         return ResponseEntity.ok(createdOrder);
     }
@@ -98,7 +102,7 @@ public class OrderController {
             Long id,
             @RequestBody
             @Valid
-            OrderDto orderDto) {
+            OrderRequest orderDto) {
         orderService.updateOrder(id, orderDto);
         return ResponseEntity.ok("Order with id " + id + " is updated");
     }

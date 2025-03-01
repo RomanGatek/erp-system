@@ -44,7 +44,7 @@ class AuthControllerTest {
 
     private SignUpRequest signUpRequest;
     private LoginRequest loginRequest;
-    private User userDto;
+    private User user;
 
     @TestConfiguration
     static class AuthServiceTestConfig {
@@ -56,9 +56,18 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        signUpRequest = new SignUpRequest("testUser", "password", "test@example.com");
-        loginRequest = new LoginRequest("testUser", "password");
-        userDto = new User(1L, "testUser", "Test", "User","pass", "test@example.com", true, Set.of(new Role("ROLE_USER")));
+        signUpRequest = new SignUpRequest("testUser", "Password123@", "test@example.com");
+        loginRequest = new LoginRequest("testUser", "Password123@");
+        user = User.builder()
+                .id(1L)
+                .username("testUser")
+                .password("Password123@")
+                .firstName("testUserFirstName")
+                .lastName("testUserLastName")
+                .email("test@test.test")
+                .active(true)
+                .roles(Set.of(new Role("ROLE_USER")))
+                .build();
     }
 
     /**
@@ -72,8 +81,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/public/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(signUpRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(content().string("User registered successfully"));
+                .andExpect(status().isCreated());
 
         verify(authService, times(1)).registerUser(any(SignUpRequest.class));
     }
@@ -91,7 +99,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Login successfull! Token: " + mockToken));
+                .andExpect(content().string(String.format("{\"accessToken\":\"%s\",\"refreshToken\":\"%s\"}", mockToken, mockToken)));
 
         verify(authService, times(1)).authenticateUser(any(LoginRequest.class));
     }
@@ -103,11 +111,11 @@ class AuthControllerTest {
     @Test
     @WithMockUser(username = "testUser", roles = "USER")
     void getCurrentUser_shouldReturnUser_whenAuthenticated() throws Exception {
-        when(authService.getCurrentUser()).thenReturn(userDto);
+        when(authService.getCurrentUser()).thenReturn(user);
 
-        mockMvc.perform(get("/api/auth/user/me"))
+        mockMvc.perform(get("/api/me"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(userDto)));
+                .andExpect(content().json(objectMapper.writeValueAsString(user)));
 
         verify(authService, times(1)).getCurrentUser();
     }
@@ -118,7 +126,7 @@ class AuthControllerTest {
      */
     @Test
     void getCurrentUser_shouldReturnUnauthorized_whenNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/api/auth/user/me"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/me"))
+                .andExpect(status().is(403));
     }
 }

@@ -32,7 +32,8 @@ export const useUserStore = defineStore('user', {
       return null
     },
     filteredUsers: (state) => {
-      let filtered = [...state.users]
+      // eslint-disable-next-line no-unsafe-optional-chaining
+      let filtered = [...state?.users]
 
       if (state.searchQuery) {
         const searchValue = state.searchQuery.toLowerCase()
@@ -78,13 +79,13 @@ export const useUserStore = defineStore('user', {
         /**@type {{id: number, username: string, email: string, roles: string[], active: boolean}[]}   */
         const response = (await api.get('/users')).data
         const me = useMeStore().user
-        this.users = response.filter(user => user.email !== me.email)
+        this.users = response.filter(user => user?.email !== me?.email)
       } catch (error) {
-        this.error = error.response.data || error.data
+        this.error = error.response?.data || error.data
         console.log(error)
         notify({
           type: 'error',
-          text: 'Nastala chyba při načítání dat. Chyba: ' + error.response.data || error.message,
+          text: 'Nastala chyba při načítání dat. Chyba: ' + error.response?.data || error.message,
           duration: 5000,
           speed: 500
         })
@@ -107,11 +108,11 @@ export const useUserStore = defineStore('user', {
       } catch (error) {
         notify({
           type: 'error',
-          text: 'Nastala chyba při přidávání dat. Chyba: ' + error.response.data || error.message,
+          text: 'Nastala chyba při přidávání dat. Chyba: ' + error.response?.data || error.message,
           duration: 5000,
           speed: 500
         })
-        this.error = error.response.message || error.message
+        this.error = error.response?.data || error.message
       }
     },
     async updateUser(user) {

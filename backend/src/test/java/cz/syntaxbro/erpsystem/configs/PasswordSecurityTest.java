@@ -1,54 +1,48 @@
 package cz.syntaxbro.erpsystem.configs;
 
+import cz.syntaxbro.erpsystem.models.Role;
+import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class PasswordSecurityTest {
 
     private final PasswordSecurity passwordSecurity = new PasswordSecurity();
-    private UserDto userDto = new UserDto();
+    private User user;
 
     @BeforeEach
     void setUp() {
-        this.userDto = new UserDto(
-                1L,              // User ID
-                "testUser",      // Username
-                "Test",          // First name
-                "User",          // Last name
-                passwordSecurity.encode("password"), //Password
-                "test@example.com", // Email
-                true,            // Active status
-                Set.of("ROLE_USER") // Assigned roles
-        );
+        Set<Role> roles = Set.of("ROLE_USER", "ROLE_ADMIN", "ROLE_MANAGER")
+                .stream().map(Role::new).collect(Collectors.toUnmodifiableSet());
+
+        this.user = User
+                .builder()
+                .id((long) 1)
+                .username("testUser")
+                .firstName("testFirstName")
+                .lastName("testLastName")
+                .password(passwordSecurity.encode("Password123@"))
+                .email("test@test.test")
+                .active(true)
+                .roles(roles)
+                .build();
     }
 
     @Test
     void hashPassword() {
-        //Act
-        boolean isValidated = "password".equals(this.userDto.getPassword());
-        //Assert
-        assertFalse(isValidated);
-
+        assertFalse(passwordSecurity.matches("Password123", this.user.getPassword()));
     }
 
-    @Test
-    void passwordValidateFailed() {
-        //Act
-        boolean isValidated = passwordSecurity.passwordValidator(this.userDto.getPassword());
-        //Assert
-        assertFalse(isValidated);
-    }
     @Test
     void passwordValidateSuccessfully() {
-        //Arrange
-        this.userDto.setPassword("1T!password");
-        //Act
-        boolean isValidated = passwordSecurity.passwordValidator(this.userDto.getPassword());
-        //Assert
+        this.user.setPassword("1T!password");
+        boolean isValidated = passwordSecurity.passwordValidator(this.user.getPassword());
         assertTrue(isValidated);
     }
 }

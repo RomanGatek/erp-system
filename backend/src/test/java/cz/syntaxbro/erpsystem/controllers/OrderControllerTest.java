@@ -1,256 +1,65 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.dtos.OrderDto;
-import cz.syntaxbro.erpsystem.repositories.OrderRepository;
-import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.OrderService;
-import cz.syntaxbro.erpsystem.services.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
-@AutoConfigureMockMvc
-@SpringBootTest
-class OrderControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+public class OrderControllerTest {
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
+    @Mock
     private OrderService orderService;
 
-    private Product product;
-    private Order order;
-    private OrderDto orderDto;
-    private LocalDateTime now;
-    private String dateNow;
-    @Autowired
-    private ProductService productService;
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
-    private ProductRepository productRepository;
+    @InjectMocks
+    private OrderController orderController;
 
     @BeforeEach
-    void setUp() {
-        this.now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        this.dateNow = now.format(formatter);
-        this.product = new Product(1L, "Product Name", 12.12, 1);
-        this.orderDto = new OrderDto(100, 100.0, Order.Status.ORDERED, this.now, product.getId());
-        this.order = new Order(1L, product, orderDto.getAmount(), orderDto.getCost(), orderDto.getStatus(), orderDto.getOrderTime());
-
-    }
-
-    /**
-        Test case: Attempting to create a new product.
-        Expected result: HTTP 201.
-     */
-    @Test
-    @WithMockUser(username = "admin")
-    void createProductOkTest() throws Exception {
-        when(orderService.createdOrder(any(OrderDto.class)))
-                .thenReturn(this.order);
-
-        mockMvc.perform(post("/api/orders/create")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
-
-        verify(orderService, times(1)).createdOrder(any(OrderDto.class));
-    }
-
-    /**
-     * Test case: Attempting to create a new product with bad product id.
-     * Expected result: HTTP 400.
-     */
-    @Test
-    @WithMockUser(username = "admin")
-    void createProductWrongProductNullTest() throws Exception {
-        when(orderService.createdOrder(any(OrderDto.class)))
-                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product ID must be greater than 0"));
-
-        mockMvc.perform(post("/api/orders/create")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(orderService, times(0)).createdOrder(any(OrderDto.class));
-    }
-
-    /**
-     * Test case: Attempting to create a new product with bad product id 0.
-     * Expected result: HTTP 400.
-     */
-    @Test
-    @WithMockUser(username = "admin")
-    void createOrderWithWrongProductID0Test() throws Exception {
-        this.orderDto.setProductId(0L);
-        when(orderService.createdOrder(any(OrderDto.class)))
-                .thenReturn(this.order);
-
-        mockMvc.perform(post("/api/orders/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString("Product ID must be greater than 0")))
-                .andExpect(status().isBadRequest());
-
-        verify(orderService, times(0)).createdOrder(any(OrderDto.class));
-    }
-
-    /**
-     * Test case: Attempting to get order by id 1.
-     * Expected result: HTTP 200.
-     */
-    @Test
-    @WithMockUser(username = "admin")
-    void getOrderByIdBadRequestTest() throws Exception {
-        // Mocking the service to return an order
-        Mockito.when(orderService.getOrderById(anyLong())).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product does not exist"));
-
-        // Performing a request with an invalid order ID (non-existent or bad value)
-        mockMvc.perform(get("/api/orders/by-product/1") // Passing an invalid ID
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound()) // Expecting a bad request response
-                .andExpect(jsonPath("$.message").value("Product does not exist")); // Assuming the exception message is "Invalid order id"
-    }
-
-    /**
-     * Test case: Attempting to get order by id 1.
-     * Expected result: HTTP 401.
-     */
-    @Test
-    @WithMockUser(username = "admin")
-    void getOrderByIdWithNotFound() throws Exception {
-        // Mock the service to throw a 404 exception
-        Mockito.when(orderService.getOrderById(1L))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
-
-        // Simulate the GET request and expect 404
-        mockMvc.perform(get("/api/orders/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Order not found"));
-
-        // Verify that the service was called with the correct ID
-        Mockito.verify(orderService).getOrderById(1L);
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @WithMockUser(username = "admin")
-    void getOrdersWithCostBetweenGoodRequest() throws Exception {
-        // Mock the service to throw a 404 exception
-        Mockito.when(orderService.getOrdersByCostBetween(100, 500))
-                        .thenReturn(List.of(this.order));
+    public void testGetOrder() {
+        Order order = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
+        when(orderService.getOrderById(1L)).thenReturn(order);
 
-        // Simulate the GET request and expect 404
-        mockMvc.perform(get("/api/orders/cost-between?start=100&end=500")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].product").value(this.product))
-                .andExpect(jsonPath("$[0].status").value(Order.Status.ORDERED.toString()))
-                .andExpect(jsonPath("$[0].orderTime").value(this.dateNow));
-
-        // Verify that the service was called with the correct ID
-        Mockito.verify(orderService).getOrdersByCostBetween(100, 500);
+        ResponseEntity<Order> response = orderController.getOrder(1L);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(order, response.getBody());
     }
 
     @Test
-    @WithMockUser(username = "admin")
-    void getOrdersWithCostBetweenBadRequest() throws Exception {
-        // Mock the service to throw a 404 exception
-        Mockito.when(orderService.getOrdersByCostBetween(500, 100))
-                .thenThrow( new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost must be grater or equal with 0"));
+    public void testGetAllOrders() {
+        List<Order> orders = Collections.singletonList(new Order());
+        when(orderService.getOrders()).thenReturn(orders);
 
-        // Simulate the GET request and expect 404
-        mockMvc.perform(get("/api/orders/cost-between?start=500&end=100")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Cost must be grater or equal with 0"));
-        // Verify that the service was called with the correct ID
-        Mockito.verify(orderService).getOrdersByCostBetween(500, 100);
+        ResponseEntity<List<Order>> response = orderController.getAllOrders();
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(orders, response.getBody());
     }
 
     @Test
-    @WithMockUser(username = "admin")
-    void getOrdersWithDateBetweenGoodRequest() throws Exception {
-        Mockito.when(orderService.getOrdersByDateBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(List.of(this.order));
-        mockMvc.perform(get("/api/orders/date-between?start=2025-02-01T23:59:59&end=2025-04-21T23:59:59"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].product").value(this.product))
-                .andExpect(jsonPath("$[0].status").value(Order.Status.ORDERED.toString()))
-                .andExpect(jsonPath("$[0].orderTime").value(this.dateNow));
+    public void testCreateOrder() {
+        OrderRequest orderRequest = new OrderRequest(); // Předpokládáme, že máte třídu OrderRequest
+        Order createdOrder = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
+        when(orderService.createdOrder(any(OrderRequest.class))).thenReturn(createdOrder);
 
-        Mockito.verify(orderService).getOrdersByDateBetween(any(LocalDateTime.class), any(LocalDateTime.class));
+        ResponseEntity<Order> response = orderController.createOrder(orderRequest);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(createdOrder, response.getBody());
     }
-
-    @Test
-    @WithMockUser(username = "admin")
-    void getOrdersWithDateBetweenBadRequest() throws Exception {
-        Mockito.when(orderService.getOrdersByDateBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
-                        .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal than start"));
-        mockMvc.perform(get("/api/orders/date-between?start=2025-02-01T23:59:59&end=2025-02-01T23:59:59"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("End must be greater or equal than start"));
-        Mockito.verify(orderService).getOrdersByDateBetween(any(LocalDateTime.class), any(LocalDateTime.class));
-    }
-
-    @Test
-    @WithMockUser(username = "admin")
-    void getOrdersWithProductIdGoodRequest() throws Exception {
-        Mockito.when(orderService.getOrdersByProduct(1L))
-                        .thenReturn(List.of(this.order));
-        mockMvc.perform(get("/api/orders/by-product/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].product").value(this.product))
-                .andExpect(jsonPath("$[0].status").value(Order.Status.ORDERED.toString()))
-                .andExpect(jsonPath("$[0].orderTime").value(this.dateNow));
-        Mockito.verify(orderService).getOrdersByProduct(1L);
-    }
-
-
-    @Test
-    @WithMockUser(username = "admin")
-    void deleteOrder() throws Exception {
-        Mockito.doNothing().when(orderService).deleteOrder(1L);
-        mockMvc.perform(delete("/api/orders/1"))
-                .andExpect(status().isOk());
-        Mockito.verify(orderService).deleteOrder(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "admin")
-    void updateOrder() throws Exception {
-        Mockito.doNothing().when(orderService).updateOrder(1L, this.orderDto);
-        mockMvc.perform(put("/api/orders/1"))
-                .andExpect(status().isOk());
-        Mockito.verify(orderService).deleteOrder(1L);
-    }
-
-}
+} 

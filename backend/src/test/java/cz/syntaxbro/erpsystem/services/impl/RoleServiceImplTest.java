@@ -47,7 +47,7 @@ class RoleServiceImplTest {
         List<Role> roles = roleService.getAllRoles();
 
         assertThat(roles).isNotNull().hasSize(1);
-        assertThat(roles.getFirst().getName()).isEqualTo("ROLE_TEST");
+        assertThat(roles.get(0).getName()).isEqualTo("ROLE_TEST");
 
         verify(roleRepository, times(1)).findAll();
     }
@@ -175,5 +175,12 @@ class RoleServiceImplTest {
         verify(roleRepository, times(1)).findById(1L);
         verify(permissionRepository, times(1)).findById(1L);
         verify(roleRepository, times(1)).save(any(Role.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenRoleNotFound() {
+        when(roleRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> roleService.getRoleById(1L));
     }
 }
