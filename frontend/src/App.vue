@@ -4,12 +4,11 @@
     <!-- Ambientní pozadí -->
     <div class="fixed inset-0 bg-gradient-pattern opacity-5"></div>
     <div class="fixed inset-0 bg-mesh opacity-10"></div>
-    
+
     <!-- Hlavní obsah -->
     <div class="relative z-10 flex flex-col min-h-screen">
+      <CustomNavbar v-if="isAuthenticated" class="flex-shrink-0" />
 
-      <Navbar v-if="isAuthenticated" class="flex-shrink-0" />
-      
       <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <router-view v-slot="{ Component }" class="w-full h-full">
           <transition
@@ -25,31 +24,33 @@
           </transition>
         </router-view>
       </main>
-      <Footer class="mt-auto" />
+      <CustomFooter class="mt-auto" />
     </div>
   </div>
 </template>
 
 <script>
-import Navbar from "@/components/Navbar.vue";
-import Footer from "@/components/Footer.vue";
-import { ref, computed } from "vue";
-import { useMeStore } from "./stores/me";
+import CustomNavbar from '@/components/CustomNavbar.vue'
+import CustomFooter from '@/components/CustomFooter.vue'
+import { computed } from 'vue'
+import { useMeStore } from './stores/me'
+import { Notifications } from '@kyvg/vue3-notification'
 
 export default {
   name: 'App',
   components: {
-    Navbar,
-    Footer
+    Notifications,
+    CustomNavbar,
+    CustomFooter,
   },
   setup() {
-    const meStore = useMeStore();
-    const isAuthenticated = computed(() => meStore.user);
+    const meStore = useMeStore()
+    const isAuthenticated = computed(() => meStore.user)
 
     return {
-      isAuthenticated
+      isAuthenticated,
     }
-  }
+  },
 }
 </script>
 
@@ -64,19 +65,19 @@ export default {
 }
 
 .my-notification.success {
-  background-color: #10B981 !important;
+  background-color: #10b981 !important;
 }
 
 .my-notification.error {
-  background-color: #EF4444 !important;
+  background-color: #ef4444 !important;
 }
 
 .my-notification.warning {
-  background-color: #F59E0B !important;
+  background-color: #f59e0b !important;
 }
 
 .my-notification.info {
-  background-color: #3B82F6 !important;
+  background-color: #3b82f6 !important;
 }
 
 html {
@@ -111,13 +112,11 @@ h2 {
 }
 
 .bg-mesh {
-  background-image: radial-gradient(
-    circle at center,
-    #3b82f620 0%,
-    transparent 70%
-  );
+  background-image: radial-gradient(circle at center, #3b82f620 0%, transparent 70%);
   background-size: 50px 50px;
-  background-position: 0 0, 25px 25px;
+  background-position:
+    0 0,
+    25px 25px;
   animation: meshFloat 20s linear infinite;
 }
 
@@ -148,9 +147,10 @@ h2 {
 
 /* Vylepšení stínů a přechodů */
 .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-              0 4px 6px -2px rgba(0, 0, 0, 0.05),
-              0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Globální přechody */

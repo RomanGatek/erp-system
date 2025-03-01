@@ -47,9 +47,8 @@ router.beforeEach(async (to, from, next) => {
   if (!token) return next('/auth')
 
   if (!meStore.user) {
-    try {
-      await meStore.fetchMe(token)
-    } catch {
+    await meStore.fetchMe()
+    if (meStore.error) {
       notify({
         type: 'error',
         text: 'Vaše session vypršela. Prosím, přihlaste se znovu.',
@@ -59,6 +58,8 @@ router.beforeEach(async (to, from, next) => {
       localStorage.removeItem('token')
       meStore.clearUser()
       return next('/auth')
+    } else {
+      console.log(meStore.user)
     }
   }
 
