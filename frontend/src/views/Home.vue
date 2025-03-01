@@ -78,7 +78,7 @@ export default {
           role: 'Java Developer'
         },
         {
-          name: 'Michal Rostislav Rbaniský',
+          name: 'Michal Rostislav Rabaniský',
           role: 'Java Developer',
           github: 'https://github.com/Michal-30'
         },
@@ -100,7 +100,7 @@ export default {
         {
           name: 'Christos Stefanakis',
           role: 'Java Developer',
-          github: 'https://github.com/hristosste86'
+          github: 'https://github.com/cstefanakis'
         }
       ]
     }

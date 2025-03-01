@@ -51,15 +51,13 @@ router.beforeEach(async (to, from, next) => {
     if (meStore.error) {
       notify({
         type: 'error',
-        text: 'Vaše session vypršela. Prosím, přihlaste se znovu.',
+        text: 'Our session is over. Please login again.',
         duration: 5000,
         speed: 1000
       })
       localStorage.removeItem('token')
       meStore.clearUser()
       return next('/auth')
-    } else {
-      console.log(meStore.user)
     }
   }
 
