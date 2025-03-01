@@ -42,7 +42,7 @@ public class MeController {
     // Fetching the current user
     public ResponseEntity<User> getCurrentUser() {
         User currentUser = authService.getCurrentUser();
-        logger.info("Current logged user: {}", currentUser);
+        logger.info("get me user: {}", currentUser);
         return ResponseEntity.ok(currentUser);
     }
 
@@ -57,7 +57,7 @@ public class MeController {
         currentUser.setLastName(user.getLastName());
         currentUser.setActive(user.isActive());
         var savedUser = userRepository.save(currentUser);
-        logger.info("UPDATE Current logged user: {}", savedUser);
+        logger.info("UPDATE me user: {}", savedUser);
         return ResponseEntity.ok(savedUser);
     }
 
@@ -93,7 +93,7 @@ public class MeController {
             currentUser.setAvatar("/uploads/" + fileName);
             User updatedUser = userRepository.save(currentUser);
 
-            logger.info("UPDATE Current logged user - {} avatar: {}", updatedUser.getEmail(), updatedUser.getAvatar());
+            logger.info("UPDATE me user - {} avatar: {}", updatedUser.getEmail(), updatedUser.getAvatar());
 
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {

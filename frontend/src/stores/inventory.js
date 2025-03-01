@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { user as api } from '@/services/api'
+import { user  } from '@/services/api'
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -13,10 +12,11 @@ export const useInventoryStore = defineStore('inventory', {
   actions: {
     async fetchItems() {
       try {
-        const response = await api.get('/inventory');
+        const response = await user.get('/inventory');
         this.items = response.data;
         this.error = null;
       } catch (err) {
+        console.log(err);
         this.error = err.message;
         // Notify user on error
       }
@@ -26,8 +26,8 @@ export const useInventoryStore = defineStore('inventory', {
   getters: {
     filteredItems: (state) => {
       if (!state.searchQuery) return state.items
-      
-      return state.items.filter(item => 
+
+      return state.items.filter(item =>
         item.productName.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
         item.quantity.toString().includes(state.searchQuery) ||
         item.location.toLowerCase().includes(state.searchQuery.toLowerCase())
@@ -37,7 +37,7 @@ export const useInventoryStore = defineStore('inventory', {
       const sorted = [...state.filteredItems].sort((a, b) => {
         const aValue = a[state.sorting.field]
         const bValue = b[state.sorting.field]
-        
+
         if (state.sorting.direction === 'asc') {
           return aValue > bValue ? 1 : -1
         }
