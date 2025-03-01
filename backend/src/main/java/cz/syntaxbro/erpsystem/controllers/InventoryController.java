@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.InventoryItem;
+import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -9,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -19,7 +22,7 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @Autowired
-    public InventoryController(InventoryService inventoryService) {
+    public InventoryController(InventoryService inventoryService, InventoryRepository inventoryRepository) {
         this.inventoryService = inventoryService;
     }
 
@@ -47,5 +50,10 @@ public class InventoryController {
         }
 
         return ResponseEntity.ok("Quantity updated successfully.");
+    }
+
+    @GetMapping
+    public ResponseEntity<List<InventoryItem>> getAllItems() {
+        return ResponseEntity.ok(inventoryService.getAll());
     }
 }

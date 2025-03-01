@@ -14,14 +14,14 @@
           Manage your users, products, and inventory efficiently with our modern and intuitive interface.
         </p>
         <div class="flex gap-4 justify-center">
-          <button 
+          <button
             @click="currentSection = 'team'"
             class="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
           >
             <span class="relative z-10">Who Are We?</span>
             <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </button>
-          <button 
+          <button
             @click="currentSection = 'about'"
             class="group px-6 py-3 bg-white/15 backdrop-blur-lg text-gray-700 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
           >
@@ -32,16 +32,16 @@
       </div>
 
       <!-- Team Section -->
-      <TeamView 
-        v-else-if="currentSection === 'team'" 
+      <TeamView
+        v-else-if="currentSection === 'team'"
         key="team"
         :team-members="teamMembers"
         @change-section="currentSection = $event"
       />
 
       <!-- About Course Section -->
-      <CourseView 
-        v-else 
+      <CourseView
+        v-else
         key="about"
         @change-section="currentSection = $event"
       />
@@ -214,7 +214,7 @@ export default {
 /* Vylepšený hover efekt pro karty - jemnější transformace */
 .bg-white:hover {
   transform: translateY(-3px) rotateX(3deg);
-  box-shadow: 
+  box-shadow:
     0 15px 20px -5px rgba(0, 0, 0, 0.1),
     0 8px 8px -5px rgba(0, 0, 0, 0.04),
     0 0 0 1px rgba(59, 130, 246, 0.1);

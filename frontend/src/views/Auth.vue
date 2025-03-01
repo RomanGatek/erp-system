@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { auth } from '@/services/auth'
 import { useMeStore } from '../stores/me'
@@ -169,7 +169,7 @@ const clearServerErrors = () => {
 // Handle server validation errors
 const handleServerValidationErrors = (error) => {
   clearServerErrors()
-  
+
   if (!error.response?.data) {
     serverErrors.value.general = 'An unexpected error occurred'
     return
@@ -205,7 +205,7 @@ const handleLogin = async () => {
     localStorage.setItem('token', token)
     const meStore = useMeStore()
     await meStore.fetchMe(token)
-    router.push('/')
+    await router.push('/')
     notify({
       type: 'success',
       text: 'Successfully logged in',
