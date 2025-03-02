@@ -162,7 +162,7 @@ const deleteUser = async (userId) => {
 
 const cancelAdd = () => {
   isAddModalOpen.value = false
-  clearServerErrors
+  clearServerErrors()
   Object.assign(newUser, {
     firstName: '',
     lastName: '',
