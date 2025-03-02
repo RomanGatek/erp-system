@@ -1,12 +1,15 @@
 package cz.syntaxbro.erpsystem.repositories;
 
 import cz.syntaxbro.erpsystem.models.InventoryItem;
+import cz.syntaxbro.erpsystem.models.Product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,6 +25,9 @@ public class InventoryRepositoryTest {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     private InventoryItem testItem;
 
     /**
@@ -31,10 +37,28 @@ public class InventoryRepositoryTest {
     @BeforeEach
     void setUp() {
         // Arrange: Create and save a test inventory item
-        testItem = new InventoryItem();
-        testItem.setName("Test Item");
-        testItem.setQuantity(10);
-        inventoryRepository.save(testItem);
+        // ew Product(1L, "Test Product", 50.0, "Sample product description")
+
+        productRepository.save(Product.builder()
+            .name("Test Product")
+            .description("Sample product description")
+            .price(50.0)
+            .build()
+
+        );
+        Optional<Product> product = productRepository.findByName("Test Product");
+
+        if (product.isPresent()) {
+            testItem = new InventoryItem();
+            testItem.setProduct(product.get());
+            testItem.setQuantity(1);
+
+            inventoryRepository.save(testItem);
+
+            Optional<InventoryItem> item = inventoryRepository.findByProduct(product.get());
+
+            item.ifPresent(inventoryItem -> this.testItem = inventoryItem);
+        }
     }
 
     /**
@@ -68,7 +92,9 @@ public class InventoryRepositoryTest {
     @Test
     void updateQuantity_shouldNotUpdateNonExistingItem() {
         // Act: Attempt to update an item with a non-existing ID
-        int updatedRows = inventoryRepository.updateQuantity(9999L, 30);
+        int updatedRows = inventoryRepository.updateQuantity(99L, 30);
+
+        System.out.println(updatedRows);
 
         // Assert: Verify that no records were updated
         assertEquals(0, updatedRows, "No record should have been updated.");

@@ -15,6 +15,8 @@ class InventoryItemTest {
 
     private Validator validator;
 
+    private final Product product = new Product(1L, "Test Product", 50.0, "Sample product description");
+
     @BeforeEach
     void setUp() {
         // Initializes the Jakarta Validator before each test
@@ -30,14 +32,14 @@ class InventoryItemTest {
     @Test
     void shouldFailValidation_WhenNameIsBlank() {
         // Arrange: Create an InventoryItem with an empty name
-        InventoryItem item = new InventoryItem(null, "", 10);
+        InventoryItem item = new InventoryItem(null, null, 10);
 
         // Act: Validate the item
         Set<ConstraintViolation<InventoryItem>> violations = validator.validate(item);
 
         // Assert: Expect a validation error due to the empty name
         assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getMessage().equals("Item name is required"));
+        assertThat(violations).anyMatch(v -> v.getMessage().equals("Product is required"));
     }
 
     /**
@@ -48,7 +50,7 @@ class InventoryItemTest {
     @Test
     void shouldFailValidation_WhenQuantityIsNegative() {
         // Arrange: Create an InventoryItem with a negative quantity
-        InventoryItem item = new InventoryItem(null, "Test Item", -5);
+        InventoryItem item = new InventoryItem(null, product, -5);
 
         // Act: Validate the item
         Set<ConstraintViolation<InventoryItem>> violations = validator.validate(item);
@@ -66,7 +68,7 @@ class InventoryItemTest {
     @Test
     void shouldPassValidation_WhenValidData() {
         // Arrange: Create an InventoryItem with valid name and quantity
-        InventoryItem item = new InventoryItem(null, "Valid Item", 5);
+        InventoryItem item = new InventoryItem(null, product, 5);
 
         // Act: Validate the item
         Set<ConstraintViolation<InventoryItem>> violations = validator.validate(item);

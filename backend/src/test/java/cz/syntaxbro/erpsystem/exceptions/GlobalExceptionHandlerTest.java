@@ -103,7 +103,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleDuplicateEntry_shouldReturnConflictForDuplicateEntry() {
         // Arrange
-        DataIntegrityViolationException exception = new DataIntegrityViolationException("Duplicate entry for key 'email'");
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("Duplicate entry 'email' for key 'xxxx.UKo61fmio5yukmmiqgnxf8pnavn'");
 
         // Act
         ResponseEntity<ErrorEntity> response = globalExceptionHandler.handleDuplicateEntry(exception);
@@ -111,7 +111,8 @@ class GlobalExceptionHandlerTest {
         // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Item with this name already exists.");
+
+        assertThat(response.getBody().getMessage()).isEqualTo("Entity with this name 'email' already exists.");
     }
 
     /**

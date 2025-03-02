@@ -40,7 +40,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of("ROLE_USER")
+                Set.of("ROLE_USER"),
+                null
         );
 
         // Act: Validate the userPartial object
@@ -62,7 +63,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of("ROLE_USER")
+                Set.of("ROLE_USER"),
+                null
         );
 
         // Act: Validate the userPartial object
@@ -85,7 +87,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of("ROLE_USER")
+                Set.of("ROLE_USER"),
+                null
         );
 
         // Act: Validate the userPartial object
@@ -108,7 +111,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of("ROLE_USER")
+                Set.of("ROLE_USER"),
+                null
         );
 
         // Act: Validate the userPartial object
@@ -131,7 +135,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of("ROLE_USER")
+                Set.of("ROLE_USER"),
+                null
         );
 
         // Act: Validate the userPartial object
@@ -154,7 +159,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of("ROLE_USER")
+                Set.of("ROLE_USER"),
+                null
         );
 
         // Act: Validate the userPartial object
@@ -176,7 +182,8 @@ class UserPartialTest {
                 "John",
                 "Doe",
                 true,
-                Set.of() // No roles assigned
+                Set.of(), // No roles assigned,
+                null
         );
 
         // Act: Validate the userPartial object

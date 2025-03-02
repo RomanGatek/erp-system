@@ -12,10 +12,10 @@ import java.util.Optional;
 
 public interface InventoryRepository  extends JpaRepository<InventoryItem, Long> {
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("UPDATE InventoryItem i SET i.quantity = :quantity WHERE i.id = :itemId")
-    int updateQuantity(@Param("itemId") Long itemId, @Param("quantity") int quantity);
+    @Query("UPDATE InventoryItem i SET i.quantity = :quantity WHERE i.id = :id")
+    int updateQuantity(@Param("id") Long id, @Param("quantity") int quantity);
 
     Optional<InventoryItem> findByProduct(Product product);
 }
