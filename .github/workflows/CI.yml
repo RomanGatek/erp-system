@@ -24,7 +24,7 @@ jobs:
 
             - name: Build and Test (Gradle)
               working-directory: ./
-              run: ./gradlew clean test --info
+              run: ./gradlew clean --no-build-cache test --info
 
 
     frontend-tests:
@@ -45,7 +45,3 @@ jobs:
             - name: Run tests
               working-directory: ./frontend
               run: bun run test
-
-            - name: Build Vue aplikaci
-              working-directory: ./frontend
-              run: bun run build
