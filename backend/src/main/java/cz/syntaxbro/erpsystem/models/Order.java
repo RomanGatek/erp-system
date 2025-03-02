@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import cz.syntaxbro.erpsystem.constants.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,14 +29,16 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private OrderStatus status;
+    private Order.Status status;
 
     @Column(name = "order_time")
     private LocalDateTime orderTime;
 
     public enum Status {
-        DONE,
-        ORDERED,
-        PREORDER
+        PENDING,
+        PROCESSING,
+        SHIPPED,
+        DELIVERED,
+        CANCELED
     }
 }

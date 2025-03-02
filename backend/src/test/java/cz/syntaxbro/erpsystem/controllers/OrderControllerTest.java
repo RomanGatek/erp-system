@@ -5,7 +5,6 @@ import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -34,7 +33,7 @@ public class OrderControllerTest {
 
     @Test
     public void testGetOrder() {
-        Order order = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
+        Order order = new Order(1L, null, 5, 100.0, Order.Status.SHIPPED, LocalDateTime.now());
         when(orderService.getOrderById(1L)).thenReturn(order);
 
         ResponseEntity<Order> response = orderController.getOrder(1L);
@@ -55,7 +54,7 @@ public class OrderControllerTest {
     @Test
     public void testCreateOrder() {
         OrderRequest orderRequest = new OrderRequest(); // Předpokládáme, že máte třídu OrderRequest
-        Order createdOrder = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
+        Order createdOrder = new Order(1L, null, 5, 100.0, Order.Status.SHIPPED, LocalDateTime.now());
         when(orderService.createdOrder(any(OrderRequest.class))).thenReturn(createdOrder);
 
         ResponseEntity<Order> response = orderController.createOrder(orderRequest);

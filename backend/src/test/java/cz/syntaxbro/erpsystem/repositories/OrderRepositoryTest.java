@@ -39,8 +39,8 @@ class OrderRepositoryTest {
         LocalDateTime orderDateTwo = LocalDateTime.of(2025, 2, 5, 9, 20);
 
         // Orders
-        Order orderOne = new Order(null, productOne, 2, 200, Order.Status.ORDERED, orderDateOne);
-        Order orderTwo = new Order(null, productTwo, 5, 1000, Order.Status.ORDERED, orderDateTwo);
+        Order orderOne = new Order(null, productOne, 2, 200, Order.Status.SHIPPED, orderDateOne);
+        Order orderTwo = new Order(null, productTwo, 5, 1000, Order.Status.SHIPPED, orderDateTwo);
 
         // Save Orders
         orderRepository.save(orderOne);

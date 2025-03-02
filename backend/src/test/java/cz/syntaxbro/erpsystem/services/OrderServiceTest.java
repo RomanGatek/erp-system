@@ -6,7 +6,6 @@ import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.impl.OrderServiceImpl; // Předpokládáme, že máte implementaci
-import cz.syntaxbro.erpsystem.services.ProductService; // Přidejte import pro ProductService
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -41,7 +40,7 @@ public class OrderServiceTest {
 
     @Test
     public void testGetOrderById() {
-        Order order = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
+        Order order = new Order(1L, null, 5, 100.0, Order.Status.SHIPPED, LocalDateTime.now());
         when(orderRepository.findById(1L)).thenReturn(java.util.Optional.of(order));
 
         Order foundOrder = orderService.getOrderById(1L);
