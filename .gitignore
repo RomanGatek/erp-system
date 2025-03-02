@@ -2,6 +2,7 @@
 HELP.md
 
 .idea/
+build/
 
 # Gradle
 .gradle/
