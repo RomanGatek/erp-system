@@ -27,7 +27,7 @@ jobs:
 
             - name: Build and Test (Gradle)
               working-directory: ./
-              run: ./gradlew clean --no-build-cache test
+              run: ./gradlew clean test
 
 
     frontend-tests:
