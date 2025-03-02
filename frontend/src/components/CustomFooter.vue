@@ -1,22 +1,20 @@
 <template>
   <div v-bind="$attrs">
     <footer class="mt-auto">
-      <footer 
+      <footer
         class="bg-gradient-to-r from-blue-700 to-blue-500 text-white fixed bottom-0 w-full transition-all duration-300"
         :class="{ 'h-10': !isExpanded, 'h-48': isExpanded }"
         @mouseenter="isExpanded = true"
         @mouseleave="isExpanded = false"
       >
         <div class="container mx-auto px-4 h-full">
-          <!-- Základní řádek, který je vždy vidět -->
           <div class="h-10 flex justify-between items-center">
             <div class="text-sm text-white/80">
               &copy; {{ new Date().getFullYear() }} ERP System
             </div>
           </div>
 
-          <!-- Rozšířený obsah -->
-          <div 
+          <div
             class="transition-all duration-300 overflow-hidden"
             :class="{ 'h-0': !isExpanded, 'h-38': isExpanded }"
           >
@@ -27,18 +25,18 @@
                   Powerful enterprise resource planning solution.
                 </p>
               </div>
-              
+
               <div class="text-center">
                 <h3 class="text-sm font-semibold mb-2">Quick Links</h3>
                 <div class="flex flex-col space-y-1">
-                  <router-link 
-                    to="/?section=team" 
+                  <router-link
+                    to="/?section=team"
                     class="text-sm text-white/80 hover:text-white transition-colors duration-300"
                   >
                     Meet the Team
                   </router-link>
-                  <router-link 
-                    to="/?section=about" 
+                  <router-link
+                    to="/?section=about"
                     class="text-sm text-white/80 hover:text-white transition-colors duration-300"
                   >
                     About Course
@@ -49,8 +47,8 @@
               <div class="text-center md:text-right">
                 <h3 class="text-sm font-semibold mb-2">Connect With Us</h3>
                 <div class="flex justify-center md:justify-end space-x-4">
-                  <a 
-                    href="mailto:info@erpsystem.com" 
+                  <a
+                    href="mailto:info@erpsystem.com"
                     class="text-white/80 hover:text-white transition-colors duration-300 flex items-center gap-1"
                   >
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -58,8 +56,8 @@
                     </svg>
                     <span class="text-xs">Contact</span>
                   </a>
-                  <a 
-                    href="https://github.com/cooffeeRequired/HELL-TO-PASS" 
+                  <a
+                    href="https://github.com/cooffeeRequired/HELL-TO-PASS"
                     target="_blank"
                     class="text-white/80 hover:text-white transition-colors duration-300 flex items-center gap-1"
                   >
@@ -75,7 +73,6 @@
         </div>
       </footer>
 
-      <!-- Přidáme padding pro obsah nad footerem -->
       <div class="h-10"></div>
     </footer>
   </div>
@@ -90,4 +87,4 @@ const isExpanded = ref(false)
 export default {
   inheritAttrs: false // Optional: prevents the warning
 }
-</script> 
+</script>

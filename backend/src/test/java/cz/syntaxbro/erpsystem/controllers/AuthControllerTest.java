@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(properties = {"spring.profiles.active=test"})
 @AutoConfigureMockMvc
 class AuthControllerTest {
 
@@ -105,7 +105,7 @@ class AuthControllerTest {
     }
 
     /**
-     * Test: Logged in user gets their data
+     * Test: Logged-in user gets their data
      * Expected result: 200 OK + JSON with user data
      */
     @Test
@@ -127,6 +127,6 @@ class AuthControllerTest {
     @Test
     void getCurrentUser_shouldReturnUnauthorized_whenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/api/me"))
-                .andExpect(status().is(403));
+                .andExpect(status().is(401));
     }
 }

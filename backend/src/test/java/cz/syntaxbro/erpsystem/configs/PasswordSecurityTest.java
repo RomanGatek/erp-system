@@ -16,6 +16,12 @@ class PasswordSecurityTest {
     private final PasswordSecurity passwordSecurity = new PasswordSecurity();
     private User user;
 
+    /**
+     * Sets up a test user before each test case.
+     * - Creates a set of roles (USER, ADMIN, MANAGER).
+     * - Encodes a test password using PasswordSecurity.
+     * - Initializes a User object with the encoded password.
+     */
     @BeforeEach
     void setUp() {
         Set<Role> roles = Set.of("ROLE_USER", "ROLE_ADMIN", "ROLE_MANAGER")
@@ -34,11 +40,24 @@ class PasswordSecurityTest {
                 .build();
     }
 
+    /**
+     * Test: Ensures that a password hashed with `passwordSecurity.encode()`
+     * does not match the original raw password.
+     * Expected outcome:
+     * - `matches()` should return false when comparing the raw password
+     *   with the stored hashed password.
+     */
     @Test
     void hashPassword() {
         assertFalse(passwordSecurity.matches("Password123", this.user.getPassword()));
     }
 
+    /**
+     * Test: Checks whether the `passwordValidator()` method correctly validates
+     * a password that meets the security criteria.
+     * Expected outcome:
+     * - The password should be validated successfully, returning `true`.
+     */
     @Test
     void passwordValidateSuccessfully() {
         this.user.setPassword("1T!password");

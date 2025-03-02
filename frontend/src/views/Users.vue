@@ -15,7 +15,7 @@ import {
   errorHandler,
   setErrorDefault,
   clearServerErrors
-} from '@/utils/errorHandler.js'
+} from '@/utils/error-handler.js'
 
 defineOptions({
   name: 'UsersView',
@@ -46,9 +46,7 @@ const defaultError = {
   roles: '',
 }
 
-const newUser = reactive({ ...defaultUser })
-
-const selectedUser = reactive({ ...defaultUser, roles: [] })
+const _user = reactive({ ...defaultUser, roles: [] })
 
 const availableRoles = [
   { name: 'admin', bgColor: 'bg-red-100', textColor: 'text-red-800' },
@@ -92,9 +90,9 @@ onMounted(async () => {
 const addUser = async () => {
   clearServerErrors()
   try {
-    await userStore.addUser({ ...newUser })
+    await userStore.addUser({ ..._user })
     if (!userStore.error) {
-      Object.assign(newUser, { ...newUser })
+      Object.assign(_user, { ..._user })
       isAddModalOpen.value = false
     } else {
       eHandler(userStore.error, error)
@@ -109,7 +107,7 @@ const addUser = async () => {
 
 const openEditModal = (index) => {
   const user = userStore.users[index]
-  Object.assign(selectedUser, {
+  Object.assign(_user, {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
@@ -124,7 +122,7 @@ const openEditModal = (index) => {
 const updateUser = async () => {
   clearServerErrors()
   try {
-    await userStore.updateUser(selectedUser)
+    await userStore.updateUser(_user)
     if (userStore.error) {
       eHandler(userStore.error)
     } else {
@@ -139,7 +137,7 @@ const updateUser = async () => {
 const cancelEdit = () => {
   isEditModalOpen.value = false
   clearServerErrors()
-  Object.assign(selectedUser, {
+  Object.assign(_user, {
     firstName: '',
     lastName: '',
     email: '',
@@ -163,7 +161,7 @@ const deleteUser = async (userId) => {
 const cancelAdd = () => {
   isAddModalOpen.value = false
   clearServerErrors()
-  Object.assign(newUser, {
+  Object.assign(_user, {
     firstName: '',
     lastName: '',
     email: '',
@@ -217,11 +215,11 @@ const isRoleSelected = (roleName, userRoles) => {
 
 watch(
   [
-    () => newUser.firstName,
-    () => newUser.lastName,
-    () => newUser.email,
-    () => newUser.username,
-    () => newUser.password,
+    () => _user.firstName,
+    () => _user.lastName,
+    () => _user.email,
+    () => _user.username,
+    () => _user.password,
   ],
   () => {
     clearServerErrors()
@@ -357,14 +355,14 @@ watch(
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <BaseInput
-            v-model="newUser.firstName"
+            v-model="_user.firstName"
             placeholder="First Name"
             label="First name"
             :error="serverErrors.firstName"
             :class="{ 'border-red-500': serverErrors.firstName }"
           />
           <BaseInput
-            v-model="newUser.lastName"
+            v-model="_user.lastName"
             placeholder="Last Name"
             label="Last name"
             :error="serverErrors.lastName"
@@ -372,7 +370,7 @@ watch(
           />
         </div>
         <BaseInput
-          v-model="newUser.email"
+          v-model="_user.email"
           type="email"
           placeholder="Email"
           label="Email"
@@ -380,14 +378,14 @@ watch(
           :class="{ 'border-red-500': serverErrors.email }"
         />
         <BaseInput
-          v-model="newUser.username"
+          v-model="_user.username"
           placeholder="Username"
           label="Username"
           :error="serverErrors.username"
           :class="{ 'border-red-500': serverErrors.username }"
         />
         <BaseInput
-          v-model="newUser.password"
+          v-model="_user.password"
           type="password"
           placeholder="Password"
           label="Password"
@@ -405,7 +403,7 @@ watch(
             >
               <input
                 type="checkbox"
-                v-model="newUser.roles"
+                v-model="_user.roles"
                 :value="{ name: `ROLE_${role.name.toUpperCase()}` }"
                 class="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-opacity-50"
               />
@@ -425,7 +423,7 @@ watch(
         <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
           {{ serverErrors.general }}
         </div>
-        <BaseCheckbox v-model="newUser.active" label="Is Active?" />
+        <BaseCheckbox v-model="_user.active" label="Is Active?" />
         <div class="flex justify-end space-x-3 pt-2">
           <button
             type="button"
@@ -449,7 +447,7 @@ watch(
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <BaseInput
-            v-model="selectedUser.firstName"
+            v-model="_user.firstName"
             placeholder="First Name"
             label="First name"
             variant="success"
@@ -457,7 +455,7 @@ watch(
             :class="{ 'border-red-500': serverErrors.firstName }"
           />
           <BaseInput
-            v-model="selectedUser.lastName"
+            v-model="_user.lastName"
             placeholder="Last Name"
             label="Last name"
             variant="success"
@@ -466,7 +464,7 @@ watch(
           />
         </div>
         <BaseInput
-          v-model="selectedUser.email"
+          v-model="_user.email"
           type="email"
           placeholder="Email"
           label="Email"
@@ -475,7 +473,7 @@ watch(
           :class="{ 'border-red-500': serverErrors.email }"
         />
         <BaseInput
-          v-model="selectedUser.username"
+          v-model="_user.username"
           placeholder="Username"
           label="Username"
           variant="success"
@@ -493,13 +491,13 @@ watch(
             >
               <input
                 type="checkbox"
-                :checked="isRoleSelected(role.name, selectedUser.roles)"
+                :checked="isRoleSelected(role.name, _user.roles)"
                 @change="
                   (e) => {
                     if (e.target.checked) {
-                      selectedUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
+                      _user.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
                     } else {
-                      selectedUser.roles = selectedUser.roles.filter(
+                      _user.roles = _user.roles.filter(
                         (r) => r.name !== `ROLE_${role.name.toUpperCase()}`,
                       )
                     }
@@ -519,7 +517,7 @@ watch(
             {{ serverErrors.roles }}
           </span>
         </div>
-        <BaseCheckbox v-model="selectedUser.active" label="Is Active?" variant="success" />
+        <BaseCheckbox v-model="_user.active" label="Is Active?" variant="success" />
         <div class="flex justify-between pt-2">
           <button
             type="submit"

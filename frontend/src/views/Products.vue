@@ -63,9 +63,14 @@
           </DataTable>
         </div>
 
-        <Pagination :current-page="productsStore.pagination.currentPage" :total-pages="totalPages"
-          :total-items="productsStore.filteredProducts.length" :start-item="paginationStart" :end-item="paginationEnd"
-          @page-change="productsStore.setPage" />
+        <Pagination
+          :current-page="productsStore.pagination.currentPage"
+          :total-pages="totalPages"
+          :total-items="productsStore.filteredProducts.length"
+          :start-item="paginationStart"
+          :end-item="paginationEnd"
+          @page-change="productsStore.setPage"
+        />
       </template>
     </div>
 
@@ -125,7 +130,7 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import StatusBar from '@/components/common/StatusBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { paginate, getPaginationInfo } from '@/utils/pagination'
-import { errorHandler, setErrorDefault } from '@/utils/errorHandler.js'
+import { errorHandler, setErrorDefault } from '@/utils/error-handler.js'
 
 defineOptions({
   name: 'ProductsView',

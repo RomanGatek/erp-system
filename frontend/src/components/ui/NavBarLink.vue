@@ -13,7 +13,7 @@
   <span
     v-else-if="!hasPermission(requiredRole) && !dropdown"
     class="text-white/50 cursor-not-allowed px-4 py-2 rounded-full text-sm font-medium flex items-center"
-    :title="`Nemáte oprávnění pro přístup k ${text}`"
+    :title="`Insufficient permissions fro ${text}`"
   >
     <component :is="icon" class="w-4 h-4 mr-2" />
     {{ text }}

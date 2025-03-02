@@ -2,7 +2,7 @@
 defineProps({
   message: {
     type: String,
-    default: 'Žádná data k zobrazení'
+    default: 'No data to displayed',
   }
 })
 </script>
@@ -24,4 +24,4 @@ defineProps({
     </svg>
     <h3 class="mt-2 text-sm font-medium text-gray-900">{{ message }}</h3>
   </div>
-</template> 
+</template>
