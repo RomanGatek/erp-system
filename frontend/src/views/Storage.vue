@@ -38,7 +38,7 @@ const selectedItem = reactive({
 })
 
 const tableHeaders = [
-  { field: 'productName', label: 'Product Name', sortable: true },
+  { field: 'product.name', label: 'Product Name', sortable: true },
   { field: 'price', label: 'Price', sortable: true },
   { field: 'description', label: 'Product Description', sortable: true },
   { field: 'quantity', label: 'Quantity', sortable: true },
@@ -157,7 +157,7 @@ computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.
 
       <!-- Empty state -->
       <EmptyState
-        v-else-if="!inventoryStore.paginatedItems.length"
+        v-else-if="!inventoryStore.paginateItems.length"
         message="Žádné itemy k zobrazení"
       />
 
@@ -166,7 +166,7 @@ computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.
         <div class="max-h-[500px] overflow-y-auto">
           <DataTable
             :headers="tableHeaders"
-            :items="inventoryStore.paginatedItems"
+            :items="inventoryStore.paginateItems"
             :sort-by="inventoryStore.setSorting"
             :sorting="inventoryStore.sorting"
             :on-edit="openEditModal"
@@ -209,7 +209,7 @@ computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.
           <Pagination
             :current-page="inventoryStore.pagination.currentPage"
             :total-pages="totalPages"
-            :total-items="inventoryStore.filteredItems.length"
+            :total-items="inventoryStore.paginateItems.length"
             :start-item="paginationStart"
             :end-item="paginationEnd"
             @page-change="inventoryStore.setPage"

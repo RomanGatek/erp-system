@@ -12,25 +12,13 @@ import Unauthorized from '@/views/Unauthorized.vue'
 
 const routes = [
   { path: '/', component: Home },
-  { path: '/auth', component: Auth, meta: { requiresAuth: false }},
-  {
-    path: '/profile',
-    component: Profile,
-    meta: { requiresAuth: true }
-  },
-  { path: '/users', component: Users, meta: { requiresAuth: true, role: "ADMIN" }   },
+  { path: '/auth', component: Auth, meta: { requiresAuth: false } },
+  { path: '/profile', component: Profile, meta: { requiresAuth: false } },
+  { path: '/users', component: Users, meta: { requiresAuth: true, role: "ADMIN" } },
   { path: '/products', component: Products, meta: { requiresAuth: true, role: "ADMIN" } },
   { path: '/storage', component: Storage, meta: { requiresAuth: true, role: "ADMIN" } },
-  {
-    path: '/unauthorized',
-    name: 'Unauthorized',
-    component: Unauthorized
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: NotFound
-  }
+  { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
@@ -61,11 +49,9 @@ router.beforeEach(async (to, from, next) => {
 
   const userRoles = Object.values(meStore.user?.roles ?? []).map(role => role.name)
 
-  if (to.meta.requiresAuth && !userRoles.some(role => role === `ROLE_${to.meta.role.toUpperCase()}`)) {
+  if (to.meta.requiresAuth && !userRoles.some(role => role === `ROLE_${(to.meta.role ?? "").toUpperCase()}`)) {
     return next('/unauthorized')
   }
-
-
   next()
 })
 
