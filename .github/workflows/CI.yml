@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "**"  # Bude se spouštět na všech větvích
   pull_request:
 
 jobs:
