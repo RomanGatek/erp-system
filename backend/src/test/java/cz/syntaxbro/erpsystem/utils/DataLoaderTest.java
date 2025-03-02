@@ -3,7 +3,6 @@ package cz.syntaxbro.erpsystem.utils;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
-import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
@@ -23,6 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit test class for DataLoader.
+ * Ensures the correct initialization of permissions, roles, and users.
+ */
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
 @ExtendWith(MockitoExtension.class)
@@ -34,29 +37,43 @@ class DataLoaderTest {
     @InjectMocks
     private DataLoader dataLoader;
 
-
+    // Repositories used for testing persistence of roles, users, and permissions.
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
-    @Autowired
-    private ProductRepository productRepository;
 
-    DataLoaderTest(@org.springframework.beans.factory.annotation.Autowired RoleRepository roleRepository,
-                   @org.springframework.beans.factory.annotation.Autowired UserRepository userRepository,
-                   @org.springframework.beans.factory.annotation.Autowired PermissionRepository permissionRepository) {
+    @Autowired
+    private ProductRepository productRepository; // Directly injected by Spring
+
+    /**
+     * Constructor to manually inject required repositories.
+     * This ensures the repositories are properly initialized for testing.
+     */
+    DataLoaderTest(@Autowired RoleRepository roleRepository,
+                   @Autowired UserRepository userRepository,
+                   @Autowired PermissionRepository permissionRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
     }
 
+    /**
+     * Setup method executed before each test.
+     * - Mocks password hashing to return a predefined value.
+     * - Initializes and executes the DataLoader.
+     */
     @BeforeEach
     void setUp() {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
         dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository);
-        dataLoader.run();
+        dataLoader.run(); // Populates database with initial data.
     }
 
+    /**
+     * Test: Ensures permissions are correctly persisted in the database.
+     * Expected result: Permissions should be present.
+     */
     @Test
     void shouldPersistPermissions() {
         assertThat(permissionRepository.findByName("READ_REPORTS")).isPresent();
@@ -64,28 +81,36 @@ class DataLoaderTest {
         assertThat(permissionRepository.findByName("VIEW_PROFILE")).isPresent();
     }
 
+    /**
+     * Test: Ensures roles and their associated permissions are persisted.
+     * Expected result: Each role should be present with the expected number of permissions.
+     */
     @Test
     void shouldPersistRolesWithPermissions() {
         Optional<Role> adminRole = roleRepository.findByName("ROLE_ADMIN");
         assertThat(adminRole).isPresent();
-        assertThat(adminRole.get().getPermissions()).hasSize(2);
+        assertThat(adminRole.get().getPermissions()).hasSize(2); // Admin should have 2 permissions.
 
         Optional<Role> managerRole = roleRepository.findByName("ROLE_MANAGER");
         assertThat(managerRole).isPresent();
-        assertThat(managerRole.get().getPermissions()).hasSize(1);
+        assertThat(managerRole.get().getPermissions()).hasSize(1); // Manager should have 1 permission.
 
         Optional<Role> userRole = roleRepository.findByName("ROLE_USER");
         assertThat(userRole).isPresent();
-        assertThat(userRole.get().getPermissions()).hasSize(1);
+        assertThat(userRole.get().getPermissions()).hasSize(1); // Regular user should have 1 permission.
     }
 
+    /**
+     * Test: Ensures that running the DataLoader multiple times does not create duplicate entries.
+     * Expected result: The number of roles, users, and permissions should remain the same.
+     */
     @Test
     void shouldNotDuplicateEntitiesOnSecondRun() {
         long permissionCountBefore = permissionRepository.count();
         long roleCountBefore = roleRepository.count();
         long userCountBefore = userRepository.count();
 
-        dataLoader.run();
+        dataLoader.run(); // Running again to check for duplicates.
 
         assertThat(permissionRepository.count()).isEqualTo(permissionCountBefore);
         assertThat(roleRepository.count()).isEqualTo(roleCountBefore);
