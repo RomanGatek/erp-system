@@ -1,187 +1,225 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.partials.UserPartial;
-import cz.syntaxbro.erpsystem.security.SecurityConfig;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.repositories.RoleRepository;
+import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
 import cz.syntaxbro.erpsystem.services.UserService;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
-@Import(SecurityConfig.class)
-class UserControllerTest {
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestExecutionListeners(
+        listeners = {
+                DependencyInjectionTestExecutionListener.class,
+                DirtiesContextBeforeModesTestExecutionListener.class
+        },
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
+)
+public class UserControllerTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private UserService userService;
 
-    @InjectMocks
-    private UserController userController;
+    private Long testUserId;
 
-    private User testUser;
-    private CreateUserRequest createUserRequest;
-    private UserPartial userPartial;
-
-    /**
-     * Setup method that runs before each test case.
-     * Initializes a test user with predefined values.
-     */
     @BeforeEach
     void setUp() {
-        testUser = User.builder()
-                .id(1L)
-                .username("tetUser")
-                .firstName("Test")
-                .lastName("User")
-                .password("Password123@")
-                .email("test@example.com")
-                .active(true)
-                .roles(Set.of(new Role("USER")))
-                .build();
+        // Ensure ROLE_USER exists in the database
+        roleRepository.findByName("ROLE_USER").orElseGet(() -> {
+            Role newRole = new Role();
+            newRole.setName("ROLE_USER");
+            Role savedRole = roleRepository.save(newRole);
+            roleRepository.flush();
+            return savedRole;
+        });
 
-        createUserRequest = new CreateUserRequest(
+        // Ensure the role is actually found
+        assertTrue(roleRepository.findByName("ROLE_USER").isPresent(), "ROLE_USER was not correctly created!");
+
+        // Create a test user
+        CreateUserRequest createUserRequest = new CreateUserRequest(
                 "testUser", "StrongPassword1!", "test@example.com",
-                "Test", "User", true, Set.of("ROLE_USER")
+                "Test", "User", true, Set.of("USER")
         );
 
-        userPartial = new UserPartial(
-                "testUser", "test@example.com","Test", "User", true, Set.of("ROLE_USER")
-        );
+        User user = userService.createUser(createUserRequest);
+        testUserId = user.getId();
 
+        assertNotNull(testUserId, "Test user was not correctly created!");
     }
 
     /**
-     * Test case: Retrieve a list of users.
-     * Expected result: HTTP 200 OK and a non-empty list of users.
+     * Test: Admin can retrieve all users.
      */
     @Test
-    void getUsers_shouldReturnListOfUsers() {
-        when(userService.getAllUsers()).thenReturn(List.of(testUser));
-
-        ResponseEntity<List<User>> response = userController.getUsers();
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody())
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(1)
-                .allSatisfy(user -> {
-                    assertThat(user.getUsername()).isNotEmpty();
-                    assertThat(user.getEmail()).contains("@");
-                });
-
-        verify(userService, times(1)).getAllUsers();
+    @WithMockUser(roles = {"ADMIN"})
+    void shouldReturnUsersListForAdmin() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThan(0)))
+                .andExpect(jsonPath("$[*].username").value(org.hamcrest.Matchers.hasItem("testUser")));
     }
 
     /**
-     * Test case: Retrieve an empty list when no users exist.
-     * Expected result: HTTP 200 OK and an empty list.
+     * Test: Manager can retrieve all users.
      */
     @Test
-    void getUsers_shouldReturnEmptyList_whenNoUsers() {
-        when(userService.getAllUsers()).thenReturn(Collections.emptyList());
-
-        ResponseEntity<List<User>> response = userController.getUsers();
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull().isEmpty();
-
-        verify(userService, times(1)).getAllUsers();
+    @WithMockUser(roles = {"MANAGER"})
+    void shouldReturnUsersListForManager() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/users"))
+                .andExpect(status().isOk());
     }
 
     /**
-     * Test case: Retrieve a user by ID.
-     * Expected result: HTTP 200 OK and the correct UserDto.
+     * Test: Regular user is forbidden from retrieving all users.
      */
     @Test
-    void getUserById_shouldReturnUserDto_whenUserExists() {
-        when(userService.getUserById(1L)).thenReturn(Optional.of(testUser));
-
-        ResponseEntity<Optional<User>> response = userController.getUserById(1L);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get().getUsername()).isEqualTo("testUser");
-
-        verify(userService, times(1)).getUserById(1L);
+    @WithMockUser
+    void shouldDenyUsersListForRegularUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/users"))
+                .andExpect(status().isForbidden());
     }
 
     /**
-     * Test case: Attempting to retrieve a non-existent user.
-     * Expected result: HTTP 404 Not Found (RuntimeException thrown).
+     * Test: Unauthenticated user is forbidden from retrieving all users.
      */
     @Test
-    void getUserById_shouldReturnNotFound_whenUserDoesNotExist() {
-        when(userService.getUserById(1L)).thenThrow(new RuntimeException("User not found"));
-
-        assertThrows(RuntimeException.class, () -> userController.getUserById(1L));
-
-        verify(userService, times(1)).getUserById(1L);
+    void shouldDenyUsersListForUnauthenticatedUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/users"))
+                .andExpect(status().isUnauthorized());
     }
 
     /**
-     * Test case: Successfully creating a new user.
-     * Expected result: HTTP 201 Created.
+     * Test: Admin can retrieve user details by ID.
      */
     @Test
-    void createUser_shouldReturnCreatedUser() {
-        when(userService.createUser(createUserRequest)).thenReturn(testUser);
-
-        ResponseEntity<User> response = userController.createUser(createUserRequest);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getUsername()).isEqualTo(createUserRequest.getUsername());
-
-        verify(userService, times(1)).createUser(createUserRequest);
+    @WithMockUser(roles = {"ADMIN"})
+    void shouldReturnUserDetailsForAdmin() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/users/" + testUserId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("testUser"))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.firstName").value("Test"))
+                .andExpect(jsonPath("$.lastName").value("User"));
     }
 
     /**
-     * Test case: Successfully updating a user.
-     * Expected result: HTTP 200 OK and updated user.
+     * Test: Regular user is forbidden from retrieving another user's details.
      */
     @Test
-    void updateUser_shouldReturnUpdatedUser() {
-        when(userService.updateUser(1L, userPartial)).thenReturn(testUser);
-
-        ResponseEntity<User> response = userController.updateUser(1L, userPartial);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getUsername()).isEqualTo(testUser.getUsername());
-
-        verify(userService, times(1)).updateUser(1L, userPartial);
+    @WithMockUser
+    void shouldDenyUserDetailsForRegularUser() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/users/" + testUserId))
+                .andExpect(status().isForbidden());
     }
 
     /**
-     * Test case: Successfully deleting a user.
-     * Expected result: HTTP 204 No Content.
+     * Test: Admin can create a new user.
      */
     @Test
-    void deleteUser_shouldReturnNoContent() {
-        doNothing().when(userService).deleteUser(1L);
+    @WithMockUser(roles = {"ADMIN"})
+    void shouldCreateUserForAdmin() throws Exception {
+        String newUserJson = """
+            {
+                "username": "newUser",
+                "password": "StrongPassword1!",
+                "email": "newuser@example.com",
+                "firstName": "New",
+                "lastName": "User",
+                "active": true,
+                "roles": ["USER"]
+            }
+        """;
 
-        ResponseEntity<Void> response = userController.deleteUser(1L);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newUserJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value("newUser"))
+                .andExpect(jsonPath("$.email").value("newuser@example.com"));
+    }
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    /**
+     * Test: Admin can update an existing user.
+     */
+    @Test
+    @WithMockUser(roles = {"ADMIN"})
+    void shouldUpdateUserForAdmin() throws Exception {
+        String updatedUserJson = """
+            {
+                "username": "updatedUser",
+                "email": "updated@example.com",
+                "firstName": "Updated",
+                "lastName": "User",
+                "active": false,
+                "roles": ["USER"]
+            }
+        """;
 
-        verify(userService, times(1)).deleteUser(1L);
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/users/" + testUserId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedUserJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("updatedUser"))
+                .andExpect(jsonPath("$.email").value("updated@example.com"));
+    }
+
+    /**
+     * Test: Admin can delete a user.
+     */
+    @Test
+    @WithMockUser(roles = {"ADMIN"})
+    void shouldDeleteUserForAdmin() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/users/" + testUserId))
+                .andExpect(status().isNoContent());
+
+        Optional<User> deletedUser = userRepository.findById(testUserId);
+        assertTrue(deletedUser.isEmpty(), "User was not deleted correctly!");
+    }
+
+    /**
+     * Test: Ensure role persistence.
+     */
+    @Test
+    void shouldSaveRoleCorrectly() {
+        Role role = new Role();
+        role.setName("ROLE_TEST");
+        roleRepository.save(role);
+
+        Optional<Role> foundRole = roleRepository.findByName("ROLE_TEST");
+        assertTrue(foundRole.isPresent(), "ROLE_TEST was not found in the database!");
     }
 }

@@ -5,7 +5,6 @@ import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -27,39 +26,75 @@ public class OrderControllerTest {
     @InjectMocks
     private OrderController orderController;
 
+    /**
+     * Initializes mocks before each test execution.
+     */
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
+    /**
+     * Test: Retrieves an order by ID.
+     * Expected outcome:
+     * - The response status should be `200 OK`.
+     * - The response body should contain the expected order.
+     */
     @Test
     public void testGetOrder() {
+
+        // Arrange: Create a sample order
         Order order = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
         when(orderService.getOrderById(1L)).thenReturn(order);
 
+        // Act: Call the controller method
         ResponseEntity<Order> response = orderController.getOrder(1L);
-        assertEquals(200, response.getStatusCodeValue());
+
+        // Assert: Verify response
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(order, response.getBody());
     }
 
+    /**
+     * Test: Retrieves all orders.
+     * Expected outcome:
+     * - The response status should be `200 OK`.
+     * - The response body should contain a list of orders.
+     */
     @Test
     public void testGetAllOrders() {
+
+        // Arrange: Create a sample list of orders
         List<Order> orders = Collections.singletonList(new Order());
         when(orderService.getOrders()).thenReturn(orders);
 
+        // Act: Call the controller method
         ResponseEntity<List<Order>> response = orderController.getAllOrders();
-        assertEquals(200, response.getStatusCodeValue());
+
+        // Assert: Verify response
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(orders, response.getBody());
     }
 
+    /**
+     * Test: Creates a new order.
+     * Expected outcome:
+     * - The response status should be `200 OK`.
+     * - The response body should contain the created order.
+     */
     @Test
     public void testCreateOrder() {
-        OrderRequest orderRequest = new OrderRequest(); // Předpokládáme, že máte třídu OrderRequest
+
+        // Arrange: Prepare order request and mock service response
+        OrderRequest orderRequest = new OrderRequest();
         Order createdOrder = new Order(1L, null, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
         when(orderService.createdOrder(any(OrderRequest.class))).thenReturn(createdOrder);
 
+        // Act: Call the controller method
         ResponseEntity<Order> response = orderController.createOrder(orderRequest);
-        assertEquals(200, response.getStatusCodeValue());
+
+        // Assert: Verify response
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(createdOrder, response.getBody());
     }
 } 

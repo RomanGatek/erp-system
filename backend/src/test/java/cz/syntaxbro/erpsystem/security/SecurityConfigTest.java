@@ -32,12 +32,12 @@ public class SecurityConfigTest {
 
     /**
      * Tests whether the protected endpoint is properly secured.
-     * Access without authentication should be denied (403 Forbidden).
+     * Access without authentication should be denied with HTTP 401 Unauthorized.
      */
     @Test
     void shouldRequireAuthenticationForApiEndpoints() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/protected"))
-                .andExpect(status().isForbidden()); // Verifies that access is denied for an unauthenticated user
+                .andExpect(status().isUnauthorized()); // Verifies that an unauthenticated user receives 401 Unauthorized
     }
 
     /**

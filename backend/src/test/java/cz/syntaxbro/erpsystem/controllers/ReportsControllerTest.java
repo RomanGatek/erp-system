@@ -1,24 +1,20 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 
-@ExtendWith(MockitoExtension.class)
-@WebMvcTest(controllers = ReportsController.class)
-@Import(SecurityConfig.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class ReportsControllerTest {
 
     @Autowired
@@ -64,7 +60,7 @@ class ReportsControllerTest {
 
     /**
      * Test case: Unauthenticated users should not access reports.
-     * Expected result: HTTP 401 Unauthorized.
+     * Expected result: HTTP 401 Unauthorized (or 403 Forbidden depending on SecurityConfig).
      */
     @Test
     void getAllReports_shouldReturnUnauthorized_whenUserIsNotAuthenticated() throws Exception {
