@@ -9,22 +9,6 @@ on:
 jobs:
     backend-tests:
         runs-on: ubuntu-latest
-        services:
-            mysql:
-                image: mysql:8.0
-                env:
-                    MYSQL_ROOT_PASSWORD: root
-                    MYSQL_DATABASE: testdb
-                    MYSQL_USER: user
-                    MYSQL_PASSWORD: password
-                ports:
-                    - 3306:3306
-                options: >-
-                    --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=root"
-                    --health-interval=10s
-                    --health-timeout=5s
-                    --health-retries=5
-
         steps:
             - name: Set up repository
               uses: actions/checkout@v4
@@ -37,16 +21,13 @@ jobs:
                 distribution: 'temurin'
                 java-version: 21
 
-            - name: Wait for MySQL to be ready
-              run: sleep 15s
-
             - name: Make +x for ./gradlew
               working-directory: ./
               run: chmod +x gradlew
 
             - name: Build and Test (Gradle)
               working-directory: ./
-              run: ./gradlew clean --no-build-cache test --info
+              run: ./gradlew clean --no-build-cache test
 
 
     frontend-tests:
