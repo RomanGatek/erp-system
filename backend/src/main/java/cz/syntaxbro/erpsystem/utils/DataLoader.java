@@ -1,15 +1,9 @@
 package cz.syntaxbro.erpsystem.utils;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
+import cz.syntaxbro.erpsystem.models.*;
+import cz.syntaxbro.erpsystem.repositories.*;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
-import cz.syntaxbro.erpsystem.models.Permission;
-import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.Role;
-import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
-import cz.syntaxbro.erpsystem.repositories.ProductRepository;
-import cz.syntaxbro.erpsystem.repositories.RoleRepository;
-import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -30,14 +24,16 @@ public class DataLoader implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final PasswordSecurity encoder;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
 
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
-                      PermissionRepository permissionRepository, PasswordSecurity encoder, ProductRepository productRepository) {
+                      PermissionRepository permissionRepository, PasswordSecurity encoder, ProductRepository productRepository, InventoryRepository inventoryRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
         this.encoder = encoder;
         this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     @Override
@@ -99,6 +95,33 @@ public class DataLoader implements CommandLineRunner {
         createProductIfNotExists("Jogurt jahodový 150g", 15.9, "Lahodný jogurt");
         createProductIfNotExists("Toaletní papír 8ks", 89.9, "Měkký a pevný");
 
+
+        // Po vytvoření / aktualizaci produktů je získáme z DB a založíme několik InventoryItem
+        Product milkaProduct = productRepository.findByName("Milka 200g")
+                .orElseThrow(() -> new RuntimeException("Milka 200g not found"));
+        Product cajProduct = productRepository.findByName("Čaj černý")
+                .orElseThrow(() -> new RuntimeException("Čaj černý not found"));
+        Product mlekoProduct = productRepository.findByName("Mléko polotučné")
+                .orElseThrow(() -> new RuntimeException("Mléko polotučné not found"));
+
+        createInventoryItemIfNotExists(milkaProduct, 50);
+        createInventoryItemIfNotExists(cajProduct, 120);
+        createInventoryItemIfNotExists(mlekoProduct, 200);
+
+    }
+
+    /**
+     * Metoda pro vytvoření InventoryItemu, pokud ještě neexistuje.
+     * Např. klíčová kontrola je na základě produktu (1 InventoryItem = 1 Product).
+     */
+    private void createInventoryItemIfNotExists(Product product, int quantity) {
+        Optional<InventoryItem> itemFromDb = inventoryRepository.findByProduct(product);
+        if (itemFromDb.isEmpty()) {
+            InventoryItem newItem = new InventoryItem();
+            newItem.setProduct(product);
+            newItem.setQuantity(quantity);
+            inventoryRepository.save(newItem);
+        }
     }
 
     private Permission createPermissionIfNotExists(String permissionName) {
@@ -134,7 +157,7 @@ public class DataLoader implements CommandLineRunner {
 
             userRepository.save(user);
         } else {
-            ErpSystemApplication.getLogger().warn("[DATA LOADER] User {} created.", username);
+            ErpSystemApplication.getLogger().info("[DATA LOADER] User {} created.", username);
         }
     }
 

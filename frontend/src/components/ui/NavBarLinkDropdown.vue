@@ -22,7 +22,7 @@
           <span
             v-else
             class="flex px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
-            :title="`Nemáte oprávnění pro přístup k ${item.text}`"
+            :title="`Insufficient permissions for ${item.text}`"
           >
             {{ item.text }}
           </span>

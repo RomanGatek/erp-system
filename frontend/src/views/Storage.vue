@@ -20,22 +20,29 @@ const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 
 const newItem = reactive({
-  productName: '',
+  product: {
+    name: '',
+    description: '',
+    price: 0,
+  },
   quantity: 0,
-  location: ''
 })
 
 const selectedItem = reactive({
-  productName: '',
+  product: {
+    name: '',
+    description: '',
+    price: 0,
+  },
   quantity: 0,
-  location: ''
 })
 
 const tableHeaders = [
-  { field: 'productName', label: 'Název produktu', sortable: true },
-  { field: 'quantity', label: 'Množství', sortable: true },
-  { field: 'location', label: 'Lokace', sortable: true },
-  { field: 'actions', label: 'Akce', sortable: false, class: 'text-right' },
+  { field: 'productName', label: 'Product Name', sortable: true },
+  { field: 'price', label: 'Price', sortable: true },
+  { field: 'description', label: 'Product Description', sortable: true },
+  { field: 'quantity', label: 'Quantity', sortable: true },
+  { field: 'actions', label: '', sortable: false, class: 'text-right' },
 ]
 
 const loading = ref(false)
@@ -88,9 +95,12 @@ const deleteItem = async (itemId) => {
 const cancelAdd = () => {
   isAddModalOpen.value = false
   Object.assign(newItem, {
-    productName: '',
+    product: {
+      name: '',
+      description: '',
+      price: 0,
+    },
     quantity: 0,
-    location: ''
   })
 }
 
@@ -103,7 +113,6 @@ computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-      <!-- Přesuneme StatusBar nad hlavní obsah, aby byl vždy viditelný -->
       <StatusBar
         :error="error"
         :loading="loading"
@@ -165,13 +174,16 @@ computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.
           >
             <template #row="{ item }">
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                {{ item.productName }}
+                {{ item.product.name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                {{ item.product.price }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                {{ item.product.description }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
                 {{ item.quantity }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ item.location }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
@@ -215,7 +227,7 @@ computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.
     >
       <div class="space-y-3">
         <BaseInput
-          v-model="newItem.productName"
+          v-model="newItem.product.name"
           placeholder="Název produktu"
           label="Název produktu"
         />
