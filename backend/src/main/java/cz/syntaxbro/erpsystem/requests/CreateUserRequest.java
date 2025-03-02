@@ -1,6 +1,5 @@
 package cz.syntaxbro.erpsystem.requests;
 
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -35,10 +35,10 @@
 
 
 <script setup>
-import { ref, defineProps } from 'vue'
+import { ref } from 'vue'
 import { hasPermission } from '@/utils/user-utils.js'
 
-const props = defineProps({
+defineProps({
   text: String,
   icon: Object,
   items: Array,

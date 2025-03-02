@@ -21,10 +21,9 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
 import { hasPermission } from '@/utils/user-utils.js'
 
-const props = defineProps({
+defineProps({
   to: String,
   text: String,
   icon: Object,

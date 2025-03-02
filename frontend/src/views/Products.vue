@@ -167,7 +167,7 @@ const error = ref('')
 const serverErrors = ref({ ...defaultError })
 
 setErrorDefault(defaultError)
-const eHandler = errorHandler(serverErrors)
+const eHandler = errorHandler(serverErrors, productsStore)
 
 onMounted(async () => {
   loading.value = true

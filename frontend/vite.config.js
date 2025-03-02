@@ -13,7 +13,9 @@ export default defineConfig({
     tailwindcss()
   ],
   build: {
-    watch: ["./src/**/*"],
+    watch: {
+      include: 'src/**'
+    }
   },
   resolve: {
     alias: {

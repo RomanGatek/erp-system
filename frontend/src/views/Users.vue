@@ -69,7 +69,7 @@ const loading = ref(false)
 const error = ref('')
 const serverErrors = ref({ ...defaultError })
 setErrorDefault(defaultError)
-const eHandler = errorHandler(serverErrors)
+const eHandler = errorHandler(serverErrors, userStore)
 
 onMounted(async () => {
   clearServerErrors()
@@ -138,6 +138,7 @@ const updateUser = async () => {
 
 const cancelEdit = () => {
   isEditModalOpen.value = false
+  clearServerErrors()
   Object.assign(selectedUser, {
     firstName: '',
     lastName: '',
@@ -161,6 +162,7 @@ const deleteUser = async (userId) => {
 
 const cancelAdd = () => {
   isAddModalOpen.value = false
+  clearServerErrors()
   Object.assign(newUser, {
     firstName: '',
     lastName: '',

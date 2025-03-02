@@ -108,7 +108,7 @@
           {{ serverErrors.general }}
         </div>
 
-        <!-- Sign Up Button -->
+        <!-- Sign Up Button  -->
         <button
           type="submit"
           class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -224,7 +224,7 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   try {
     clearServerErrors()
-    await register(email.value, password.value, confirmPassword.value)
+    await auth.register(email.value, password.value, confirmPassword.value)
     notify({
       type: 'success',
       text: 'Successfully registered! Please sign in.',

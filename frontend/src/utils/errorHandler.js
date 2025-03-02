@@ -5,20 +5,21 @@ let errorDefault = {
   general: ''
 }
 let server;
+let store_;
 
 export const setErrorDefault = (object) => {
-  errorDefault = {...object, ...errorDefault}
+  errorDefault = {...object, ...errorDefault }
 }
 
-export const errorHandler = (serverErrors) => {
+export const errorHandler = (serverErrors, store) => {
   server = serverErrors;
+  store_ = store;
   return handleServerValidationErrors;
 }
 
 export const clearServerErrors = () => {
-  server.value = {
-    ...errorDefault,
-  }
+  store_.error = null;
+  server.value = { ...errorDefault }
 }
 
 const handleServerValidationErrors = (error, srv) => {
