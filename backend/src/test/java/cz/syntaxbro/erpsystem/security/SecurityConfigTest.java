@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(properties = {"spring.profiles.active=test"})
 @AutoConfigureMockMvc
 public class SecurityConfigTest {
 

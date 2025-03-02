@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 
-@SpringBootTest
+@SpringBootTest(properties = {"spring.profiles.active=test"})
 @AutoConfigureMockMvc
 class ReportsControllerTest {
 
