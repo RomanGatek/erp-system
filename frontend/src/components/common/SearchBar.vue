@@ -3,7 +3,7 @@ defineProps({
   modelValue: String,
   placeholder: {
     type: String,
-    default: 'Hledat...'
+    default: 'Search...'
   }
 })
 
@@ -40,4 +40,4 @@ defineEmits(['update:modelValue'])
       />
     </div>
   </div>
-</template> 
+</template>

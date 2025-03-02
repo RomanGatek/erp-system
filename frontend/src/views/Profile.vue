@@ -8,7 +8,7 @@
             <img
               :src="meStore.user?.avatar || 'https://ui-avatars.com/api/?name=' + meStore.user?.firstName + '+' + meStore.user?.lastName"
               class="w-16 h-16 rounded-full border-4 border-white/90 shadow-lg" :alt="meStore.user?.firstName" />
-            <button v-if="meStore.user?.avatar" @click="removeAvatar"
+            <button @click="removeAvatar"
               class="absolute bottom-0 left-0 bg-red-500 rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-all group">
               <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

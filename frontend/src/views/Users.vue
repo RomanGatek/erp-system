@@ -1,7 +1,6 @@
 <script setup>
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { notify } from '@kyvg/vue3-notification'
 import DataTable from '@/components/common/DataTable.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
@@ -10,8 +9,14 @@ import BaseInput from '@/components/common/BaseInput.vue'
 import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
 import StatusBar from '@/components/common/StatusBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
+import { getPaginationInfo, paginate } from '@/utils/pagination'
 
-// Přidáme jméno komponenty pro linter
+import {
+  errorHandler,
+  setErrorDefault,
+  clearServerErrors
+} from '@/utils/errorHandler.js'
+
 defineOptions({
   name: 'UsersView',
 })
@@ -21,125 +26,89 @@ const searchInput = ref('')
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 
-const newUser = reactive({
+const defaultUser = {
   firstName: '',
   lastName: '',
   email: '',
   username: '',
   password: '',
-  active: true,
-  roles: []
-})
+  active: false,
+  roles: [],
+}
 
-const selectedUser = reactive({
-  firstName: '',
-  lastName: '',
-  email: '',
-  username: '',
-  password: '',
-  active: true,
-  roles: []
-})
 
-// Upravíme definici rolí
-const availableRoles = [
-  { name: 'admin', bgColor: 'bg-red-100', textColor: 'text-red-800' },
-  { name: 'manager', bgColor: 'bg-blue-100', textColor: 'text-blue-800' },
-  { name: 'user', bgColor: 'bg-green-100', textColor: 'text-green-800' }
-]
-
-// Upravíme tableHeaders - přidáme roles
-const tableHeaders = [
-  { field: 'firstName', label: 'Jméno', sortable: true },
-  { field: 'lastName', label: 'Příjmení', sortable: true },
-  { field: 'email', label: 'Email', sortable: true },
-  { field: 'username', label: 'Uživatelské jméno', sortable: true },
-  { field: 'roles', label: 'Role', sortable: true },
-  { field: 'active', label: 'Aktivní', sortable: true },
-  { field: 'actions', label: 'Akce', sortable: false, class: 'text-right' },
-]
-
-const loading = ref(false)
-const error = ref('')
-
-// Přidáme state pro serverové chyby
-const serverErrors = ref({
+const defaultError = {
   firstName: '',
   lastName: '',
   email: '',
   username: '',
   password: '',
   roles: '',
-  general: ''
-})
-
-// Funkce pro vyčištění chyb
-const clearServerErrors = () => {
-  serverErrors.value = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
-    password: '',
-    roles: '',
-    general: ''
-  }
 }
 
-// Zpracování chyb ze serveru
-const handleServerValidationErrors = (error) => {
-  clearServerErrors()
-  
-  if (!error.response?.data) {
-    serverErrors.value.general = 'An unexpected error occurred'
-    return
-  }
+const newUser = reactive({ ...defaultUser })
 
-  const { field: errorField, message: errorMessage } = error.response.data
+const selectedUser = reactive({ ...defaultUser, roles: [] })
 
-  if (errorField) {
-    serverErrors.value[errorField] = errorMessage
-  } else {
-    serverErrors.value.general = errorMessage
-  }
-}
+const availableRoles = [
+  { name: 'admin', bgColor: 'bg-red-100', textColor: 'text-red-800' },
+  { name: 'manager', bgColor: 'bg-blue-100', textColor: 'text-blue-800' },
+  { name: 'user', bgColor: 'bg-green-100', textColor: 'text-green-800' },
+]
+
+const tableHeaders = [
+  { field: 'firstName', label: 'First name', sortable: true },
+  { field: 'lastName', label: 'Last name', sortable: true },
+  { field: 'email', label: 'Email', sortable: true },
+  { field: 'username', label: 'Username', sortable: true },
+  { field: 'roles', label: 'Role', sortable: true },
+  { field: 'active', label: 'Active', sortable: true },
+  { field: 'actions', label: '', sortable: false, class: 'text-right' },
+]
+const loading = ref(false)
+const error = ref('')
+const serverErrors = ref({ ...defaultError })
+setErrorDefault(defaultError)
+const eHandler = errorHandler(serverErrors)
 
 onMounted(async () => {
+  clearServerErrors()
   loading.value = true
   try {
     await userStore.fetchUsers()
-    if (useUserStore.error) {
-      error.value = useUserStore.error
+    if (!userStore.error) {
+      loading.value = false
+    } else {
+      eHandler(userStore.error)
+      loading.value = false
     }
   } catch (err) {
-    error.value = 'Nepodařilo se načíst data uživatelů: ' + err.message
-  } finally {
+    console.error('Error fetching users:', err)
     loading.value = false
+    error.value = 'Failed to load users. Please try again later.'
   }
 })
 
 const addUser = async () => {
+  clearServerErrors()
   try {
-    clearServerErrors()
     await userStore.addUser({ ...newUser })
-    Object.assign(newUser, {
-      firstName: '',
-      lastName: '',
-      email: '',
-      username: '',
-      password: '',
-      active: true,
-      roles: []
-    })
-    isAddModalOpen.value = false
+    if (!userStore.error) {
+      Object.assign(newUser, { ...newUser })
+      isAddModalOpen.value = false
+    } else {
+      eHandler(userStore.error, error)
+      console.log(userStore.error)
+      if (error.value) isAddModalOpen.value = false
+    }
   } catch (err) {
-    handleServerValidationErrors(err)
+    console.error('Error adding user:', err)
+    error.value = 'Failed to add user. Please try again later.'
   }
 }
 
 const openEditModal = (index) => {
   const user = userStore.users[index]
-  // Vytvoříme hlubokou kopii uživatele
   Object.assign(selectedUser, {
     id: user.id,
     firstName: user.firstName,
@@ -147,37 +116,46 @@ const openEditModal = (index) => {
     email: user.email,
     username: user.username,
     active: user.active,
-    roles: [...(user.roles || [])] // Zajistíme, že roles je vždy pole
+    roles: [...(user.roles || [])],
   })
   isEditModalOpen.value = true
 }
 
 const updateUser = async () => {
+  clearServerErrors()
   try {
-    clearServerErrors()
     await userStore.updateUser(selectedUser)
-    isEditModalOpen.value = false
+    if (userStore.error) {
+      eHandler(userStore.error)
+    } else {
+      isEditModalOpen.value = false
+    }
   } catch (err) {
-    handleServerValidationErrors(err)
+    console.error('Error updating user:', err)
+    error.value = 'Failed to update user. Please try again later.'
   }
 }
 
 const cancelEdit = () => {
   isEditModalOpen.value = false
-  // Vyčistíme data
   Object.assign(selectedUser, {
     firstName: '',
     lastName: '',
     email: '',
     username: '',
     active: true,
-    roles: []
+    roles: [],
   })
 }
 
 const deleteUser = async (userId) => {
-  if (confirm('Opravdu chcete smazat tohoto uživatele?')) {
-    await userStore.deleteUser(userId)
+  if (confirm('Do you really want to delete this user?')) {
+    try {
+      await userStore.deleteUser(userId)
+    } catch (err) {
+      console.error('Error deleting user:', err)
+      error.value = 'Failed to delete user. Please try again later.'
+    }
   }
 }
 
@@ -190,73 +168,75 @@ const cancelAdd = () => {
     username: '',
     password: '',
     active: true,
-    roles: []
+    roles: [],
   })
 }
 
 const paginationStart = computed(
-  () => (userStore.pagination.currentPage - 1) * userStore.pagination.perPage + 1,
+  () =>
+    getPaginationInfo(
+      userStore.filteredUsers,
+      userStore.pagination.currentPage,
+      userStore.pagination.perPage,
+    ).startItem,
+)
+const paginationEnd = computed(
+  () =>
+    getPaginationInfo(
+      userStore.filteredUsers,
+      userStore.pagination.currentPage,
+      userStore.pagination.perPage,
+    ).endItem,
+)
+const totalPages = computed(
+  () =>
+    getPaginationInfo(
+      userStore.filteredUsers,
+      userStore.pagination.currentPage,
+      userStore.pagination.perPage,
+    ).totalPages,
+)
+computed(() =>
+  paginate(userStore.filteredUsers, userStore.pagination.currentPage, userStore.pagination.perPage),
 )
 
-const paginationEnd = computed(() =>
-  Math.min(
-    paginationStart.value + userStore.pagination.perPage - 1,
-    userStore.filteredUsers.length,
-  ),
-)
-
-const totalPages = computed(() =>
-  Math.ceil(userStore.filteredUsers.length / userStore.pagination.perPage),
-)
-
-// Pomocná funkce pro získání stylu role
 const getRoleStyle = (roleName) => {
-  const role = availableRoles.find(r => 
-    roleName.toLowerCase().includes(r.name.toLowerCase())
-  )
+  const role = availableRoles.find((r) => roleName.toLowerCase().includes(r.name.toLowerCase()))
   return role ? [role.bgColor, role.textColor] : ['bg-gray-100', 'text-gray-800']
 }
 
-// Pomocná funkce pro formátování zobrazení role
 const formatRoleDisplay = (role) => {
   return role.name.replace('ROLE_', '').toLowerCase()
 }
 
-// Upravíme funkci pro kontrolu vybrané role
 const isRoleSelected = (roleName, userRoles) => {
-  return userRoles?.some(role => 
-    role.name === `ROLE_${roleName.toUpperCase()}`
-  ) || false
+  return userRoles?.some((role) => role.name === `ROLE_${roleName.toUpperCase()}`) || false
 }
 
-// Přidáme watch pro čištění chyb při změně inputů
-watch([
-  () => newUser.firstName,
-  () => newUser.lastName,
-  () => newUser.email,
-  () => newUser.username,
-  () => newUser.password
-], () => {
-  clearServerErrors()
-})
+watch(
+  [
+    () => newUser.firstName,
+    () => newUser.lastName,
+    () => newUser.email,
+    () => newUser.username,
+    () => newUser.password,
+  ],
+  () => {
+    clearServerErrors()
+  },
+)
 </script>
 
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar
-        :error="error"
-        :loading="loading"
-      />
+      <StatusBar :error="error" :loading="loading" />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Users</h2>
         <div class="flex items-center space-x-4">
-          <SearchBar
-            v-model="searchInput"
-            @update:modelValue="userStore.setSearch($event)"
-          />
+          <SearchBar v-model="searchInput" @update:modelValue="userStore.setSearch($event)" />
           <button
             @click="isAddModalOpen = true"
             class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm transition flex items-center"
@@ -278,19 +258,8 @@ watch([
         </div>
       </div>
 
-      <!-- Loading overlay -->
-      <div
-        v-if="loading"
-        class="absolute inset-0 bg-white/50 flex items-center justify-center rounded-2xl"
-      >
-        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
-      </div>
-
       <!-- Empty state -->
-      <EmptyState
-        v-else-if="!userStore.paginatedUsers.length"
-        message="Žádní uživatelé k zobrazení"
-      />
+      <EmptyState v-if="!userStore.paginatedUsers.length" message="No users to display" />
 
       <!-- Data table -->
       <template v-else>
@@ -335,7 +304,7 @@ watch([
                     item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
                   ]"
                 >
-                  {{ item.active ? 'Aktivní' : 'Neaktivní' }}
+                  {{ item.active ? 'Active' : 'Inactive' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -344,7 +313,12 @@ watch([
                   class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
                 >
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
                   </svg>
                 </button>
                 <button
@@ -352,7 +326,12 @@ watch([
                   class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
                 >
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </td>
@@ -372,25 +351,20 @@ watch([
     </div>
 
     <!-- Add Modal -->
-    <Modal
-      :show="isAddModalOpen"
-      title="Add New User"
-      @close="cancelAdd"
-      @submit="addUser"
-    >
+    <Modal :show="isAddModalOpen" title="Add New User" @close="cancelAdd" @submit="addUser">
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <BaseInput
             v-model="newUser.firstName"
-            placeholder="Jméno"
-            label="Jméno"
+            placeholder="First Name"
+            label="First name"
             :error="serverErrors.firstName"
             :class="{ 'border-red-500': serverErrors.firstName }"
           />
           <BaseInput
             v-model="newUser.lastName"
-            placeholder="Příjmení"
-            label="Příjmení"
+            placeholder="Last Name"
+            label="Last name"
             :error="serverErrors.lastName"
             :class="{ 'border-red-500': serverErrors.lastName }"
           />
@@ -405,16 +379,16 @@ watch([
         />
         <BaseInput
           v-model="newUser.username"
-          placeholder="Uživatelské jméno"
-          label="Uživatelské jméno"
+          placeholder="Username"
+          label="Username"
           :error="serverErrors.username"
           :class="{ 'border-red-500': serverErrors.username }"
         />
         <BaseInput
           v-model="newUser.password"
           type="password"
-          placeholder="Heslo"
-          label="Heslo"
+          placeholder="Password"
+          label="Password"
           :error="serverErrors.password"
           :class="{ 'border-red-500': serverErrors.password }"
         />
@@ -449,10 +423,7 @@ watch([
         <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
           {{ serverErrors.general }}
         </div>
-        <BaseCheckbox
-          v-model="newUser.active"
-          label="Aktivní"
-        />
+        <BaseCheckbox v-model="newUser.active" label="Is Active?" />
         <div class="flex justify-end space-x-3 pt-2">
           <button
             type="button"
@@ -472,26 +443,21 @@ watch([
     </Modal>
 
     <!-- Edit Modal -->
-    <Modal
-      :show="isEditModalOpen"
-      title="Edit User"
-      @close="cancelEdit"
-      @submit="updateUser"
-    >
+    <Modal :show="isEditModalOpen" title="Edit User" @close="cancelEdit" @submit="updateUser">
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <BaseInput
             v-model="selectedUser.firstName"
-            placeholder="Jméno"
-            label="Jméno"
+            placeholder="First Name"
+            label="First name"
             variant="success"
             :error="serverErrors.firstName"
             :class="{ 'border-red-500': serverErrors.firstName }"
           />
           <BaseInput
             v-model="selectedUser.lastName"
-            placeholder="Příjmení"
-            label="Příjmení"
+            placeholder="Last Name"
+            label="Last name"
             variant="success"
             :error="serverErrors.lastName"
             :class="{ 'border-red-500': serverErrors.lastName }"
@@ -508,8 +474,8 @@ watch([
         />
         <BaseInput
           v-model="selectedUser.username"
-          placeholder="Uživatelské jméno"
-          label="Uživatelské jméno"
+          placeholder="Username"
+          label="Username"
           variant="success"
           :error="serverErrors.username"
           :class="{ 'border-red-500': serverErrors.username }"
@@ -526,15 +492,17 @@ watch([
               <input
                 type="checkbox"
                 :checked="isRoleSelected(role.name, selectedUser.roles)"
-                @change="(e) => {
-                  if (e.target.checked) {
-                    selectedUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
-                  } else {
-                    selectedUser.roles = selectedUser.roles.filter(
-                      r => r.name !== `ROLE_${role.name.toUpperCase()}`
-                    )
+                @change="
+                  (e) => {
+                    if (e.target.checked) {
+                      selectedUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
+                    } else {
+                      selectedUser.roles = selectedUser.roles.filter(
+                        (r) => r.name !== `ROLE_${role.name.toUpperCase()}`,
+                      )
+                    }
                   }
-                }"
+                "
                 class="w-4 h-4 rounded border-gray-300 text-green-600 shadow-sm focus:ring-2 focus:ring-green-200 focus:ring-opacity-50"
               />
               <span
@@ -549,11 +517,7 @@ watch([
             {{ serverErrors.roles }}
           </span>
         </div>
-        <BaseCheckbox
-          v-model="selectedUser.active"
-          label="Aktivní"
-          variant="success"
-        />
+        <BaseCheckbox v-model="selectedUser.active" label="Is Active?" variant="success" />
         <div class="flex justify-between pt-2">
           <button
             type="submit"

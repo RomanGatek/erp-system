@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Users from '@/views/Users.vue'
 import Products from '@/views/Products.vue'
-import Inventory from '@/views/Inventory.vue'
+import Storage from '@/views/Storage.vue'
 import Home from '@/views/Home.vue'
 import Auth from '@/views/Auth.vue'
 import { useMeStore } from '@/stores/me'
@@ -20,7 +20,7 @@ const routes = [
   },
   { path: '/users', component: Users, meta: { requiresAuth: true }   },
   { path: '/products', component: Products, meta: { requiresAuth: true } },
-  { path: '/inventory', component: Inventory, meta: { requiresAuth: true } },
+  { path: '/storage', component: Storage, meta: { requiresAuth: true } },
   {
     path: '/unauthorized',
     name: 'Unauthorized',

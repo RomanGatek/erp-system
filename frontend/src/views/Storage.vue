@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useInventoryStore } from '@/stores/inventory'
+import { paginate, getPaginationInfo } from '@/utils/pagination'
 import DataTable from '@/components/common/DataTable.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
@@ -10,7 +11,7 @@ import StatusBar from '@/components/common/StatusBar.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 defineOptions({
-  name: 'InventoryView',
+  name: 'StorageView',
 })
 
 const inventoryStore = useInventoryStore()
@@ -93,20 +94,10 @@ const cancelAdd = () => {
   })
 }
 
-const paginationStart = computed(
-  () => (inventoryStore.pagination.currentPage - 1) * inventoryStore.pagination.perPage + 1,
-)
-
-const paginationEnd = computed(() =>
-  Math.min(
-    paginationStart.value + inventoryStore.pagination.perPage - 1,
-    inventoryStore.filteredItems.length,
-  ),
-)
-
-const totalPages = computed(() =>
-  Math.ceil(inventoryStore.filteredItems.length / inventoryStore.pagination.perPage),
-)
+const paginationStart = computed(() => getPaginationInfo(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).startItem);
+const paginationEnd = computed(() => getPaginationInfo(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).endItem);
+const totalPages = computed(() => getPaginationInfo(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).totalPages);
+computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage));
 </script>
 
 <template>
@@ -120,7 +111,7 @@ const totalPages = computed(() =>
       />
 
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Inventory</h2>
+        <h2 class="text-2xl font-bold text-gray-800">Storage</h2>
         <div class="flex items-center space-x-4">
           <SearchBar
             v-model="searchInput"
@@ -302,4 +293,4 @@ const totalPages = computed(() =>
       </div>
     </Modal>
   </div>
-</template> 
+</template>
