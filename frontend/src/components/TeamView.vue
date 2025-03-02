@@ -83,7 +83,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-defineProps({
+const props = defineProps({
   teamMembers: {
     type: Array,
     required: true,
