@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import { notify } from '@kyvg/vue3-notification'
+import { useUserStore } from '@/stores/user';
 
 let errorDefault = {
   general: ''
@@ -7,7 +8,7 @@ let errorDefault = {
 let server;
 
 export const setErrorDefault = (object) => {
-  errorDefault = {...object, ...errorDefault}
+  errorDefault = { ...object, ...errorDefault }
 }
 
 export const errorHandler = (serverErrors) => {
@@ -16,6 +17,10 @@ export const errorHandler = (serverErrors) => {
 }
 
 export const clearServerErrors = () => {
+  const userStore = useUserStore()
+
+  userStore.error = null
+
   server.value = {
     ...errorDefault,
   }

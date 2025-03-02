@@ -138,6 +138,7 @@ const updateUser = async () => {
 
 const cancelEdit = () => {
   isEditModalOpen.value = false
+  clearServerErrors()
   Object.assign(selectedUser, {
     firstName: '',
     lastName: '',
@@ -161,6 +162,7 @@ const deleteUser = async (userId) => {
 
 const cancelAdd = () => {
   isAddModalOpen.value = false
+  clearServerErrors
   Object.assign(newUser, {
     firstName: '',
     lastName: '',
