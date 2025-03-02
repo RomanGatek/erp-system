@@ -1,6 +1,6 @@
 <script setup>
 
-const props = defineProps({
+defineProps({
   headers: {
     type: Array,
     required: true

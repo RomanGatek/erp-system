@@ -95,24 +95,17 @@ export const useUserStore = defineStore('user', {
     },
     async addUser(user) {
       try {
-        console.log(user)
         const payload = {...user, roles: user.roles.map(role => role.name.replace('ROLE_', ''))};
         await api.post('/users', payload)
         await this.fetchUsers()
         notify({
           type: 'success',
-          text: 'Údaje byly úspěšně přidány.',
+          text: 'New user added.',
           duration: 5000,
           speed: 500
         })
       } catch (error) {
-        notify({
-          type: 'error',
-          text: 'Nastala chyba při přidávání dat. Chyba: ' + error.response?.data || error.message,
-          duration: 5000,
-          speed: 500
-        })
-        this.error = error.response?.data || error.message
+        this.error = error
       }
     },
     async updateUser(user) {
@@ -127,23 +120,15 @@ export const useUserStore = defineStore('user', {
           password: user.password,
         })
         await this.fetchUsers()
-        this.isEditing = false
         this.editedUserIndex = null
         notify({
           type: 'success',
-          text: 'Údaje byly úspěšně aktualizovány.',
+          text: 'Records of user updated successfully.',
           duration: 5000,
           speed: 500
         })
       } catch (error) {
-        notify({
-          type: 'error',
-          text: 'Nastala chyba při aktualizování dat.',
-          duration: 5000,
-          speed: 500
-        })
-        console.log(error.response.data)
-        this.error = error.response.data || error.message
+        this.error = error
       }
     },
     async deleteUser(userId) {
@@ -152,27 +137,13 @@ export const useUserStore = defineStore('user', {
         await this.fetchUsers()
         notify({
           type: 'success',
-          text: 'Údaje byly úspěšně smazány.',
+          text: 'Records of user deleted successfully.',
           duration: 5000,
           speed: 500
         })
       } catch (error) {
-        notify({
-          type: 'error',
-          text: 'Nastala chyba při smazání dat. Chyba: ' + error.response.data || error.message,
-          duration: 5000,
-          speed: 500
-        })
-        this.error = error.response.data || error.message
+        this.error = error
       }
-    },
-    editUser(index) {
-      this.isEditing = true
-      this.editedUserIndex = index
-    },
-    cancelEdit() {
-      this.isEditing = false
-      this.editedUserIndex = null
     },
     setSorting(field) {
       if (this.sorting.field === field) {

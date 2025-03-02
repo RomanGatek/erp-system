@@ -2,6 +2,7 @@ package cz.syntaxbro.erpsystem.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,9 +18,10 @@ public class InventoryItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    @NotBlank(message = "Item name is required")
-    private String name;
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "product_id", nullable = false)
+    @NotNull
+    private Product product;
 
     @PositiveOrZero(message = "Item quantity must be zero or positive")
     private int quantity;
