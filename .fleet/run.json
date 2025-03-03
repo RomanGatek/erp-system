@@ -21,7 +21,11 @@
             "tasks": [
                 "clean",
                 "test"
-            ]
+            ],
+            "environment": {
+                "FILE_UPLOAD_DIR": "./frontend/public/uploads",
+                "JWT_SECRET": "Ym5qaWJqQkpLQmpoaWxnYkpLSEdqaHlUR2lwdWdJVVRHaXVBRVRHdWl0Z2hFSXRoOlBFUDpldHc="
+            }
         },
         {
             "type": "command",
