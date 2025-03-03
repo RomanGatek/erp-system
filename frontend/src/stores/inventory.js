@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { user } from '@/services/api'
 import { notify } from '@kyvg/vue3-notification'
+import { sort, setupSort } from '@/utils/sorting.js'
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -8,7 +9,7 @@ export const useInventoryStore = defineStore('inventory', {
     loading: false,
     error: null,
     searchQuery: '',
-    sorting: { field: 'product.name', direction: 'asc' },
+    sorting: setupSort('product.name'),
     pagination: { currentPage: 1, perPage: 10 }
   }),
   getters: {
@@ -23,16 +24,7 @@ export const useInventoryStore = defineStore('inventory', {
         )
       }
 
-      if (state.sorting.field !== 'actions') {
-        filtered.sort((a, b) => {
-          const aVal = a[state.sorting.field]
-          const bVal = b[state.sorting.field]
-          const direction = state.sorting.direction === 'asc' ? 1 : -1
-          return aVal > bVal ? direction : -direction
-        })
-      }
-
-      return filtered
+      return sort(state, filtered);
     },
     paginateItems: (state) => {
       const start = (state.pagination.currentPage - 1) * state.pagination.perPage

@@ -2,11 +2,16 @@
 import { defineStore } from 'pinia'
 import { user as api } from '@/services/api'
 import { useMeStore } from '@/stores/me'
-import { notify } from '@kyvg/vue3-notification'
+import { setupSort, sort } from '@/utils/sorting.js'
+
+/**
+ * @typedef {{id: number, username: string, firstName: string, lastName: string, email: string, active: boolean, avatar?: string, roles: string[]}} User
+ */
 
 
 export const useUserStore = defineStore('user', {
   state: () => ({
+    /** @type User[] */
     users: [],
     loading: false,
     error: null,
@@ -18,10 +23,7 @@ export const useUserStore = defineStore('user', {
       perPage: 10,
       total: 0,
     },
-    sorting: {
-      field: 'username',
-      direction: 'asc',
-    },
+    sorting: setupSort('name'),
     searchQuery: '',
   }),
   getters: {
@@ -53,18 +55,7 @@ export const useUserStore = defineStore('user', {
               .includes(searchValue),
         )
       }
-
-      // Sort
-      if (state.sorting.field !== 'actions') {
-        filtered.sort((a, b) => {
-          const aVal = String(a[state.sorting.field] || '').toLowerCase()
-          const bVal = String(b[state.sorting.field] || '').toLowerCase()
-          const direction = state.sorting.direction === 'asc' ? 1 : -1
-          return aVal > bVal ? direction : -direction
-        })
-      }
-
-      return filtered
+      return sort(state, filtered)
     },
     paginatedUsers: (state) => {
       const start = (state.pagination.currentPage - 1) * state.pagination.perPage
@@ -81,15 +72,7 @@ export const useUserStore = defineStore('user', {
         const me = useMeStore().user
         this.users = response.filter(user => user?.email !== me?.email)
       } catch (error) {
-        this.error = error.response?.data || error.data
-        console.log(error)
-        notify({
-          type: 'error',
-          text: 'Nastala chyba při načítání dat. Chyba: ' + error.response?.data || error.message,
-          duration: 5000,
-          speed: 500
-        })
-      } finally {
+        this.error = error;
         this.loading = false
       }
     },
@@ -98,14 +81,8 @@ export const useUserStore = defineStore('user', {
         const payload = {...user, roles: user.roles.map(role => role.name.replace('ROLE_', ''))};
         await api.post('/users', payload)
         await this.fetchUsers()
-        notify({
-          type: 'success',
-          text: 'New user added.',
-          duration: 5000,
-          speed: 500
-        })
       } catch (error) {
-        this.error = error
+        this.error = error;
       }
     },
     async updateUser(user) {
@@ -121,28 +98,16 @@ export const useUserStore = defineStore('user', {
         })
         await this.fetchUsers()
         this.editedUserIndex = null
-        notify({
-          type: 'success',
-          text: 'Records of user updated successfully.',
-          duration: 5000,
-          speed: 500
-        })
       } catch (error) {
-        this.error = error
+        this.error = error;
       }
     },
     async deleteUser(userId) {
       try {
         await api.delete(`/users/${userId}`)
         await this.fetchUsers()
-        notify({
-          type: 'success',
-          text: 'Records of user deleted successfully.',
-          duration: 5000,
-          speed: 500
-        })
       } catch (error) {
-        this.error = error
+        this.error = error;
       }
     },
     setSorting(field) {

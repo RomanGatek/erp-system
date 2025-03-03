@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { user as api } from '@/services/api'
-import { notify } from '@kyvg/vue3-notification'
+import { sort, setupSort } from '@/utils/sorting.js'
 
 export const useProductsStore = defineStore('products', {
     state: () => ({
@@ -11,16 +11,12 @@ export const useProductsStore = defineStore('products', {
             currentPage: 1,
             perPage: 10
         },
-        sorting: {
-            field: 'name',
-            direction: 'asc'
-        },
+        sorting: setupSort('name'),
         searchQuery: '',
     }),
     getters: {
         filteredProducts: (state) => {
             let filtered = [...state.products];
-
             if (state.searchQuery) {
                 const searchValue = state.searchQuery.toLowerCase();
                 filtered = filtered.filter(product =>
@@ -28,18 +24,7 @@ export const useProductsStore = defineStore('products', {
                     product.price.toString().includes(searchValue)
                 );
             }
-
-            // Sort
-            if (state.sorting.field !== 'actions') {
-                filtered.sort((a, b) => {
-                    const aVal = a[state.sorting.field];
-                    const bVal = b[state.sorting.field];
-                    const direction = state.sorting.direction === 'asc' ? 1 : -1;
-                    return aVal > bVal ? direction : -direction;
-                });
-            }
-
-            return filtered;
+            return sort(state, filtered);
         },
         paginatedProducts: (state) => {
             const start = (state.pagination.currentPage - 1) * state.pagination.perPage;
@@ -64,14 +49,7 @@ export const useProductsStore = defineStore('products', {
             try {
                 await api.post('/products', product);
                 await this.fetchProducts();
-                notify({
-                    type: 'success',
-                    text: 'Product was successfully added',
-                    duration: 5000,
-                    speed: 500
-                });
             } catch (err) {
-                console.error(err);
                 this.error = err;
             }
         },
@@ -86,13 +64,6 @@ export const useProductsStore = defineStore('products', {
                         id
                     };
                 }
-                notify({
-                    type: 'success',
-                    text: 'Product was successfully updated',
-                    duration: 5000,
-                    speed: 500
-                });
-                this.error = null;
             } catch (err) {
                 this.error = err;
             }
@@ -101,12 +72,6 @@ export const useProductsStore = defineStore('products', {
             try {
                 await api.delete(`/products/${productId}`);
                 await this.fetchProducts();
-                notify({
-                    type: 'success',
-                    text: 'Product was successfully deleted',
-                    duration: 5000,
-                    speed: 500
-                });
                 this.error = null;
             } catch (err) {
                 this.error = err;
