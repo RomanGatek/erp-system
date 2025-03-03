@@ -29,7 +29,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private Order.Status status;
+    private Status status;
 
     @Column(name = "order_time")
     private LocalDateTime orderTime;

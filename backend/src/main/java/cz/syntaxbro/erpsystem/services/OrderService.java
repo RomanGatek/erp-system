@@ -22,6 +22,8 @@ public interface OrderService {
 
     void updateOrder(Long id, OrderRequest orderDto);
 
+    void updateOrderStatus(Long id, Order.Status newStatus);
+
     void deleteOrder(Long id);
 
     void deleteOrderByProductId(Long productId);

@@ -88,12 +88,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public void updateOrderStatus(Long id, Order.Status newStatus) {
+        Order order = getOrderById(id);
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+    }
+
+    @Override
     public void deleteOrder(Long id) {
         if(getOrderById(id) == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
         orderRepository.deleteById(id);
-
     }
 
     //delete all orders with witch include order
@@ -106,8 +112,6 @@ public class OrderServiceImpl implements OrderService {
         Product product = productOptional.get();
         orderRepository.deleteAll(orderRepository.findByProduct(product));
     }
-
-
 
     // Converts OrderDto to Order with exceptions.
     private Order mapToEntity(OrderRequest orderDto, Order order) {
