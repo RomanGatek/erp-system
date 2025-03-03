@@ -99,4 +99,49 @@ public class InventoryRepositoryTest {
         // Assert: Verify that no records were updated
         assertEquals(0, updatedRows, "No record should have been updated.");
     }
+
+    @Test
+    @Transactional
+    void updateQuantity_Success() {
+        // Arrange
+        Product product = Product.builder()
+                .name("testName")
+                .price(200)
+                .description("description")
+                .build();
+
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .quantity(100)
+                .product(product)
+                .build();
+
+        inventoryItem = inventoryRepository.save(inventoryItem); // Save and get generated ID
+
+        inventoryRepository.updateQuantity(
+                inventoryItem.getId(), 200);
+        InventoryItem updatedInventoryItem = inventoryRepository.findById(inventoryItem.getId()).get();
+        assertEquals(200, updatedInventoryItem.getQuantity());
+    }
+
+    @Test
+    public void deleteTest(){
+        //Arrange
+        Product product = Product.builder()
+                .name("testName")
+                .price(200)
+                .description("description")
+                .build();
+
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .quantity(100)
+                .product(product)
+                .build();
+
+        InventoryItem inventoryItemSaved = inventoryRepository.save(inventoryItem);
+        //Act
+        inventoryRepository.delete(inventoryItemSaved);
+        Optional<InventoryItem> result = inventoryRepository.findById(inventoryItemSaved.getId());
+        //Assert
+        assertEquals(result, Optional.empty());
+    }
 }

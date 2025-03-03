@@ -81,4 +81,26 @@ public class InventoryController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+
+    @PutMapping("/{itemId}/receive")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<InventoryItem> receiveItem(
+            @PathVariable
+            @Min(value = 1, message = "Must be positive number") long itemId,
+            @RequestParam
+            @Min(value = 0, message = "Must be positive number or zero") int quantity){
+        inventoryService.receiveStock(itemId, quantity);
+        return ResponseEntity.ok(inventoryService.getItem(itemId));
+    }
+
+    @PutMapping("/{itemId}/release")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<InventoryItem> releaseItem(
+            @PathVariable
+            @Min(value = 1, message = "Must be positive number") long itemId,
+            @RequestParam
+            @Min(value = 0, message = "Must be positive number or zero") int quantity){
+        inventoryService.releaseStock(itemId, quantity);
+        return ResponseEntity.ok(inventoryService.getItem(itemId));
+    }
 }
