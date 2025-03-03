@@ -28,10 +28,10 @@
             v-model="email"
             placeholder="admin@example.com"
             class="w-full px-3 py-2 bg-gray-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-            :class="{ 'border-red-500': serverErrors.email, 'border-gray-200': !serverErrors.email }"
+            :class="{ 'border-red-500': errorStore.errors.email, 'border-gray-200': !errorStore.errors.email }"
             required
           />
-          <span v-if="serverErrors.email" class="text-xs text-red-500">{{ serverErrors.email }}</span>
+          <span v-if="errorStore.errors.email" class="text-xs text-red-500">{{ errorStore.errors.email }}</span>
         </div>
 
         <!-- Password Input -->
@@ -40,15 +40,15 @@
           <PasswordInput
             v-model="password"
             class="bg-gray-50"
-            :error="serverErrors.password"
+            :error="errorStore.errors.password"
             required
           />
-          <span v-if="serverErrors.password" class="text-xs text-red-500">{{ serverErrors.password }}</span>
+          <span v-if="errorStore.errors.password" class="text-xs text-red-500">{{ errorStore.errors.password }}</span>
         </div>
 
         <!-- General Error Message -->
-        <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
-          {{ serverErrors.general }}
+        <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
+          {{ errorStore.errors.general }}
         </div>
 
         <!-- Sign In Button -->
@@ -73,10 +73,10 @@
             v-model="email"
             placeholder="your@email.com"
             class="w-full px-3 py-2 bg-gray-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-            :class="{ 'border-red-500': serverErrors.email, 'border-gray-200': !serverErrors.email }"
+            :class="{ 'border-red-500': errorStore.errors.email, 'border-gray-200': !errorStore.errors.email }"
             required
           />
-          <span v-if="serverErrors.email" class="text-xs text-red-500">{{ serverErrors.email }}</span>
+          <span v-if="errorStore.errors.email" class="text-xs text-red-500">{{ errorStore.errors.email }}</span>
         </div>
 
         <!-- Password Input -->
@@ -85,10 +85,10 @@
           <PasswordInput
             v-model="password"
             class="bg-gray-50"
-            :error="serverErrors.password"
+            :error="errorStore.errors.password"
             required
           />
-          <span v-if="serverErrors.password" class="text-xs text-red-500">{{ serverErrors.password }}</span>
+          <span v-if="errorStore.errors.password" class="text-xs text-red-500">{{ errorStore.errors.password }}</span>
         </div>
 
         <!-- Confirm Password Input -->
@@ -97,15 +97,15 @@
           <PasswordInput
             v-model="confirmPassword"
             class="bg-gray-50"
-            :error="serverErrors.confirmPassword"
+            :error="errorStore.errors.confirmPassword"
             required
           />
-          <span v-if="serverErrors.confirmPassword" class="text-xs text-red-500">{{ serverErrors.confirmPassword }}</span>
+          <span v-if="errorStore.errors.confirmPassword" class="text-xs text-red-500">{{ errorStore.errors.confirmPassword }}</span>
         </div>
 
         <!-- General Error Message -->
-        <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
-          {{ serverErrors.general }}
+        <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
+          {{ errorStore.errors.general }}
         </div>
 
         <!-- Sign Up Button  -->
@@ -149,7 +149,7 @@ const password = ref('')
 const confirmPassword = ref('')
 
 // Server errors state
-const serverErrors = ref({
+const errorStore.errors = ref({
   email: '',
   password: '',
   confirmPassword: '',
@@ -157,8 +157,8 @@ const serverErrors = ref({
 })
 
 // Clear server errors
-const clearServerErrors = () => {
-  serverErrors.value = {
+const clearerrorStore.errors = () => {
+  errorStore.errors.value = {
     email: '',
     password: '',
     confirmPassword: '',
@@ -168,10 +168,10 @@ const clearServerErrors = () => {
 
 // Handle server validation errors
 const handleServerValidationErrors = (error) => {
-  clearServerErrors()
+  clearerrorStore.errors()
 
   if (!error.response?.data) {
-    serverErrors.value.general = 'An unexpected error occurred'
+    errorStore.errors.value.general = 'An unexpected error occurred'
     return
   }
 
@@ -180,15 +180,15 @@ const handleServerValidationErrors = (error) => {
   console.log(errorField, errorMessage)
 
   if (errorField) {
-    serverErrors.value[errorField] = errorMessage
+    errorStore.errors.value[errorField] = errorMessage
   } else {
-    serverErrors.value.general = errorMessage
+    errorStore.errors.value.general = errorMessage
   }
 }
 
 const toggleForm = () => {
   isLogin.value = !isLogin.value
-  clearServerErrors()
+  clearerrorStore.errors()
   email.value = ''
   password.value = ''
   confirmPassword.value = ''
@@ -196,10 +196,10 @@ const toggleForm = () => {
 
 const handleLogin = async () => {
   try {
-    clearServerErrors()
+    clearerrorStore.errors()
     const token = await auth.login({email: email.value, password: password.value})
     if (!token) {
-      serverErrors.value.general = 'Invalid authentication token'
+      errorStore.errors.value.general = 'Invalid authentication token'
       return
     }
     localStorage.setItem('token', token)
@@ -215,7 +215,7 @@ const handleLogin = async () => {
     handleServerValidationErrors(err)
     notify({
       type: 'error',
-      text: serverErrors.value.general || 'Login failed',
+      text: errorStore.errors.value.general || 'Login failed',
       duration: 5000
     })
   }
@@ -223,7 +223,7 @@ const handleLogin = async () => {
 
 const handleRegister = async () => {
   try {
-    clearServerErrors()
+    clearerrorStore.errors()
     await auth.register(email.value, password.value, confirmPassword.value)
     notify({
       type: 'success',
@@ -238,7 +238,7 @@ const handleRegister = async () => {
     handleServerValidationErrors(err)
     notify({
       type: 'error',
-      text: serverErrors.value.general || 'Registration failed',
+      text: errorStore.errors.value.general || 'Registration failed',
       duration: 5000
     })
   }
@@ -246,7 +246,7 @@ const handleRegister = async () => {
 
 // Clear server errors on input change
 watch([email, password, confirmPassword], () => {
-  clearServerErrors()
+  clearerrorStore.errors()
 })
 </script>
 

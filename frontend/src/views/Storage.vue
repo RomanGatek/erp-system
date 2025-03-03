@@ -104,10 +104,10 @@ const cancelAdd = () => {
   })
 }
 
-const paginationStart = computed(() => getPaginationInfo(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).startItem);
-const paginationEnd = computed(() => getPaginationInfo(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).endItem);
-const totalPages = computed(() => getPaginationInfo(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).totalPages);
-computed(() => paginate(inventoryStore.filteredItems, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage));
+const paginationStart = computed(() => getPaginationInfo(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).startItem);
+const paginationEnd = computed(() => getPaginationInfo(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).endItem);
+const totalPages = computed(() => getPaginationInfo(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).totalPages);
+computed(() => paginate(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage));
 </script>
 
 <template>

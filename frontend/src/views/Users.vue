@@ -14,7 +14,7 @@ import { getPaginationInfo, paginate } from '@/utils/pagination'
 import {
   errorHandler,
   setErrorDefault,
-  clearServerErrors
+  clearerrorStore.errors
 } from '@/utils/error-handler.js'
 
 defineOptions({
@@ -65,12 +65,12 @@ const tableHeaders = [
 ]
 const loading = ref(false)
 const error = ref('')
-const serverErrors = ref({ ...defaultError })
+const errorStore.errors = ref({ ...defaultError })
 setErrorDefault(defaultError)
-const eHandler = errorHandler(serverErrors, userStore)
+const eHandler = errorHandler(errorStore.errors, userStore)
 
 onMounted(async () => {
-  clearServerErrors()
+  clearerrorStore.errors()
   loading.value = true
   try {
     await userStore.fetchUsers()
@@ -88,7 +88,7 @@ onMounted(async () => {
 })
 
 const addUser = async () => {
-  clearServerErrors()
+  clearerrorStore.errors()
   try {
     await userStore.addUser({ ..._user })
     if (!userStore.error) {
@@ -106,7 +106,7 @@ const addUser = async () => {
 }
 
 const openEditModal = (index) => {
-  const user = userStore.users[index]
+  const user = userStore.items[index]
   Object.assign(_user, {
     id: user.id,
     firstName: user.firstName,
@@ -120,7 +120,7 @@ const openEditModal = (index) => {
 }
 
 const updateUser = async () => {
-  clearServerErrors()
+  clearerrorStore.errors()
   try {
     await userStore.updateUser(_user)
     if (userStore.error) {
@@ -136,7 +136,7 @@ const updateUser = async () => {
 
 const cancelEdit = () => {
   isEditModalOpen.value = false
-  clearServerErrors()
+  clearerrorStore.errors()
   Object.assign(_user, {
     firstName: '',
     lastName: '',
@@ -160,7 +160,7 @@ const deleteUser = async (userId) => {
 
 const cancelAdd = () => {
   isAddModalOpen.value = false
-  clearServerErrors()
+  clearerrorStore.errors()
   Object.assign(_user, {
     firstName: '',
     lastName: '',
@@ -175,7 +175,7 @@ const cancelAdd = () => {
 const paginationStart = computed(
   () =>
     getPaginationInfo(
-      userStore.filteredUsers,
+      userStore.filtered,
       userStore.pagination.currentPage,
       userStore.pagination.perPage,
     ).startItem,
@@ -183,7 +183,7 @@ const paginationStart = computed(
 const paginationEnd = computed(
   () =>
     getPaginationInfo(
-      userStore.filteredUsers,
+      userStore.filtered,
       userStore.pagination.currentPage,
       userStore.pagination.perPage,
     ).endItem,
@@ -191,13 +191,13 @@ const paginationEnd = computed(
 const totalPages = computed(
   () =>
     getPaginationInfo(
-      userStore.filteredUsers,
+      userStore.filtered,
       userStore.pagination.currentPage,
       userStore.pagination.perPage,
     ).totalPages,
 )
 computed(() =>
-  paginate(userStore.filteredUsers, userStore.pagination.currentPage, userStore.pagination.perPage),
+  paginate(userStore.filtered, userStore.pagination.currentPage, userStore.pagination.perPage),
 )
 
 const getRoleStyle = (roleName) => {
@@ -222,7 +222,7 @@ watch(
     () => _user.password,
   ],
   () => {
-    clearServerErrors()
+    clearerrorStore.errors()
   },
 )
 </script>
@@ -341,7 +341,7 @@ watch(
           <Pagination
             :current-page="userStore.pagination.currentPage"
             :total-pages="totalPages"
-            :total-items="userStore.filteredUsers.length"
+            :total-items="userStore.filtered.length"
             :start-item="paginationStart"
             :end-item="paginationEnd"
             @page-change="userStore.setPage"
@@ -358,15 +358,15 @@ watch(
             v-model="_user.firstName"
             placeholder="First Name"
             label="First name"
-            :error="serverErrors.firstName"
-            :class="{ 'border-red-500': serverErrors.firstName }"
+            :error="errorStore.errors.firstName"
+            :class="{ 'border-red-500': errorStore.errors.firstName }"
           />
           <BaseInput
             v-model="_user.lastName"
             placeholder="Last Name"
             label="Last name"
-            :error="serverErrors.lastName"
-            :class="{ 'border-red-500': serverErrors.lastName }"
+            :error="errorStore.errors.lastName"
+            :class="{ 'border-red-500': errorStore.errors.lastName }"
           />
         </div>
         <BaseInput
@@ -374,23 +374,23 @@ watch(
           type="email"
           placeholder="Email"
           label="Email"
-          :error="serverErrors.email"
-          :class="{ 'border-red-500': serverErrors.email }"
+          :error="errorStore.errors.email"
+          :class="{ 'border-red-500': errorStore.errors.email }"
         />
         <BaseInput
           v-model="_user.username"
           placeholder="Username"
           label="Username"
-          :error="serverErrors.username"
-          :class="{ 'border-red-500': serverErrors.username }"
+          :error="errorStore.errors.username"
+          :class="{ 'border-red-500': errorStore.errors.username }"
         />
         <BaseInput
           v-model="_user.password"
           type="password"
           placeholder="Password"
           label="Password"
-          :error="serverErrors.password"
-          :class="{ 'border-red-500': serverErrors.password }"
+          :error="errorStore.errors.password"
+          :class="{ 'border-red-500': errorStore.errors.password }"
         />
         <!-- Role selection -->
         <div class="space-y-2">
@@ -415,13 +415,13 @@ watch(
               </span>
             </label>
           </div>
-          <span v-if="serverErrors.roles" class="text-xs text-red-500">
-            {{ serverErrors.roles }}
+          <span v-if="errorStore.errors.roles" class="text-xs text-red-500">
+            {{ errorStore.errors.roles }}
           </span>
         </div>
         <!-- General Error Message -->
-        <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
-          {{ serverErrors.general }}
+        <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
+          {{ errorStore.errors.general }}
         </div>
         <BaseCheckbox v-model="_user.active" label="Is Active?" />
         <div class="flex justify-end space-x-3 pt-2">
@@ -451,16 +451,16 @@ watch(
             placeholder="First Name"
             label="First name"
             variant="success"
-            :error="serverErrors.firstName"
-            :class="{ 'border-red-500': serverErrors.firstName }"
+            :error="errorStore.errors.firstName"
+            :class="{ 'border-red-500': errorStore.errors.firstName }"
           />
           <BaseInput
             v-model="_user.lastName"
             placeholder="Last Name"
             label="Last name"
             variant="success"
-            :error="serverErrors.lastName"
-            :class="{ 'border-red-500': serverErrors.lastName }"
+            :error="errorStore.errors.lastName"
+            :class="{ 'border-red-500': errorStore.errors.lastName }"
           />
         </div>
         <BaseInput
@@ -469,16 +469,16 @@ watch(
           placeholder="Email"
           label="Email"
           variant="success"
-          :error="serverErrors.email"
-          :class="{ 'border-red-500': serverErrors.email }"
+          :error="errorStore.errors.email"
+          :class="{ 'border-red-500': errorStore.errors.email }"
         />
         <BaseInput
           v-model="_user.username"
           placeholder="Username"
           label="Username"
           variant="success"
-          :error="serverErrors.username"
-          :class="{ 'border-red-500': serverErrors.username }"
+          :error="errorStore.errors.username"
+          :class="{ 'border-red-500': errorStore.errors.username }"
         />
         <!-- Role selection -->
         <div class="space-y-2">
@@ -513,8 +513,8 @@ watch(
               </span>
             </label>
           </div>
-          <span v-if="serverErrors.roles" class="text-xs text-red-500">
-            {{ serverErrors.roles }}
+          <span v-if="errorStore.errors.roles" class="text-xs text-red-500">
+            {{ errorStore.errors.roles }}
           </span>
         </div>
         <BaseCheckbox v-model="_user.active" label="Is Active?" variant="success" />

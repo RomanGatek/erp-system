@@ -67,13 +67,13 @@
 
               <div class="grid grid-cols-2 gap-6">
                 <BaseInput v-model="profileForm.firstName" label="First Name" placeholder="Your first name"
-                  :error="serverErrors.firstName" />
+                  :error="errorStore.errors.firstName" />
                 <BaseInput v-model="profileForm.lastName" label="Last Name" placeholder="Your last name"
-                  :error="serverErrors.lastName" />
+                  :error="errorStore.errors.lastName" />
                 <BaseInput disabled v-model="profileForm.email" type="email" label="Email Address" placeholder="your@email.com"
-                  :error="serverErrors.email" />
+                  :error="errorStore.errors.email" />
                 <BaseInput v-model="profileForm.username" label="Username" placeholder="Username"
-                  :error="serverErrors.username" />
+                  :error="errorStore.errors.username" />
               </div>
             </div>
 
@@ -102,16 +102,16 @@
               <div class="flex-1 grid grid-cols-2 gap-6">
                 <div class="min-h-[76px]">
                   <PasswordInput v-model="profileForm.newPassword" label="New Password" placeholder="••••••••"
-                    :error="serverErrors.newPassword" />
-                  <p v-if="serverErrors.newPassword" class="text-xs text-red-500 mt-1">
-                    {{ serverErrors.newPassword }}
+                    :error="errorStore.errors.newPassword" />
+                  <p v-if="errorStore.errors.newPassword" class="text-xs text-red-500 mt-1">
+                    {{ errorStore.errors.newPassword }}
                   </p>
                 </div>
                 <div class="min-h-[76px]">
                   <PasswordInput v-model="profileForm.confirmPassword" label="Confirm Password" placeholder="••••••••"
-                    :error="serverErrors.confirmPassword" />
-                  <p v-if="serverErrors.confirmPassword" class="text-xs text-red-500 mt-1">
-                    {{ serverErrors.confirmPassword }}
+                    :error="errorStore.errors.confirmPassword" />
+                  <p v-if="errorStore.errors.confirmPassword" class="text-xs text-red-500 mt-1">
+                    {{ errorStore.errors.confirmPassword }}
                   </p>
                 </div>
               </div>
@@ -126,8 +126,8 @@
           </div>
 
           <!-- Add general error message display -->
-          <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
-            {{ serverErrors.general }}
+          <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
+            {{ errorStore.errors.general }}
           </div>
 
           <!-- Action buttons -->
@@ -256,7 +256,7 @@ const handleAvatarChange = async (event) => {
 }
 
 // Add server errors state
-const serverErrors = ref({
+const errorStore.errors = ref({
   firstName: '',
   lastName: '',
   avatar: '',
@@ -268,8 +268,8 @@ const serverErrors = ref({
 })
 
 // Clear server errors function
-const clearServerErrors = () => {
-  serverErrors.value = {
+const clearerrorStore.errors = () => {
+  errorStore.errors.value = {
     firstName: '',
     lastName: '',
     email: '',
@@ -283,10 +283,10 @@ const clearServerErrors = () => {
 
 // Handle server validation errors
 const handleServerValidationErrors = (error) => {
-  clearServerErrors()
+  clearerrorStore.errors()
 
   if (!error.response?.data) {
-    serverErrors.value.general = 'An unexpected error occurred'
+    errorStore.errors.value.general = 'An unexpected error occurred'
     return
   }
 
@@ -299,31 +299,31 @@ const handleServerValidationErrors = (error) => {
       data.forEach(e => {
         const { field, message } = e
         if (field === 'password') {
-          serverErrors.value['newPassword'] = message
+          errorStore.errors.value['newPassword'] = message
         } else if (field) {
-          serverErrors.value[field] = message
+          errorStore.errors.value[field] = message
         } else {
-          serverErrors.value.general = message
+          errorStore.errors.value.general = message
         }
       });
     } else {
       const { field, message } = data
       if (field === 'password') {
-        serverErrors.value['newPassword'] = message
+        errorStore.errors.value['newPassword'] = message
       } else if (field) {
-        serverErrors.value[field] = message
+        errorStore.errors.value[field] = message
       } else {
-        serverErrors.value.general = message
+        errorStore.errors.value.general = message
       }
     }
   }
 }
 
 const updateProfile = async () => {
-  clearServerErrors()
+  clearerrorStore.errors()
 
   if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
-    serverErrors.value.confirmPassword = 'Passwords do not match'
+    errorStore.errors.value.confirmPassword = 'Passwords do not match'
     return
   }
 
@@ -346,21 +346,21 @@ const updateProfile = async () => {
     handleServerValidationErrors(error)
     notify({
       type: 'error',
-      text: serverErrors.value.general || 'Failed to update profile'
+      text: errorStore.errors.value.general || 'Failed to update profile'
     })
   }
 }
 
 const updatePassword = async () => {
-  clearServerErrors()
+  clearerrorStore.errors()
 
   if (!profileForm.newPassword || !profileForm.confirmPassword) {
-    serverErrors.value.general = 'Please fill in all password fields'
+    errorStore.errors.value.general = 'Please fill in all password fields'
     return
   }
 
   if (profileForm.newPassword !== profileForm.confirmPassword) {
-    serverErrors.value.confirmPassword = 'Passwords do not match'
+    errorStore.errors.value.confirmPassword = 'Passwords do not match'
     return
   }
 
@@ -378,7 +378,7 @@ const updatePassword = async () => {
     handleServerValidationErrors(error)
     notify({
       type: 'error',
-      text: serverErrors.value.general || 'Failed to update password'
+      text: errorStore.errors.value.general || 'Failed to update password'
     })
   }
 }
@@ -410,7 +410,7 @@ const getRoleStyle = (roleName) => {
 
 // Clear server errors on input change
 watch(() => profileForm, () => {
-  clearServerErrors()
+  clearerrorStore.errors()
 }, { deep: true })
 
 const removeAvatar = async () => {

@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { user } from '@/services/api'
-import { notify } from '@kyvg/vue3-notification'
-import { sort, setupSort } from '@/utils/sorting.js'
+import {
+  filter,
+  setupSort
+} from '@/utils/table-utils.js'
+import { __paginate } from '@/utils/pagination.js'
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -13,33 +16,20 @@ export const useInventoryStore = defineStore('inventory', {
     pagination: { currentPage: 1, perPage: 10 }
   }),
   getters: {
-    filteredItems: (state) => {
-      let filtered = [...state.items]
-
-      if (state.searchQuery) {
-        const searchValue = state.searchQuery.toLocaleLowerCase()
-        filtered = filtered.filter(item =>
-          item.product.name.toLocaleLowerCase().includes(searchValue) ||
-          item.product.description.toLocaleLowerCase().includes(searchValue)
-        )
+    filtered: (state) => filter(state, (item) => {
+        const search = state.searchQuery.toLocaleLowerCase();
+        return item.product.name.toLocaleLowerCase().includes(search) ||
+        item.product.description.toLocaleLowerCase().includes(search)
       }
-
-      return sort(state, filtered);
-    },
-    paginateItems: (state) => {
-      const start = (state.pagination.currentPage - 1) * state.pagination.perPage
-      const end = start + state.pagination.perPage
-      return state.filteredItems.slice(start, end)
-    }
+    ),
+    paginateItems: (state) => __paginate(state)
   },
   actions: {
     async fetchItems() {
       try {
         const response = await user.get('/inventory')
         this.items = response.data
-        this.error = null
       } catch (err) {
-        console.log(err)
         this.error = err.message
       }
     },
@@ -47,14 +37,7 @@ export const useInventoryStore = defineStore('inventory', {
       try {
         await user.post('/inventory', Item)
         await this.fetchItems()
-        notify({
-          type: 'success',
-          text: 'Product was successfully added',
-          duration: 5000,
-          speed: 500
-        })
       } catch (err) {
-        console.error(err)
         this.error = err
       }
     },
@@ -69,13 +52,6 @@ export const useInventoryStore = defineStore('inventory', {
             id
           }
         }
-        notify({
-          type: 'success',
-          text: 'Product was successfully updated',
-          duration: 5000,
-          speed: 500
-        })
-        this.error = null
       } catch (err) {
         this.error = err
       }
@@ -84,25 +60,15 @@ export const useInventoryStore = defineStore('inventory', {
       try {
         await user.delete(`/iventory/${itemId}`)
         await this.fetchItems()
-        notify({
-          type: 'success',
-          text: 'Product was successfully deleted',
-          duration: 5000,
-          speed: 500
-        })
-        this.error = null
       } catch (err) {
         this.error = err
       }
     },
-
-
     setSearch(query) {
       this.searchQuery = query
       this.pagination.currentPage = 1 // Reset to the first page when searching
     },
     setSorting(field) {
-      console.log(field)
       if (this.sorting.field === field) {
         this.sorting.direction = this.sorting.direction === 'asc' ? 'desc' : 'asc'
       } else {

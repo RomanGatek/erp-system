@@ -1,43 +1,34 @@
 import { defineStore } from 'pinia';
 import { user as api } from '@/services/api'
-import { sort, setupSort } from '@/utils/sorting.js'
+import {
+  filter,
+  setupSort
+} from '@/utils/table-utils.js'
+import { __paginate } from '@/utils/pagination.js'
 
 export const useProductsStore = defineStore('products', {
     state: () => ({
-        products: [],
+        items: [],
         loading: false,
         error: null,
-        pagination: {
-            currentPage: 1,
-            perPage: 10
-        },
+        pagination: { currentPage: 1, perPage: 10 },
         sorting: setupSort('name'),
         searchQuery: '',
     }),
     getters: {
-        filteredProducts: (state) => {
-            let filtered = [...state.products];
-            if (state.searchQuery) {
-                const searchValue = state.searchQuery.toLowerCase();
-                filtered = filtered.filter(product =>
-                    product.name.toLowerCase().includes(searchValue) ||
-                    product.price.toString().includes(searchValue)
-                );
-            }
-            return sort(state, filtered);
-        },
-        paginatedProducts: (state) => {
-            const start = (state.pagination.currentPage - 1) * state.pagination.perPage;
-            const end = start + state.pagination.perPage;
-            return state.filteredProducts.slice(start, end);
-        }
+        filtered: (state) => filter(state, (product) => {
+            const search = state.searchQuery.toLocaleLowerCase();
+            return product.name.toLowerCase().includes(search) ||
+            product.price.toString().includes(search)
+        }),
+        paginateItems: (state) => __paginate(state)
     },
     actions: {
         async fetchProducts() {
             this.loading = true;
             try {
-                const response = await api.get('/products');
-                this.products = response.data;
+                const response = await api.get('/products_');
+                this.items = response.data;
                 this.error = null;
             } catch (err) {
                 this.error = err;
@@ -56,10 +47,10 @@ export const useProductsStore = defineStore('products', {
         async updateProduct(id, productData) {
             try {
                 await api.put(`/products/${id}`, productData);
-                const index = this.products.findIndex(p => p.id === id);
+                const index = this.items.findIndex(p => p.id === id);
                 if (index !== -1) {
-                    this.products[index] = {
-                        ...this.products[index],
+                    this.items[index] = {
+                        ...this.items[index],
                         ...productData,
                         id
                     };

@@ -2,8 +2,9 @@
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar :error="error" :loading="loading" />
+      <StatusBar :error="errorStore.errors.general" :loading="loading" />
 
+      <!-- Header overlay -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Products</h2>
         <div class="flex items-center space-x-4">
@@ -20,20 +21,20 @@
         </div>
       </div>
 
-      <!-- Loading overlay -->
-      <div v-if="loading" class="absolute inset-0 bg-white/50 flex items-center justify-center rounded-2xl">
-        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
-      </div>
-
       <!-- Empty state -->
-      <EmptyState v-else-if="!productsStore.paginatedProducts.length" message="No products to display" />
+      <EmptyState v-if="!productsStore.paginateItems.length" message="No products to display" />
 
       <!-- Data table -->
       <template v-else>
         <div class="max-h-[500px] overflow-y-auto">
-          <DataTable :headers="tableHeaders" :items="productsStore.paginatedProducts"
-            :sort-by="productsStore.setSorting" :sorting="productsStore.sorting" :on-edit="openEditModal"
-            :on-delete="deleteProduct">
+          <DataTable
+            :headers="tableHeaders"
+            :items="productsStore.paginateItems"
+            :sort-by="productsStore.setSorting"
+            :sorting="productsStore.sorting"
+            :on-edit="openEditModal"
+            :on-delete="deleteProduct"
+          >
             <template #row="{ item }">
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
                 {{ item.name }}
@@ -63,24 +64,17 @@
           </DataTable>
         </div>
 
-        <Pagination
-          :current-page="productsStore.pagination.currentPage"
-          :total-pages="totalPages"
-          :total-items="productsStore.filteredProducts.length"
-          :start-item="paginationStart"
-          :end-item="paginationEnd"
-          @page-change="productsStore.setPage"
-        />
+        <Pagination :store="useProductsStore" />
       </template>
     </div>
 
     <!-- Add Modal -->
     <Modal :show="isAddModalOpen" title="Add New Product" @close="cancelAdd" @submit="addProduct">
       <div class="space-y-3">
-        <BaseInput :error="serverErrors.name" v-model="newProduct.name" placeholder="Product name" label="Name" />
-        <BaseInput v-model="newProduct.price" :error="serverErrors.price" type="number" placeholder="Price"
+        <BaseInput :error="errorStore.errors.name" v-model="reativeProduct.name" placeholder="Product name" label="Name" />
+        <BaseInput v-model="reativeProduct.price" :error="serverErrors.price" type="number" placeholder="Price"
           label="Price" />
-        <BaseInput v-model="newProduct.description" :error="serverErrors.description" placeholder="Product description"
+        <BaseInput v-model="reativeProduct.description" :error="serverErrors.description" placeholder="Product description"
           label="Product description" />
         <div class="flex justify-end space-x-3 pt-2">
           <button type="button" @click="cancelAdd"
@@ -98,11 +92,11 @@
     <!-- Edit Modal -->
     <Modal :show="isEditModalOpen" title="Edit Product" @close="cancelEdit" @submit="updateProduct">
       <div class="space-y-3">
-        <BaseInput v-model="selectedProduct.name" :error="serverErrors.name" placeholder="Product name" label="Name"
+        <BaseInput v-model="reativeProduct.name" :error="serverErrors.name" placeholder="Product name" label="Name"
           variant="success" />
-        <BaseInput v-model="selectedProduct.price" :error="serverErrors.price" type="number" placeholder="Price"
+        <BaseInput v-model="reativeProduct.price" :error="serverErrors.price" type="number" placeholder="Price"
           label="Price" variant="success" />
-        <BaseInput v-model="selectedProduct.description" :error="serverErrors.description"
+        <BaseInput v-model="reativeProduct.description" :error="serverErrors.description"
           placeholder="Product description" label="Product description" variant="success" />
         <div class="flex justify-between pt-2">
           <button type="submit"
@@ -120,17 +114,21 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useProductsStore } from '@/stores/products'
-import DataTable from '@/components/common/DataTable.vue'
-import SearchBar from '@/components/common/SearchBar.vue'
-import Pagination from '@/components/common/Pagination.vue'
-import Modal from '@/components/common/Modal.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
-import StatusBar from '@/components/common/StatusBar.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import { paginate, getPaginationInfo } from '@/utils/pagination'
-import { errorHandler, setErrorDefault } from '@/utils/error-handler.js'
+import { $reactive } from '@/utils/index.js'
+
+import {
+  DataTable,
+  SearchBar,
+  Pagination,
+  Modal,
+  StatusBar,
+  EmptyState,
+  BaseInput
+} from '@/components/common'
+import { useErrorStore } from '@/stores/errors.js'
+
 
 defineOptions({
   name: 'ProductsView',
@@ -140,25 +138,14 @@ const productsStore = useProductsStore()
 const searchInput = ref('')
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
+const errorStore = useErrorStore()
 
-const newProduct = reactive({
+const reativeProduct = $reactive({
+  id: undefined,
   name: '',
   price: null,
   description: ''
 })
-
-const selectedProduct = reactive({
-  id: null,
-  name: '',
-  price: null,
-  description: ''
-})
-
-const defaultError = {
-  name: '',
-  price: null,
-  description: ''
-}
 
 const tableHeaders = [
   { field: 'name', label: 'Name', sortable: true },
@@ -169,20 +156,17 @@ const tableHeaders = [
 
 const loading = ref(false)
 const error = ref('')
-const serverErrors = ref({ ...defaultError })
-
-setErrorDefault(defaultError)
-const eHandler = errorHandler(serverErrors, productsStore)
 
 onMounted(async () => {
   loading.value = true
   try {
     await productsStore.fetchProducts()
     if (productsStore.error) {
-      error.value = productsStore.error
+      errorStore.handle(productsStore.error)
     }
   } catch (err) {
-    error.value = 'Failed to load product data: ' + err.message
+    errorStore.handle(err)
+    console.log(err)
   } finally {
     loading.value = false
   }
@@ -190,72 +174,64 @@ onMounted(async () => {
 
 const addProduct = async () => {
   loading.value = true
-  await productsStore.addProduct({ ...newProduct })
-  if (productsStore.error) {
-    eHandler(productsStore.error, error)
-    if (error.value) isAddModalOpen.value = false
-  } else {
-    Object.assign(newProduct, {
-      name: '',
-      price: null,
-      description: ''
-    })
-    isAddModalOpen.value = false
+  try {
+    await productsStore.addProduct({ ...reativeProduct })
+    if (productsStore.error) {
+      errorStore.handle(productsStore.error)
+      if (error.value) isAddModalOpen.value = false
+    } else {
+      reativeProduct.$clear();
+      isAddModalOpen.value = false
+    }
+  } catch (e) {
+    errorStore.handle(e)
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
-const openEditModal = (product) => {
-  isEditModalOpen.value = true
-  selectedProduct.id = product.id
-  selectedProduct.name = product.name
-  selectedProduct.price = product.price
-  selectedProduct.description = product.description
-}
 
-const updateProduct = async () => {
-  loading.value = true
-  await productsStore.updateProduct(selectedProduct.id, {
-    name: selectedProduct.name,
-    price: selectedProduct.price,
-    description: selectedProduct.description
-  })
-  if (productsStore.error) {
-    eHandler(productsStore.error)
-  } else {
-    isEditModalOpen.value = false
-  }
-  loading.value = false
-}
-
-const cancelEdit = () => {
-  isEditModalOpen.value = false
-}
 
 const deleteProduct = async (productId) => {
   if (confirm('Do you really want to delete this product?')) {
     loading.value = true
     await productsStore.deleteProduct(productId)
     if (productsStore.error) {
-      eHandler(productsStore.error)
+      errorStore.handle(productsStore.error)
     } else {
       isEditModalOpen.value = false
     }
     loading.value = false
   }
 }
-
-const cancelAdd = () => {
-  isAddModalOpen.value = false
-  Object.assign(newProduct, {
-    name: '',
-    price: null,
-    description: ''
+const updateProduct = async () => {
+  loading.value = true
+  await productsStore.updateProduct(reativeProduct.id, {
+    name: reativeProduct.name,
+    price: reativeProduct.price,
+    description: reativeProduct.description
   })
+  if (productsStore.error) {
+    errorStore.handle(productsStore.error)
+  } else {
+    isEditModalOpen.value = false
+  }
+  loading.value = false
 }
 
-const paginationStart = computed(() => getPaginationInfo(productsStore.filteredProducts, productsStore.pagination.currentPage, productsStore.pagination.perPage).startItem);
-const paginationEnd = computed(() => getPaginationInfo(productsStore.filteredProducts, productsStore.pagination.currentPage, productsStore.pagination.perPage).endItem);
-const totalPages = computed(() => getPaginationInfo(productsStore.filteredProducts, productsStore.pagination.currentPage, productsStore.pagination.perPage).totalPages);
-computed(() => paginate(productsStore.filteredProducts, productsStore.pagination.currentPage, productsStore.pagination.perPage));
+
+const openEditModal = (product) => {
+  isEditModalOpen.value = true
+  reativeProduct.$assign(product)
+}
+const cancelEdit = () => {
+  isEditModalOpen.value = false
+  reativeProduct.$clear();
+}
+const cancelAdd = () => {
+  isAddModalOpen.value = false
+  console.log(reativeProduct)
+  reativeProduct.$clear();
+  console.log(reativeProduct)
+}
 </script>
