@@ -122,4 +122,10 @@ public class OrderController {
             orderService.deleteOrderByProductId(id);
             return ResponseEntity.ok("Orders with product id " + id + " are deleted");
     }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestBody Order.Status newStatus) {
+        orderService.updateOrderStatus(id, newStatus);
+        return ResponseEntity.ok("Order status updated successfully");
+    }
 }
