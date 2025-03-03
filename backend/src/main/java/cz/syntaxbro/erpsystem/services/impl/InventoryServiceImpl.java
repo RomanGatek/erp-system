@@ -5,6 +5,7 @@ import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,12 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     public InventoryItem addItem(InventoryItem item) {
-        return inventoryRepository.save(item);
+        var dbItem = inventoryRepository.findByProduct(item.getProduct());
+        if (dbItem.isPresent()){
+            throw new DataIntegrityViolationException(String.format("Duplicate entry '%s' for key 'xxxx.UKo61fmio5yukmmiqgnxf8pnavn'", item.getProduct().getName()));
+        } else {
+            return inventoryRepository.save(item);
+        }
     }
 
     @Transactional
