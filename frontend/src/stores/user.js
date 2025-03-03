@@ -55,6 +55,7 @@ export const useUserStore = defineStore('user', {
         const response = (await api.get('/users')).data
         const me = useMeStore().user
         this.items = response.filter(user => user?.email !== me?.email)
+        this.error = null;
       } catch (error) {
         this.error = error
         this.loading = false
@@ -65,6 +66,7 @@ export const useUserStore = defineStore('user', {
         const payload = { ...user, roles: user.roles.map(role => role.name.replace('ROLE_', '')) }
         await api.post('/users', payload)
         await this.fetchUsers()
+        this.error = null;
       } catch (error) {
         this.error = error
       }
@@ -82,6 +84,7 @@ export const useUserStore = defineStore('user', {
         })
         await this.fetchUsers()
         this.editedUserIndex = null
+        this.error = null;
       } catch (error) {
         this.error = error
       }
@@ -90,6 +93,7 @@ export const useUserStore = defineStore('user', {
       try {
         await api.delete(`/users/${userId}`)
         await this.fetchUsers()
+        this.error = null;
       } catch (error) {
         this.error = error
       }

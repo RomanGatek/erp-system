@@ -41,7 +41,7 @@ export const useInventoryStore = defineStore('inventory', {
         this.error = err
       }
     },
-    async updateProduct(id, ItemData) {
+    async updateItem(id, ItemData) {
       try {
         await user.put(`/inventory/${id}`, ItemData)
         const index = this.products.findIndex(p => p.id === id)
@@ -56,7 +56,7 @@ export const useInventoryStore = defineStore('inventory', {
         this.error = err
       }
     },
-    async deleteProduct(itemId) {
+    async deleteItem(itemId) {
       try {
         await user.delete(`/iventory/${itemId}`)
         await this.fetchItems()

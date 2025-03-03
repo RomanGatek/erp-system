@@ -27,7 +27,7 @@ export const useProductsStore = defineStore('products', {
         async fetchProducts() {
             this.loading = true;
             try {
-                const response = await api.get('/products_');
+                const response = await api.get('/products');
                 this.items = response.data;
                 this.error = null;
             } catch (err) {

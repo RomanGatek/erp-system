@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { AxiosError } from 'axios'
 import { notify } from '@kyvg/vue3-notification'
-import { ref } from 'vue'
 import { $reactive } from '@/utils/index.js'
 
 export const useErrorStore = defineStore('errorStore', {
@@ -11,14 +10,14 @@ export const useErrorStore = defineStore('errorStore', {
      * při inicializaci store vracíme stav.
      */
     errorDefault: {},
-    errors: $reactive({}),
+    errors: $reactive({ general: null }),
 
     /**
      * Pokud potřebujete v clearerrorStore.errors
      * mazat nějakou další chybu mimo `server`,
      * je možné mít i referenci na nějaký externí store nebo objekt.
      */
-    externalStore: null,
+    externalStore: null
   }),
 
   actions: {
@@ -30,6 +29,9 @@ export const useErrorStore = defineStore('errorStore', {
       this.errorDefault = { ...object, ...this.errorDefault }
     },
 
+    clear(field) {
+      delete this.errors[field]
+    },
     /**
      * Nastaví odkaz na externí store nebo objekt,
      * u kterého chcete např. v `clearerrorStore.errors` nastavovat error = null.
@@ -41,11 +43,11 @@ export const useErrorStore = defineStore('errorStore', {
     /**
      * Vymaže stávající chyby ve `server` a případně i v `externalStore.error`.
      */
-    clearerrorStore.errors() {
+    clearServerErrors() {
       if (this.externalStore && this.externalStore.error !== undefined) {
         this.externalStore.error = null
       }
-      this.errors.$clear();
+      this.errors = $reactive({})
     },
 
     /**
@@ -57,10 +59,7 @@ export const useErrorStore = defineStore('errorStore', {
      *              pokud je to potřeba (např. `srv.value = "Chybová hláška"`).
      */
     handle(error) {
-      this.clearerrorStore.errors()
-
-      console.log("E: ", error)
-      console.log("S: ", this.errors)
+      this.errors.$clear()
 
       if (error instanceof AxiosError) {
         const rsp = error?.response?.data
@@ -82,9 +81,9 @@ export const useErrorStore = defineStore('errorStore', {
           })
         } else {
           const { field: errorField, message: errorMessage } = rsp
-          if (['database', 'argument', 'resource'].includes(errorField)) {
+          if (['database', 'argument', 'resource', 'error'].includes(errorField)) {
             // Zvláštní zacházení s některými "typy" chyb
-            this.errors.general = errorMessage
+            this.errors.general = errorMessage + " More information you can read on backend stacktrace"
           } else {
             if (errorField) {
               this.errors[errorField] = errorMessage
@@ -104,6 +103,6 @@ export const useErrorStore = defineStore('errorStore', {
         })
         console.error(error)
       }
-    },
-  },
+    }
+  }
 })
