@@ -66,11 +66,15 @@ public class InventoryServiceImpl implements InventoryService {
         InventoryItem inventoryItem = getItem(itemId);
         if (inventoryItem != null) {
             if(inventoryItem.getQuantity() < quantity) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "not enough quantity of product");
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "not enough quantity of product");
             }
             inventoryItem.setQuantity(inventoryItem.getQuantity() - quantity);
+
+            System.out.println(quantityWarning());
+
             if(inventoryItem.getQuantity() < quantityWarning()) {
                 inventoryRepository.save(inventoryItem);
+                System.out.println(inventoryItem);
                 throw new ResponseStatusException(HttpStatus.OK, "last pieces in stock");
             }
             inventoryRepository.save(inventoryItem);

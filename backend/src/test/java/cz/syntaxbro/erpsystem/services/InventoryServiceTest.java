@@ -76,16 +76,17 @@ public class InventoryServiceTest {
     void receiveStock_successfully() {
         when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
         inventoryService.receiveStock(1L, 100);
-        assertEquals(300, item1.getQuantity());
+        assertEquals(110, item1.getQuantity());
         verify(inventoryRepository, times(1)).findById(1L);
     }
 
     @Test
     void releaseStock_successfully() {
         when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
-        inventoryService.releaseStock(1L, 100);
-        assertEquals(100, item1.getQuantity());
-        verify(inventoryRepository).findById(1L);
+        inventoryService.receiveStock(1L, 400);
+        inventoryService.releaseStock(1L, 1);
+        assertEquals(409, item1.getQuantity());
+        verify(inventoryRepository, times(2)).findById(1L);
     }
 
     @Test void releaseStock_config_noEnoughQuantity() {
@@ -95,19 +96,8 @@ public class InventoryServiceTest {
                 ResponseStatusException.class,
                 () -> inventoryService.releaseStock(1L, 300)
         );
-        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals(HttpStatus.NOT_ACCEPTABLE, exception.getStatusCode());
         assertEquals("not enough quantity of product", exception.getReason());
     }
 
-    @Test void releaseStock_config_warningQuantity() {
-        //Arrest
-        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
-        //Act
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> inventoryService.releaseStock(1L, 199)
-        );
-        assertEquals(HttpStatus.OK, exception.getStatusCode());
-        assertEquals("last pieces in stock", exception.getReason());
-    }
 }

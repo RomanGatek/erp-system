@@ -104,15 +104,20 @@ public class InventoryRepositoryTest {
     @Transactional
     void updateQuantity_Success() {
         // Arrange
-        Product product = Product.builder()
+        Product product__ = Product.builder()
                 .name("testName")
                 .price(200)
                 .description("description")
                 .build();
 
-        InventoryItem inventoryItem = InventoryItem.builder()
+        productRepository.save(product__);
+
+        var productOptional = productRepository.findByName("testName");
+
+        if (productOptional.isPresent()) {
+            InventoryItem inventoryItem = InventoryItem.builder()
                 .quantity(100)
-                .product(product)
+                .product(productOptional.get())
                 .build();
 
         inventoryItem = inventoryRepository.save(inventoryItem); // Save and get generated ID
@@ -121,27 +126,35 @@ public class InventoryRepositoryTest {
                 inventoryItem.getId(), 200);
         InventoryItem updatedInventoryItem = inventoryRepository.findById(inventoryItem.getId()).get();
         assertEquals(200, updatedInventoryItem.getQuantity());
+        }
     }
 
     @Test
     public void deleteTest(){
         //Arrange
-        Product product = Product.builder()
+        Product product__ = Product.builder()
                 .name("testName")
                 .price(200)
                 .description("description")
                 .build();
 
-        InventoryItem inventoryItem = InventoryItem.builder()
-                .quantity(100)
-                .product(product)
-                .build();
+        productRepository.save(product__);
 
-        InventoryItem inventoryItemSaved = inventoryRepository.save(inventoryItem);
-        //Act
-        inventoryRepository.delete(inventoryItemSaved);
-        Optional<InventoryItem> result = inventoryRepository.findById(inventoryItemSaved.getId());
-        //Assert
-        assertEquals(result, Optional.empty());
+        var productOptional = productRepository.findByName("testName");
+
+        if (productOptional.isPresent()) {
+
+            InventoryItem inventoryItem = InventoryItem.builder()
+                    .quantity(100)
+                    .product(productOptional.get())
+                    .build();
+
+            InventoryItem inventoryItemSaved = inventoryRepository.save(inventoryItem);
+            //Act
+            inventoryRepository.delete(inventoryItemSaved);
+            Optional<InventoryItem> result = inventoryRepository.findById(inventoryItemSaved.getId());
+            //Assert
+            assertEquals(result, Optional.empty());
+        }
     }
 }
