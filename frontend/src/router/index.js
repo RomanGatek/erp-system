@@ -9,6 +9,7 @@ import NotFound from '@/views/NotFound.vue'
 import Profile from '@/views/Profile.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
 import { useNotifier } from '@/stores/notifier.js'
+import { useErrorStore } from '@/stores/errors.js'
 
 const routes = [
   { path: '/', component: Home },
@@ -26,12 +27,14 @@ const router = createRouter({ history: createWebHistory(), routes })
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   const me = useMeStore()
+  const e = useErrorStore()
   const notifier = useNotifier();
 
   if (to.path === '/auth' && token) return next('/')
   if (to.path === '/auth') return next()
   if (!token) return next('/auth')
 
+  e.clearServerErrors();
   await me.fetchMe()
 
   if (me.error || !me.user) {

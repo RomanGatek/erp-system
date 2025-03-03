@@ -194,7 +194,12 @@ watch(
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar :error="errorStore.errors.general" :loading="loading" />
+      <StatusBar
+        :error="errorStore.errors.general"
+        :loading="loading"
+        class="mb-4"
+        @clear-error="errorStore.clearServerErrors()"
+      />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Users</h2>
