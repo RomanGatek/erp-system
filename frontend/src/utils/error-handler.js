@@ -11,19 +11,19 @@ export const setErrorDefault = (object) => {
   errorDefault = {...object, ...errorDefault }
 }
 
-export const errorHandler = (serverErrors, store) => {
-  server = serverErrors;
+export const errorHandler = (errorStore.errors, store) => {
+  server = errorStore.errors;
   store_ = store;
   return handleServerValidationErrors;
 }
 
-export const clearServerErrors = () => {
+export const clearerrorStore.errors = () => {
   store_.error = null;
   server.value = { ...errorDefault }
 }
 
 const handleServerValidationErrors = (error, srv) => {
-  clearServerErrors()
+  clearerrorStore.errors()
   if (error instanceof AxiosError) {
     let rsp;
     if (!(rsp = error.response.data)) {

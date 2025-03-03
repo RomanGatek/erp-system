@@ -1,3 +1,4 @@
+
 export const setupSort = (field) => {
   return { field, direction: 'asc' }
 }
@@ -12,4 +13,15 @@ export const sort = (state, filtered) => {
     })
   }
   return filtered;
+}
+
+/**
+ * filter functions
+ * @param {Object} state
+ * @param {Function} filterCallback
+ */
+export const filter = (state, filterCallback) => {
+  let filtered = [...state.items]
+  if (state.searchQuery) filtered = filtered.filter(filterCallback)
+  return sort(state, filtered)
 }
