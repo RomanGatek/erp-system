@@ -65,7 +65,7 @@ public class OrderServiceTest {
         orderRequest.setAmount(5);
         orderRequest.setCost(100.0);
         orderRequest.setProductId(1L);
-        orderRequest.setStatus(Order.Status.PENDING);
+        orderRequest.setStatus(Order.Status.PROCESSING);
         orderRequest.setOrderTime(LocalDateTime.now().plusDays(2));
 
         Product product = new Product(1L, "New Product", 22.2, "Description");
@@ -86,7 +86,7 @@ public class OrderServiceTest {
         assertEquals(product, result.getProduct());
         assertEquals(5, result.getAmount());
         assertEquals(100.0, result.getCost());
-        assertEquals(Order.Status.PENDING, result.getStatus());
+        assertEquals(Order.Status.PROCESSING, result.getStatus());
         assertEquals(orderRequest.getOrderTime(), result.getOrderTime());
     }
 
@@ -94,7 +94,7 @@ public class OrderServiceTest {
     public void testUpdateOrderStatus() {
         // Arrange
         Long orderId = 1L;
-        Order order = new Order(orderId, null, 5, 100.0, Order.Status.PENDING, LocalDateTime.now());
+        Order order = new Order(orderId, null, 5, 100.0, Order.Status.PROCESSING, LocalDateTime.now());
         when(orderRepository.findById(orderId)).thenReturn(java.util.Optional.of(order));
 
         // Act
