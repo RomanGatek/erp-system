@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/inventory")
 @Validated
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity()
 public class InventoryController {
 
     private final InventoryService inventoryService;
