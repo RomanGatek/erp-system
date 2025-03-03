@@ -3,7 +3,7 @@ HELP.md
 
 .idea/
 build/
-
+bun.lock
 # Gradle
 .gradle/
 backend/build/
