@@ -16,6 +16,7 @@
     "@kyvg/vue3-notification": "^3.4.1",
     "@tailwindcss/vite": "^4.0.8",
     "axios": "^1.7.9",
+    "chalk": "^5.4.1",
     "gsap": "^3.12.7",
     "jwt-decode": "^4.0.0",
     "pinia": "^3.0.1",

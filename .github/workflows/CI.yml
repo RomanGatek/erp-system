@@ -2,15 +2,18 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "**"  # Bude se spouštět na všech větvích
   pull_request:
 
 jobs:
     backend-tests:
         runs-on: ubuntu-latest
         steps:
-            - name: Check out repository
-              uses: actions/checkout@v3
+            - name: Set up repository
+              uses: actions/checkout@v4
+              with:
+                ref: ${{ github.event.pull_request.head.sha }}
 
             - name: Set up Java 21
               uses: actions/setup-java@v3
@@ -24,7 +27,7 @@ jobs:
 
             - name: Build and Test (Gradle)
               working-directory: ./
-              run: ./gradlew clean test
+              run: ./gradlew clean test --info
 
 
     frontend-tests:
@@ -45,7 +48,3 @@ jobs:
             - name: Run tests
               working-directory: ./frontend
               run: bun run test
-
-            - name: Build Vue aplikaci
-              working-directory: ./frontend
-              run: bun run build

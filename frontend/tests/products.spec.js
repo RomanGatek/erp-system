@@ -30,12 +30,12 @@ describe('Products Store', () => {
   });
 
   it('should add a product', async () => {
-    const newProduct = { name: 'New Product' };
+    const reativeProduct = { name: 'New Product' };
     api.post.mockResolvedValueOnce({});
-    api.get.mockResolvedValueOnce({ data: [newProduct] });
+    api.get.mockResolvedValueOnce({ data: [reativeProduct] });
 
-    await store.addProduct(newProduct);
-    expect(api.post).toHaveBeenCalledWith('/products', newProduct);
-    expect(store.products).toEqual([newProduct]);
+    await store.addProduct(reativeProduct);
+    expect(api.post).toHaveBeenCalledWith('/products', reativeProduct);
+    expect(store.products).toEqual([reativeProduct]);
   });
 }); 

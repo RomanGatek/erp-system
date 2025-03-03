@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.InventoryItem;
+import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.impl.InventoryServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,14 +25,12 @@ public class InventoryServiceTest {
     private InventoryServiceImpl inventoryService;
 
     private InventoryItem item1;
-    private InventoryItem item2;
-    private InventoryItem item3;
+
+    private final Product product = new Product(1L, "Test Product", 50.0, "Sample product description");
 
     @BeforeEach
     void setUp() {
-        item1 = new InventoryItem(1L, "Test Item", 10);
-        item2 = new InventoryItem(2L, "Test Item", 5);
-        item3 = new InventoryItem(3L, "Test Item", 5);
+        item1 = new InventoryItem(1L, product, 10);
     }
 
     @Test
@@ -42,7 +41,7 @@ public class InventoryServiceTest {
 
         assertNotNull(result);
         assertEquals(item1.getId(), result.getId());
-        assertEquals("Test Item", result.getName());
+        assertEquals("Test Product", result.getProduct().getName());
     }
 
     @Test

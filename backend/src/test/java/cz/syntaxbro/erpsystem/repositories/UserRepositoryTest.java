@@ -16,7 +16,8 @@ class UserRepositoryTest {
     private UserRepository userRepository;
 
     /**
-     * Test: Saves a user and finds it by username.
+     * Test: Saves a user and looks them up by username.
+     * Expected result: Returns the saved user.
      */
     @Test
     void findByUsername_shouldReturnUser_whenUserExists() {
@@ -24,6 +25,8 @@ class UserRepositoryTest {
         user.setUsername("testUser");
         user.setEmail("test@example.com");
         user.setPassword("securePassword123");
+        user.setFirstName("John");
+        user.setLastName("Doe");
         userRepository.save(user);
 
         Optional<User> foundUser = userRepository.findByUsername("testUser");
@@ -34,6 +37,7 @@ class UserRepositoryTest {
 
     /**
      * Test: Searching for a non-existent user by username.
+     * Expected result: Returns an empty response.
      */
     @Test
     void findByUsername_shouldReturnEmpty_whenUserDoesNotExist() {
@@ -43,7 +47,8 @@ class UserRepositoryTest {
     }
 
     /**
-     * Test: Verifies that a user exists by username.
+     * Test: Checks if the user exists by username.
+     * Expected result: Returns `true` if the user exists.
      */
     @Test
     void existsByUsername_shouldReturnTrue_whenUserExists() {
@@ -51,6 +56,8 @@ class UserRepositoryTest {
         user.setUsername("existingUser");
         user.setEmail("user@example.com");
         user.setPassword("strongPassword123");
+        user.setFirstName("John");
+        user.setLastName("Doe");
         userRepository.save(user);
 
         boolean exists = userRepository.existsByUsername("existingUser");
@@ -59,7 +66,8 @@ class UserRepositoryTest {
     }
 
     /**
-     * Test: Verify that there is no user with username.
+     * Test: Verifies that there is no user with the given username.
+     * Expected result: Returns `false` if the user does not exist.
      */
     @Test
     void existsByUsername_shouldReturnFalse_whenUserDoesNotExist() {
@@ -69,7 +77,8 @@ class UserRepositoryTest {
     }
 
     /**
-     * Test: Verify that a user exists by email.
+     * Test: Verifies that the user exists by email.
+     * Expected result: Returns `true` if the user exists.
      */
     @Test
     void existsByEmail_shouldReturnTrue_whenEmailExists() {
@@ -77,6 +86,8 @@ class UserRepositoryTest {
         user.setUsername("emailUser");
         user.setEmail("email@example.com");
         user.setPassword("securePassword123");
+        user.setFirstName("John");
+        user.setLastName("Doe");
         userRepository.save(user);
 
         boolean exists = userRepository.existsByEmail("email@example.com");
@@ -85,7 +96,8 @@ class UserRepositoryTest {
     }
 
     /**
-     * Test: Verify that the user by email does not exist.
+     * Test: Verifies that the user does not exist by email.
+     * Expected result: Returns `false` if the user does not exist.
      */
     @Test
     void existsByEmail_shouldReturnFalse_whenEmailDoesNotExist() {

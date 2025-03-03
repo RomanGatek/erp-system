@@ -1,5 +1,5 @@
 <template>
-  <notifications position="bottom left" classes="my-notification" :duration="3000" />
+  <NotificationWrapper />
   <div id="app" class="min-h-screen flex flex-col relative bg-gray-50">
     <!-- Ambientní pozadí -->
     <div class="fixed inset-0 bg-gradient-pattern opacity-5"></div>
@@ -34,12 +34,12 @@ import CustomNavbar from '@/components/CustomNavbar.vue'
 import CustomFooter from '@/components/CustomFooter.vue'
 import { computed } from 'vue'
 import { useMeStore } from './stores/me'
-import { Notifications } from '@kyvg/vue3-notification'
+import NotificationWrapper from '@/components/common/NotificationWrapper.vue'
 
 export default {
   name: 'App',
   components: {
-    Notifications,
+    NotificationWrapper,
     CustomNavbar,
     CustomFooter,
   },
@@ -55,31 +55,6 @@ export default {
 </script>
 
 <style>
-.my-notification {
-  margin-bottom: 1rem !important;
-  margin-left: 1rem !important;
-  border-radius: 0.5rem !important;
-  padding: 1rem !important;
-  color: white !important;
-  font-size: 0.875rem !important;
-}
-
-.my-notification.success {
-  background-color: #10b981 !important;
-}
-
-.my-notification.error {
-  background-color: #ef4444 !important;
-}
-
-.my-notification.warning {
-  background-color: #f59e0b !important;
-}
-
-.my-notification.info {
-  background-color: #3b82f6 !important;
-}
-
 html {
   font-size: 15px;
   background-color: #f8fafc;

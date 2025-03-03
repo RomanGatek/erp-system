@@ -1,4 +1,4 @@
-import { useInventoryStore } from '../src/stores/inventory';
+import { useInventoryStore } from '@/stores/storage.js';
 import { user as api } from '../src/services/api';
 import { vi } from 'vitest';
 import { createApp } from 'vue';

@@ -1,12 +1,9 @@
 package cz.syntaxbro.erpsystem.utils;
 
-import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.repositories.*;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
-import cz.syntaxbro.erpsystem.repositories.RoleRepository;
-import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +37,8 @@ class DataLoaderTest {
     private final PermissionRepository permissionRepository;
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     DataLoaderTest(@org.springframework.beans.factory.annotation.Autowired RoleRepository roleRepository,
                    @org.springframework.beans.factory.annotation.Autowired UserRepository userRepository,
@@ -53,7 +52,7 @@ class DataLoaderTest {
     void setUp() {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
-        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository);
+        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository, inventoryRepository);
         dataLoader.run();
     }
 
