@@ -41,15 +41,15 @@ export const useInventoryStore = defineStore('inventory', {
         this.error = err
       }
     },
-    async updateItem(id, ItemData) {
+    async updateItem(ItemData) {
       try {
-        await user.put(`/inventory/${id}`, ItemData)
-        const index = this.products.findIndex(p => p.id === id)
+        await user.put(`/inventory/${ItemData.id}`, ItemData)
+        const index = this.items.findIndex(p => p.id === ItemData.id)
         if (index !== -1) {
           this.items[index] = {
             ...this.items[index],
             ...ItemData,
-            id
+            id: ItemData.id
           }
         }
       } catch (err) {
@@ -58,7 +58,7 @@ export const useInventoryStore = defineStore('inventory', {
     },
     async deleteItem(itemId) {
       try {
-        await user.delete(`/iventory/${itemId}`)
+        await user.delete(`/inventory/${itemId}`)
         await this.fetchItems()
       } catch (err) {
         this.error = err

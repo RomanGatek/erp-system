@@ -1,5 +1,4 @@
 import { reactive } from 'vue'
-import chalk from 'chalk'
 
 /**
  * Creates a reactive object with additional helper methods:

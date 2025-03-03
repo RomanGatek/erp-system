@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { ref, watch, onMounted } from 'vue'
+
+const props = defineProps({
   error: {
     type: String,
     default: ''
@@ -9,11 +11,46 @@ defineProps({
     default: false
   }
 })
+
+// Definování emitovaných událostí
+const emit = defineEmits(['clearError'])
+
+const isErrorVisible = ref(false)
+let timeoutId = null
+
+// Sledování změn v error prop pro aktivaci časovače
+watch(() => props.error, (newVal) => {
+  if (newVal) {
+    showError()
+  }
+})
+
+function showError() {
+  isErrorVisible.value = true
+
+  // Zrušit předchozí časovač, pokud existuje
+  if (timeoutId) {
+    clearTimeout(timeoutId)
+  }
+
+  // Nastavit nový časovač na 15000ms pouze pro error
+  timeoutId = setTimeout(() => {
+    isErrorVisible.value = false
+    emit('clearError') // Emitujeme událost místo přímého nastavení props
+  }, 15000)
+}
+
+// Při prvním načtení komponenty, pokud je error true
+onMounted(() => {
+  if (props.error) {
+    showError()
+  }
+})
 </script>
 
 <template>
   <div
-    v-if="error || loading"
+    v-if="(error && isErrorVisible) || loading"
     class="mb-4 p-3 rounded-lg text-sm flex items-center justify-between"
     :class="error ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'"
   >
