@@ -1,21 +1,21 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
-import DataTable from '@/components/common/DataTable.vue'
-import SearchBar from '@/components/common/SearchBar.vue'
-import Pagination from '@/components/common/Pagination.vue'
-import Modal from '@/components/common/Modal.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
-import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
-import StatusBar from '@/components/common/StatusBar.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
-import { getPaginationInfo, paginate } from '@/utils/pagination'
+import { useErrorStore } from '@/stores/errors.js'
+import { useNotifier } from '@/stores/notifier.js'
 
 import {
-  errorHandler,
-  setErrorDefault,
-  clearerrorStore.errors
-} from '@/utils/error-handler.js'
+  DataTable,
+  SearchBar,
+  Pagination,
+  Modal,
+  StatusBar,
+  EmptyState,
+  BaseInput,
+  BaseCheckbox
+} from '@/components/common'
+import { $reactive } from '@/utils/index.js'
+
 
 defineOptions({
   name: 'UsersView',
@@ -25,8 +25,10 @@ const userStore = useUserStore()
 const searchInput = ref('')
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
+const errorStore = useErrorStore()
 
-const defaultUser = {
+const reactiveUser = $reactive({
+  id: undefined,
   firstName: '',
   lastName: '',
   email: '',
@@ -34,19 +36,7 @@ const defaultUser = {
   password: '',
   active: false,
   roles: [],
-}
-
-
-const defaultError = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  username: '',
-  password: '',
-  roles: '',
-}
-
-const _user = reactive({ ...defaultUser, roles: [] })
+});
 
 const availableRoles = [
   { name: 'admin', bgColor: 'bg-red-100', textColor: 'text-red-800' },
@@ -64,141 +54,97 @@ const tableHeaders = [
   { field: 'actions', label: '', sortable: false, class: 'text-right' },
 ]
 const loading = ref(false)
-const error = ref('')
-const errorStore.errors = ref({ ...defaultError })
-setErrorDefault(defaultError)
-const eHandler = errorHandler(errorStore.errors, userStore)
+const $notifier = useNotifier()
 
 onMounted(async () => {
-  clearerrorStore.errors()
+  errorStore.clearServerErrors()
   loading.value = true
   try {
     await userStore.fetchUsers()
     if (!userStore.error) {
       loading.value = false
     } else {
-      eHandler(userStore.error)
+      errorStore.handle(userStore.error)
       loading.value = false
     }
   } catch (err) {
-    console.error('Error fetching users:', err)
+    errorStore.handle(err)
     loading.value = false
-    error.value = 'Failed to load users. Please try again later.'
+    console.error(err)
   }
 })
 
 const addUser = async () => {
-  clearerrorStore.errors()
   try {
-    await userStore.addUser({ ..._user })
+    await userStore.addUser({ ...reactiveUser })
     if (!userStore.error) {
-      Object.assign(_user, { ..._user })
       isAddModalOpen.value = false
+      $notifier.success("User was created successfully!")
+      reactiveUser.$clear();
     } else {
-      eHandler(userStore.error, error)
-      console.log(userStore.error)
-      if (error.value) isAddModalOpen.value = false
+      errorStore.handle(userStore.error)
+      if (errorStore.errors.general) {
+        isAddModalOpen.value = false
+      }
     }
   } catch (err) {
-    console.error('Error adding user:', err)
-    error.value = 'Failed to add user. Please try again later.'
+    errorStore.handle(err)
+    loading.value = false
+    console.error(err)
   }
-}
-
-const openEditModal = (index) => {
-  const user = userStore.items[index]
-  Object.assign(_user, {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    username: user.username,
-    active: user.active,
-    roles: [...(user.roles || [])],
-  })
-  isEditModalOpen.value = true
 }
 
 const updateUser = async () => {
-  clearerrorStore.errors()
+  errorStore.clearServerErrors()
   try {
-    await userStore.updateUser(_user)
+    await userStore.updateUser(reactiveUser)
     if (userStore.error) {
-      eHandler(userStore.error)
+      errorStore.handle(userStore.error)
+      if (errorStore.errors.general) isEditModalOpen.value = false
     } else {
       isEditModalOpen.value = false
+      $notifier.success("User was edited successfully!")
+      reactiveUser.$clear();
     }
   } catch (err) {
-    console.error('Error updating user:', err)
-    error.value = 'Failed to update user. Please try again later.'
+    errorStore.handle(err)
+    loading.value = false
+    console.error(err)
   }
-}
-
-const cancelEdit = () => {
-  isEditModalOpen.value = false
-  clearerrorStore.errors()
-  Object.assign(_user, {
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
-    active: true,
-    roles: [],
-  })
 }
 
 const deleteUser = async (userId) => {
   if (confirm('Do you really want to delete this user?')) {
     try {
       await userStore.deleteUser(userId)
+      $notifier.success("User deleted removed successfully!")
+      reactiveUser.$clear();
     } catch (err) {
       console.error('Error deleting user:', err)
-      error.value = 'Failed to delete user. Please try again later.'
+      errorStore.errors.general = 'Failed to delete user. Please try again later.'
     }
   }
 }
 
-const cancelAdd = () => {
-  isAddModalOpen.value = false
-  clearerrorStore.errors()
-  Object.assign(_user, {
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
-    password: '',
-    active: true,
-    roles: [],
-  })
+
+const openEditModal = (index) => {
+  reactiveUser.$clear();
+  const user = userStore.items[index]
+  reactiveUser.$assign(user);
+  isEditModalOpen.value = true
 }
 
-const paginationStart = computed(
-  () =>
-    getPaginationInfo(
-      userStore.filtered,
-      userStore.pagination.currentPage,
-      userStore.pagination.perPage,
-    ).startItem,
-)
-const paginationEnd = computed(
-  () =>
-    getPaginationInfo(
-      userStore.filtered,
-      userStore.pagination.currentPage,
-      userStore.pagination.perPage,
-    ).endItem,
-)
-const totalPages = computed(
-  () =>
-    getPaginationInfo(
-      userStore.filtered,
-      userStore.pagination.currentPage,
-      userStore.pagination.perPage,
-    ).totalPages,
-)
-computed(() =>
-  paginate(userStore.filtered, userStore.pagination.currentPage, userStore.pagination.perPage),
-)
+const cancelAdd = () => {
+  errorStore.clearServerErrors()
+  reactiveUser.$clear()
+  isAddModalOpen.value = false;
+}
+
+const cancelEdit = () => {
+  errorStore.clearServerErrors()
+  isEditModalOpen.value = false
+  reactiveUser.$clear();
+}
 
 const getRoleStyle = (roleName) => {
   const role = availableRoles.find((r) => roleName.toLowerCase().includes(r.name.toLowerCase()))
@@ -215,23 +161,40 @@ const isRoleSelected = (roleName, userRoles) => {
 
 watch(
   [
-    () => _user.firstName,
-    () => _user.lastName,
-    () => _user.email,
-    () => _user.username,
-    () => _user.password,
+    () => reactiveUser.firstName,
+    () => reactiveUser.lastName,
+    () => reactiveUser.email,
+    () => reactiveUser.username,
+    () => reactiveUser.password,
   ],
-  () => {
-    clearerrorStore.errors()
-  },
+  ([newFirstName, newLastName, newEmail, newUserName, newPassword],
+   [oldFirstName, oldLastName, oldEmail, oldUsername, oldPassword]) => {
+    if (newFirstName !== oldFirstName) {
+      errorStore.clear('firstName')
+    }
+    if (newLastName !== oldLastName) {
+      errorStore.clear('lastName')
+    }
+    if (newEmail !== oldEmail) {
+      errorStore.clear('email')
+    }
+    if (newUserName !== oldUsername) {
+      errorStore.clear('username')
+    }
+    if (oldPassword !== newPassword) {
+      errorStore.clear('password')
+    }
+  }
 )
+
+
 </script>
 
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar :error="error" :loading="loading" />
+      <StatusBar :error="errorStore.errors.general" :loading="loading" />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Users</h2>
@@ -338,14 +301,7 @@ watch(
             </template>
           </DataTable>
 
-          <Pagination
-            :current-page="userStore.pagination.currentPage"
-            :total-pages="totalPages"
-            :total-items="userStore.filtered.length"
-            :start-item="paginationStart"
-            :end-item="paginationEnd"
-            @page-change="userStore.setPage"
-          />
+          <Pagination :store="useUserStore" />
         </div>
       </template>
     </div>
@@ -355,14 +311,14 @@ watch(
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <BaseInput
-            v-model="_user.firstName"
+            v-model="reactiveUser.firstName"
             placeholder="First Name"
             label="First name"
             :error="errorStore.errors.firstName"
             :class="{ 'border-red-500': errorStore.errors.firstName }"
           />
           <BaseInput
-            v-model="_user.lastName"
+            v-model="reactiveUser.lastName"
             placeholder="Last Name"
             label="Last name"
             :error="errorStore.errors.lastName"
@@ -370,7 +326,7 @@ watch(
           />
         </div>
         <BaseInput
-          v-model="_user.email"
+          v-model="reactiveUser.email"
           type="email"
           placeholder="Email"
           label="Email"
@@ -378,14 +334,14 @@ watch(
           :class="{ 'border-red-500': errorStore.errors.email }"
         />
         <BaseInput
-          v-model="_user.username"
+          v-model="reactiveUser.username"
           placeholder="Username"
           label="Username"
           :error="errorStore.errors.username"
           :class="{ 'border-red-500': errorStore.errors.username }"
         />
         <BaseInput
-          v-model="_user.password"
+          v-model="reactiveUser.password"
           type="password"
           placeholder="Password"
           label="Password"
@@ -403,7 +359,7 @@ watch(
             >
               <input
                 type="checkbox"
-                v-model="_user.roles"
+                v-model="reactiveUser.roles"
                 :value="{ name: `ROLE_${role.name.toUpperCase()}` }"
                 class="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-opacity-50"
               />
@@ -423,7 +379,7 @@ watch(
         <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
           {{ errorStore.errors.general }}
         </div>
-        <BaseCheckbox v-model="_user.active" label="Is Active?" />
+        <BaseCheckbox v-model="reactiveUser.active" label="Is Active?" />
         <div class="flex justify-end space-x-3 pt-2">
           <button
             type="button"
@@ -447,7 +403,7 @@ watch(
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
           <BaseInput
-            v-model="_user.firstName"
+            v-model="reactiveUser.firstName"
             placeholder="First Name"
             label="First name"
             variant="success"
@@ -455,7 +411,7 @@ watch(
             :class="{ 'border-red-500': errorStore.errors.firstName }"
           />
           <BaseInput
-            v-model="_user.lastName"
+            v-model="reactiveUser.lastName"
             placeholder="Last Name"
             label="Last name"
             variant="success"
@@ -464,7 +420,7 @@ watch(
           />
         </div>
         <BaseInput
-          v-model="_user.email"
+          v-model="reactiveUser.email"
           type="email"
           placeholder="Email"
           label="Email"
@@ -473,7 +429,7 @@ watch(
           :class="{ 'border-red-500': errorStore.errors.email }"
         />
         <BaseInput
-          v-model="_user.username"
+          v-model="reactiveUser.username"
           placeholder="Username"
           label="Username"
           variant="success"
@@ -491,13 +447,13 @@ watch(
             >
               <input
                 type="checkbox"
-                :checked="isRoleSelected(role.name, _user.roles)"
+                :checked="isRoleSelected(role.name, reactiveUser.roles)"
                 @change="
                   (e) => {
                     if (e.target.checked) {
-                      _user.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
+                      reactiveUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
                     } else {
-                      _user.roles = _user.roles.filter(
+                      reactiveUser.roles = reactiveUser.roles.filter(
                         (r) => r.name !== `ROLE_${role.name.toUpperCase()}`,
                       )
                     }
@@ -517,7 +473,7 @@ watch(
             {{ errorStore.errors.roles }}
           </span>
         </div>
-        <BaseCheckbox v-model="_user.active" label="Is Active?" variant="success" />
+        <BaseCheckbox v-model="reactiveUser.active" label="Is Active?" variant="success" />
         <div class="flex justify-between pt-2">
           <button
             type="submit"

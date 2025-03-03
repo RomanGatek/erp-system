@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import chalk from 'chalk'
 
 /**
  * Creates a reactive object with additional helper methods:
@@ -18,14 +19,17 @@ export const $reactive = ($default) => {
   // 4. The spread of default properties themselves.
   return reactive({
     // Store default values under the symbol key.
-    [DEFAULT_SYMBOL]: { ...$default },
+    [DEFAULT_SYMBOL]: Object.assign({}, $default),
 
     /**
      * Resets all properties on this reactive object to their initial default values,
      * as specified in [DEFAULT_SYMBOL].
      */
     $clear() {
+      //console.log(chalk.yellow("DEFAULT: ", JSON.stringify(this[DEFAULT_SYMBOL])))
+      //console.log(chalk.green("clearing $reactive ", JSON.stringify(this)))
       Object.assign(this, this[DEFAULT_SYMBOL])
+      //console.log(chalk.blue("cleared $reactive ", JSON.stringify(this)))
     },
 
     /**

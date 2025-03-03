@@ -1,14 +1,20 @@
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useInventoryStore } from '@/stores/inventory'
-import { paginate, getPaginationInfo } from '@/utils/pagination'
-import DataTable from '@/components/common/DataTable.vue'
-import SearchBar from '@/components/common/SearchBar.vue'
-import Pagination from '@/components/common/Pagination.vue'
-import Modal from '@/components/common/Modal.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
-import StatusBar from '@/components/common/StatusBar.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
+import { $reactive } from '@/utils/index.js'
+import { useNotifier } from '@/stores/notifier.js'
+import { useErrorStore } from '@/stores/errors.js'
+
+import {
+  DataTable,
+  SearchBar,
+  Pagination,
+  Modal,
+  StatusBar,
+  EmptyState,
+  BaseInput,
+} from '@/components/common'
+
 
 defineOptions({
   name: 'StorageView',
@@ -18,23 +24,11 @@ const inventoryStore = useInventoryStore()
 const searchInput = ref('')
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
+const errorStore = useErrorStore()
 
-const newItem = reactive({
-  product: {
-    name: '',
-    description: '',
-    price: 0,
-  },
-  quantity: 0,
-})
-
-const selectedItem = reactive({
-  product: {
-    name: '',
-    description: '',
-    price: 0,
-  },
-  quantity: 0,
+const reactiveItem = $reactive({
+  product: { name: '', description: '', price: 0.0},
+  quantity: 0
 })
 
 const tableHeaders = [
@@ -46,75 +40,103 @@ const tableHeaders = [
 ]
 
 const loading = ref(false)
-const error = ref('')
+const $notifier = useNotifier()
 
 onMounted(async () => {
+  errorStore.clearServerErrors()
   loading.value = true
   try {
     await inventoryStore.fetchItems()
     if (inventoryStore.error) {
-      error.value = inventoryStore.error
+      errorStore.handle(inventoryStore.error)
     }
   } catch (err) {
-    error.value = 'Nepodařilo se načíst data inventáře: ' + err.message
+    errorStore.handle(err)
+    loading.value = false
+    console.error(err)
   } finally {
     loading.value = false
   }
 })
 
 const addItem = async () => {
-  await inventoryStore.addItem({ ...newItem })
-  Object.assign(newItem, {
-    productName: '',
-    quantity: 0,
-    location: ''
-  })
-  isAddModalOpen.value = false
+  try {
+    await inventoryStore.addItem({ ...reactiveItem })
+    if (!inventoryStore.error) {
+      isAddModalOpen.value = false
+      $notifier.success("Item was created successfully!")
+      reactiveItem.$clear()
+    } else {
+      errorStore.handle(inventoryStore.error)
+      if (errorStore.errors.general) {
+        isAddModalOpen.value = false
+      }
+    }
+  } catch (err) {
+    errorStore.handle(err)
+    console.error(err)
+    reactiveItem.$clear()
+    isEditModalOpen.value = false
+  }
 }
-
-const openEditModal = (index) => {
-  isEditModalOpen.value = true
-  Object.assign(selectedItem, inventoryStore.items[index])
-}
-
 const updateItem = async () => {
-  await inventoryStore.updateItem(selectedItem)
-  isEditModalOpen.value = false
+  try {
+    await inventoryStore.updateItem(reactiveItem)
+    if (!inventoryStore.error) {
+      isAddModalOpen.value = false
+      $notifier.success("Item was updated successfully!")
+      reactiveItem.$clear()
+    } else {
+      errorStore.handle(inventoryStore.error)
+      if (errorStore.errors.general) {
+        isAddModalOpen.value = false
+      }
+    }
+  } catch (err) {
+    errorStore.handle(err)
+    console.error(err)
+    reactiveItem.$clear()
+    isEditModalOpen.value = false
+  }
 }
-
-const cancelEdit = () => {
-  isEditModalOpen.value = false
-}
-
 const deleteItem = async (itemId) => {
-  if (confirm('Opravdu chcete smazat tuto položku?')) {
-    await inventoryStore.deleteItem(itemId)
+  if (confirm('Do you really want to delete this item?')) {
+    try {
+      await inventoryStore.deleteItem(itemId)
+      $notifier.success("Item deleted removed successfully!")
+      reactiveItem.$clear();
+    } catch (err) {
+      console.error('Error deleting item:', err)
+      errorStore.errors.general = 'Failed to delete item. Please try again later.'
+    }
   }
 }
 
-const cancelAdd = () => {
-  isAddModalOpen.value = false
-  Object.assign(newItem, {
-    product: {
-      name: '',
-      description: '',
-      price: 0,
-    },
-    quantity: 0,
-  })
+const openEditModal = (index) => {
+  reactiveItem.$clear()
+  isEditModalOpen.value = true
+  reactiveItem.$assign(inventoryStore.items[index])
 }
 
-const paginationStart = computed(() => getPaginationInfo(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).startItem);
-const paginationEnd = computed(() => getPaginationInfo(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).endItem);
-const totalPages = computed(() => getPaginationInfo(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage).totalPages);
-computed(() => paginate(inventoryStore.filtered, inventoryStore.pagination.currentPage, inventoryStore.pagination.perPage));
+const cancelEdit = () => {
+  errorStore.clearServerErrors()
+  isEditModalOpen.value = false
+  reactiveItem.$clear();
+}
+
+const cancelAdd = () => {
+  errorStore.clearServerErrors()
+  reactiveItem.$clear()
+  isAddModalOpen.value = false;
+}
+
 </script>
 
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <StatusBar
-        :error="error"
+        :error="errorStore.errors.general"
         :loading="loading"
         class="mb-4"
       />
@@ -172,7 +194,7 @@ computed(() => paginate(inventoryStore.filtered, inventoryStore.pagination.curre
             :on-edit="openEditModal"
             :on-delete="deleteItem"
           >
-            <template #row="{ item }">
+            <template #row="{ item, index }">
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
                 {{ item.product.name }}
               </td>
@@ -206,14 +228,7 @@ computed(() => paginate(inventoryStore.filtered, inventoryStore.pagination.curre
             </template>
           </DataTable>
 
-          <Pagination
-            :current-page="inventoryStore.pagination.currentPage"
-            :total-pages="totalPages"
-            :total-items="inventoryStore.paginateItems.length"
-            :start-item="paginationStart"
-            :end-item="paginationEnd"
-            @page-change="inventoryStore.setPage"
-          />
+          <Pagination :store="useInventoryStore" />
         </div>
       </template>
     </div>
@@ -227,18 +242,18 @@ computed(() => paginate(inventoryStore.filtered, inventoryStore.pagination.curre
     >
       <div class="space-y-3">
         <BaseInput
-          v-model="newItem.product.name"
+          v-model="reactiveItem.product.name"
           placeholder="Název produktu"
           label="Název produktu"
         />
         <BaseInput
-          v-model="newItem.quantity"
+          v-model="reactiveItem.quantity"
           type="number"
           placeholder="Množství"
           label="Množství"
         />
         <BaseInput
-          v-model="newItem.location"
+          v-model="reactiveItem.location"
           placeholder="Lokace"
           label="Lokace"
         />
@@ -269,20 +284,20 @@ computed(() => paginate(inventoryStore.filtered, inventoryStore.pagination.curre
     >
       <div class="space-y-3">
         <BaseInput
-          v-model="selectedItem.productName"
+          v-model="reactiveItem.productName"
           placeholder="Název produktu"
           label="Název produktu"
           variant="success"
         />
         <BaseInput
-          v-model="selectedItem.quantity"
+          v-model="reactiveItem.quantity"
           type="number"
           placeholder="Množství"
           label="Množství"
           variant="success"
         />
         <BaseInput
-          v-model="selectedItem.location"
+          v-model="reactiveItem.location"
           placeholder="Lokace"
           label="Lokace"
           variant="success"
