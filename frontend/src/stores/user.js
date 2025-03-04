@@ -1,6 +1,6 @@
 // stores/user.js
 import { defineStore } from 'pinia'
-import { user as api } from '@/services/api'
+import { api } from '@/services/api'
 import { useMeStore } from '@/stores/me'
 import { setupSort, filter } from '@/utils/table-utils.js'
 import { __paginate } from '@/utils/pagination.js'

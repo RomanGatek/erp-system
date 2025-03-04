@@ -11,7 +11,7 @@
                 "DB_NAME": "erp_system_db",
                 "DB_USER": "sda",
                 "DB_PASS": "sda",
-                "FILE_UPLOAD_DIR": "./frontend/public/uploads",
+                "FILE_UPLOAD_DIR": "../frontend/public/uploads",
                 "JWT_SECRET": "Ym5qaWJqQkpLQmpoaWxnYkpLSEdqaHlUR2lwdWdJVVRHaXVBRVRHdWl0Z2hFSXRoOlBFUDpldHc="
             }
         },
