@@ -43,7 +43,7 @@ class OrderRequestTest {
         OrderRequest request = new OrderRequest(
                 5, // amount
                 150.0, // cost
-                Order.Status.ORDERED, // status
+                Order.Status.PENDING, // status
                 LocalDateTime.now().plusDays(1), // order time in the future
                 1L // valid product ID
         );
@@ -65,7 +65,7 @@ class OrderRequestTest {
         OrderRequest request = new OrderRequest(
                 5,
                 null,
-                Order.Status.ORDERED,
+                Order.Status.PENDING,
                 LocalDateTime.now().plusDays(1),
                 1L
         );
@@ -89,7 +89,7 @@ class OrderRequestTest {
         OrderRequest request = new OrderRequest(
                 5,
                 -10.0,
-                Order.Status.ORDERED,
+                Order.Status.PENDING,
                 LocalDateTime.now().plusDays(1),
                 1L
         );
@@ -137,7 +137,7 @@ class OrderRequestTest {
         OrderRequest request = new OrderRequest(
                 5,
                 150.0,
-                Order.Status.ORDERED,
+                Order.Status.PENDING,
                 LocalDateTime.now().minusDays(1), // past date
                 1L
         );
@@ -161,7 +161,7 @@ class OrderRequestTest {
         OrderRequest request = new OrderRequest(
                 5,
                 150.0,
-                Order.Status.ORDERED,
+                Order.Status.PENDING,
                 LocalDateTime.now().plusDays(1),
                 null
         );
@@ -185,7 +185,7 @@ class OrderRequestTest {
         OrderRequest request = new OrderRequest(
                 5,
                 150.0,
-                Order.Status.ORDERED,
+                Order.Status.PENDING,
                 LocalDateTime.now().plusDays(1),
                 0L
         );
