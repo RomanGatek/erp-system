@@ -31,6 +31,7 @@ backend/*.ipr
 backend/out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+**/build
 
 # Frontend (např. React, Angular)
 frontend/node_modules/
@@ -38,6 +39,7 @@ frontend/build/
 frontend/dist/
 frontend/.env
 frontend/.vscode/
+**/package-lock.json
 
 # NetBeans (pro backend)
 backend/nbproject/private/
