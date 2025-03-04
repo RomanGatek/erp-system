@@ -2,19 +2,15 @@ import axios from 'axios'
 
 const baseURL = 'http://localhost:8080/api'
 
-// Create user-specific instance
-const user = axios.create({
-  baseURL,
-  headers: { 'Content-Type': 'application/json', 'Allow-Origin': '*'}
-})
 
 const api = axios.create({
   baseURL,
-  headers: { 'Content-Type': 'application/json', 'Allow-Origin': '*'}
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' }
 })
 
-// Add request interceptor to add token
-user.interceptors.request.use(
+
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
@@ -28,5 +24,4 @@ user.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-
-export { api, user }
+export { api };
