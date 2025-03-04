@@ -86,7 +86,7 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<Order> createOrder(
             @RequestParam @Min(value = 1, message = "Must be a number") Long itemId,
             @RequestParam @Min(value = 1, message = "Must be positive number") int quantity) {
