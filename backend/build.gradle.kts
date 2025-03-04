@@ -50,6 +50,11 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
     testImplementation("org.springframework.security:spring-security-test")
+
+    //WEB client
+    implementation("org.springframework:spring-webflux:6.2.0")
+    implementation("org.json:json:20240303")
+
 }
 
 tasks.withType<Test> {
