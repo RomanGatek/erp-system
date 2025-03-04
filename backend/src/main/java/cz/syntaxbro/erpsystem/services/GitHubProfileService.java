@@ -1,11 +1,12 @@
 package cz.syntaxbro.erpsystem.services;
 
+import cz.syntaxbro.erpsystem.models.gitHub.Branch;
+import cz.syntaxbro.erpsystem.models.gitHub.GitHubProfile;
+
 import java.util.List;
 
 public interface GitHubProfileService {
-    public boolean apiConnect();
-    public String getUsername(String username);
-    public String getUserInformation();
-    public List<String> getBranches();
-    public String getCommits();
+    public List<String> projectPartners();
+    public List<Branch> projectBranches();
+    public GitHubProfile gitHubProfile(String username);
 }
