@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.models;
+package cz.syntaxbro.erpsystem.models.gitHub;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +10,12 @@ import java.util.List;
 public class GitHubProfile {
 
     private String username;
+    private String name;
+    private String avatarUrl;
+    private String url;
     private String userInformation;
-    private List<String> branches;
-    private String commits;
+    private List<Object> branches;
+
+
 
 }
