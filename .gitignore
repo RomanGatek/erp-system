@@ -48,3 +48,6 @@ backend/.nb-gradle/
 
 # VS Code
 .vscode/
+
+# .env
+**/.env

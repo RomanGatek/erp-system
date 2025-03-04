@@ -9,4 +9,6 @@ public interface InventoryService {
     InventoryItem addItem(InventoryItem item);
     void updateQuantity(Long itemId, int quantity);
     List<InventoryItem> getAll();
+    void receiveStock(Long itemId, int quantity);
+    void releaseStock(Long itemId, int quantity);
 }

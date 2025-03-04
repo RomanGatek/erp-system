@@ -11,6 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -66,4 +70,34 @@ public class InventoryServiceTest {
 
         verify(inventoryRepository, times(1)).updateQuantity(99L, 20);
     }
+
+
+    @Test
+    void receiveStock_successfully() {
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
+        inventoryService.receiveStock(1L, 100);
+        assertEquals(110, item1.getQuantity());
+        verify(inventoryRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void releaseStock_successfully() {
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
+        inventoryService.receiveStock(1L, 400);
+        inventoryService.releaseStock(1L, 1);
+        assertEquals(409, item1.getQuantity());
+        verify(inventoryRepository, times(2)).findById(1L);
+    }
+
+    @Test void releaseStock_config_noEnoughQuantity() {
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> inventoryService.releaseStock(1L, 300)
+        );
+        assertEquals(HttpStatus.NOT_ACCEPTABLE, exception.getStatusCode());
+        assertEquals("not enough quantity of product", exception.getReason());
+    }
+
 }
