@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { user } from '@/services/api'
+import { api as user } from '@/services/api'
 import {
   filter,
   setupSort

@@ -1,4 +1,4 @@
-import { homeIcon, usersIcon, productsIcon, inventoryIcon, ordersIcon, storageIcon, workflowIcon, attendanceIcon } from '@/components/common/rawIcons'
+import { homeIcon, usersIcon, productsIcon, inventoryIcon, ordersIcon, storageIcon, workflowIcon } from '@/components/common/rawIcons'
 import { ref } from 'vue'
 
 export const navLinks = ref([
@@ -15,10 +15,10 @@ export const navLinks = ref([
       icon: usersIcon
     },
     {
-      to: '/attendance',
-      text: 'Attendance',
-      requiredRole: 'MANAGER',
-      icon: attendanceIcon
+      to: '/workflow',
+      text: 'Workflow',
+      requiredRole: 'ADMIN',
+      icon: workflowIcon
     },
     {
       to: '',
@@ -45,12 +45,6 @@ export const navLinks = ref([
           text: 'Storage',
           requiredRole: 'MANAGER',
           icon: storageIcon
-        },
-        {
-          to: '/workflow',
-          text: 'Workflow',
-          requiredRole: 'ADMIN',
-          icon: workflowIcon
         }
       ],
     },

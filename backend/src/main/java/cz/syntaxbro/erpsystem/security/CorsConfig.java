@@ -10,15 +10,15 @@ public class CorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
-            @Override
+        @Override   
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOriginPatterns("*") // Povolit všechny originy (včetně dynamických portů)
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .exposedHeaders("Authorization")
-                        .allowCredentials(true) // Funguje s allowedOriginPatterns("*")
-                        .maxAge(3600L);
+                  .allowedOriginPatterns("*") // Povolit všechny originy (včetně dynamických portů)
+                  .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                  .allowedHeaders("*")
+                  .exposedHeaders("Authorization")
+                  .allowCredentials(true) // Funguje s allowedOriginPatterns("*")
+                  .maxAge(3600L);
             }
         };
     }

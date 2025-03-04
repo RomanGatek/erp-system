@@ -11,9 +11,9 @@
                 "DB_NAME": "erp_system_db",
                 "DB_USER": "sda",
                 "DB_PASS": "sda",
+                "FILE_UPLOAD_DIR": "../frontend/public/uploads",
                 "DB_URL": "localhost",
                 "DB_PORT": "3306",
-                "FILE_UPLOAD_DIR": "./frontend/public/uploads",
                 "JWT_SECRET": "Ym5qaWJqQkpLQmpoaWxnYkpLSEdqaHlUR2lwdWdJVVRHaXVBRVRHdWl0Z2hFSXRoOlBFUDpldHc="
             }
         },
