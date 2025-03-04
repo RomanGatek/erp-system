@@ -1,11 +1,8 @@
 package cz.syntaxbro.erpsystem.utils;
 
-import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.repositories.*;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
-import cz.syntaxbro.erpsystem.repositories.PermissionRepository;
-import cz.syntaxbro.erpsystem.repositories.RoleRepository;
-import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,16 +42,21 @@ class DataLoaderTest {
     @Autowired
     private ProductRepository productRepository; // Directly injected by Spring
 
+    private final InventoryRepository inventoryRepository;
+
     /**
      * Constructor to manually inject required repositories.
      * This ensures the repositories are properly initialized for testing.
      */
     DataLoaderTest(@Autowired RoleRepository roleRepository,
                    @Autowired UserRepository userRepository,
-                   @Autowired PermissionRepository permissionRepository) {
+                   @Autowired PermissionRepository permissionRepository,
+                   @Autowired InventoryRepository inventoryRepository
+    ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
+        this.inventoryRepository = null;
     }
 
     /**
@@ -66,7 +68,7 @@ class DataLoaderTest {
     void setUp() {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
-        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository);
+        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository, inventoryRepository);
         dataLoader.run(); // Populates database with initial data.
     }
 
