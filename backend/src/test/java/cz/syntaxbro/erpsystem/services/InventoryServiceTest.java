@@ -50,25 +50,30 @@ public class InventoryServiceTest {
 
     @Test
     void testUpdateQuantity() {
-        when(inventoryRepository.updateQuantity(1L, 20)).thenReturn(1);
+        Long itemId = 1L;
+        int newQuantity = 20;
 
-        assertDoesNotThrow(() -> inventoryService.updateQuantity(1L, 20));
+        when(inventoryRepository.updateQuantity(itemId, newQuantity)).thenReturn(1);
 
-        verify(inventoryRepository, times(1)).updateQuantity(1L, 20);
+        assertDoesNotThrow(() -> inventoryService.updateQuantity(itemId, newQuantity));
+
+        verify(inventoryRepository, times(1)).updateQuantity(itemId, newQuantity);
     }
 
     @Test
     void testUpdateInvalidQuantity() {
-// Arrange: Mock the repository to return 0 (no rows updated)
-        when(inventoryRepository.updateQuantity(99L, 20)).thenReturn(0);
+        Long itemId = 1L;
+        int newQuantity = 20;
+
+        when(inventoryRepository.updateQuantity(itemId, newQuantity)).thenReturn(0);
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
-                inventoryService.updateQuantity(99L, 20)
+                inventoryService.updateQuantity(itemId, newQuantity)
         );
 
-        assertEquals("Item with id 99 not found", exception.getMessage());
+        assertEquals("Item with id 1 not found", exception.getMessage());
 
-        verify(inventoryRepository, times(1)).updateQuantity(99L, 20);
+        verify(inventoryRepository, times(1)).updateQuantity(itemId, newQuantity);
     }
 
 
@@ -99,5 +104,4 @@ public class InventoryServiceTest {
         assertEquals(HttpStatus.NOT_ACCEPTABLE, exception.getStatusCode());
         assertEquals("not enough quantity of product", exception.getReason());
     }
-
 }

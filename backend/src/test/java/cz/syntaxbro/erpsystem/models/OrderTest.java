@@ -21,13 +21,13 @@ public class OrderTest {
         Product product = new Product();
 
         // Act: Create a new order with specified values
-        Order order = new Order(1L, product, 5, 100.0, Order.Status.ORDERED, LocalDateTime.now());
+        Order order = new Order(1L, product, 5, 100.0, Order.Status.PENDING, LocalDateTime.now());
 
         // Assert: Verify that all order attributes were set correctly
         assertEquals(1L, order.getId(), "Order ID should be 1");
         assertEquals(product, order.getProduct(), "Order product should match the provided product");
         assertEquals(5, order.getAmount(), "Order amount should be 5");
         assertEquals(100.0, order.getCost(), "Order cost should be 100.0");
-        assertEquals(Order.Status.ORDERED, order.getStatus(), "Order status should be ORDERED");
+        assertEquals(Order.Status.PENDING, order.getStatus(), "Order status should be ORDERED");
     }
 }

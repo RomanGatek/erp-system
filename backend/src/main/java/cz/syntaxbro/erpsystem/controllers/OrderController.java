@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity()
 @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
 public class OrderController {
 
@@ -88,11 +88,18 @@ public class OrderController {
 
     @PostMapping("/create")
     public ResponseEntity<Order> createOrder(
-            @RequestBody
-            @Valid
-            OrderRequest orderDto) {
-        Order createdOrder = orderService.createdOrder(orderDto);
+            @RequestParam @Min(value = 1, message = "Must be a number") Long itemId,
+            @RequestParam @Min(value = 1, message = "Must be positive number") int quantity) {
+        Order createdOrder = orderService.createdOrder(itemId, quantity);
         return ResponseEntity.ok(createdOrder);
+    }
+
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancelOrder(
+            @PathVariable @Min(value = 1, message = "Must be a number") Long orderId) {
+        orderService.cancelOrder(orderId);
+
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")

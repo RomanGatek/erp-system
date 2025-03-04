@@ -1,10 +1,12 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.services.InventoryService;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +26,15 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final ProductService productService;
+    private final InventoryService inventoryService;
+
 
     @Autowired
-    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService) {
+    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService, InventoryService inventoryService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.productService = productService;
+        this.inventoryService = inventoryService;
     }
 
     @Override
@@ -69,12 +74,41 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createdOrder(OrderRequest orderDto) {
-        //map to OrderDto to Order
-        Order createdOrder = mapToEntity(orderDto, new Order());
-        orderRepository.save(createdOrder);
-        return createdOrder;
+    public Order createdOrder(Long itemId, int quantity) {
+        if (!inventoryService.isStockAvailable(itemId, quantity)) {
+            throw new IllegalArgumentException("Not enough stock available");
+        }
+
+        inventoryService.reserveStock(itemId, quantity);
+
+        InventoryItem item = inventoryService.getItem(itemId);
+        double productCost = item.getProduct().getPrice();
+
+        Order order = Order.builder()
+                .cost(productCost * quantity)
+                .product(item.getProduct())
+                .orderTime(LocalDateTime.now())
+                .amount(quantity)
+                .status(Order.Status.PENDING)
+                .build();
+
+        orderRepository.save(order);
+
+        return order;
     }
+
+    @Override
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() == Order.Status.PENDING) {
+            Long itemId = inventoryService.findItemByProduct(order.getProduct()).getId();
+            inventoryService.releaseStock(itemId, order.getAmount());
+            order.setStatus(Order.Status.CANCELED);
+        }
+    }
+
 
     @Override
     public void updateOrder(Long id, OrderRequest orderDto) {
