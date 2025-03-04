@@ -70,7 +70,6 @@ public class OrderServiceTest {
 
     @Test
     public void testCreatedOrder() {
-
         Long itemId = 1L;
         int quantity = 5;
         Product product = new Product(1L, "New Product", 22.2, "Description");
@@ -78,7 +77,7 @@ public class OrderServiceTest {
 
         when(inventoryService.isStockAvailable(itemId, quantity)).thenReturn(true);
         when(inventoryService.getItem(itemId)).thenReturn(inventoryItem);
-        doNothing().when(inventoryService).updateQuantity(itemId, quantity); // <- Oprava pre void metódu
+        doNothing().when(inventoryService).reserveStock(itemId, quantity);
         when(orderRepository.save(any(Order.class)))
                 .thenAnswer(invocation -> {
                     Order savedOrder = invocation.getArgument(0);
@@ -90,35 +89,44 @@ public class OrderServiceTest {
 
         assertEquals(1L, result.getId());
         assertEquals(product, result.getProduct());
-        assertEquals(5, result.getAmount());
-        assertEquals(22.2 * 5, result.getCost()); // Dynamicky vypočítaná cena
-        assertEquals(Order.Status.PENDING, result.getStatus()); // Status podľa implementácie
+        assertEquals(quantity, result.getAmount());
+        assertEquals(22.2 * quantity, result.getCost(), 0.01);
+        assertEquals(Order.Status.PENDING, result.getStatus());
         assertNotNull(result.getOrderTime());
 
-        verify(inventoryService, times(1)).updateQuantity(itemId, quantity);
+        verify(inventoryService, times(1)).isStockAvailable(itemId, quantity);
+        verify(inventoryService, times(1)).reserveStock(itemId, quantity);
+        verify(orderRepository, times(1)).save(any(Order.class));
     }
 
     @Test
     void testCreateOrderWithSufficientStock() {
         Long itemId = 1L;
         int quantity = 5;
+        Product product = new Product(1L, "New Product", 22.2, "Description");
+        InventoryItem inventoryItem = new InventoryItem(1L, product, 10);
 
         when(inventoryService.isStockAvailable(itemId, quantity)).thenReturn(true);
-        when(inventoryService.getItem(itemId)).thenReturn(testItem);
+        when(inventoryService.getItem(itemId)).thenReturn(inventoryItem);
+        doNothing().when(inventoryService).reserveStock(itemId, quantity);
+        when(orderRepository.save(any(Order.class)))
+                .thenAnswer(invocation -> {
+                    Order savedOrder = invocation.getArgument(0);
+                    savedOrder.setId(1L);
+                    return savedOrder;
+                });
 
-        Order mockOrder = new Order();
-        when(orderRepository.save(any(Order.class))).thenReturn(mockOrder);
+        Order result = orderService.createdOrder(itemId, quantity);
 
-        Order createdOrder = orderService.createdOrder(itemId, quantity);
-
-        assertNotNull(createdOrder);
-        assertEquals(testProduct, createdOrder.getProduct());
-        assertEquals(quantity, createdOrder.getAmount());
-        assertEquals(testProduct.getPrice() * quantity, createdOrder.getCost());
-        assertEquals(Order.Status.PENDING, createdOrder.getStatus());
+        assertEquals(1L, result.getId());
+        assertEquals(product, result.getProduct());
+        assertEquals(quantity, result.getAmount());
+        assertEquals(22.2 * quantity, result.getCost(), 0.01);
+        assertEquals(Order.Status.PENDING, result.getStatus());
+        assertNotNull(result.getOrderTime());
 
         verify(inventoryService, times(1)).isStockAvailable(itemId, quantity);
-        verify(inventoryService, times(1)).updateQuantity(itemId, quantity);
+        verify(inventoryService, times(1)).reserveStock(itemId, quantity);
         verify(orderRepository, times(1)).save(any(Order.class));
     }
 
