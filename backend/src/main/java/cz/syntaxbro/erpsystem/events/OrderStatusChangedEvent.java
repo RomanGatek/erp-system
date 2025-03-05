@@ -1,8 +1,10 @@
 package cz.syntaxbro.erpsystem.events;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@Getter
 public class OrderStatusChangedEvent {
 
     private final Long orderId;
@@ -14,11 +16,4 @@ public class OrderStatusChangedEvent {
         this.status = status;
     }
 
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public Order.Status getStatus() {
-        return status;
-    }
 }
