@@ -51,12 +51,14 @@ class DataLoaderTest {
     DataLoaderTest(@Autowired RoleRepository roleRepository,
                    @Autowired UserRepository userRepository,
                    @Autowired PermissionRepository permissionRepository,
-                   @Autowired InventoryRepository inventoryRepository
+                   @Autowired InventoryRepository inventoryRepository,
+                   @Autowired ProductRepository productRepository
     ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
-        this.inventoryRepository = null;
+        this.inventoryRepository = inventoryRepository;
+        this.productRepository = productRepository;
     }
 
     /**
