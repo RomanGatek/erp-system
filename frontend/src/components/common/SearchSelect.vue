@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { ref, computed, defineEmits, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import BaseInput from './BaseInput.vue';
 
 const props = defineProps({
