@@ -1,0 +1,41 @@
+{
+    "configurations": [
+        {
+            "type": "gradle",
+            "name": "Gradle Run SpringBoot",
+            "tasks": [
+                "clean",
+                "bootRun"
+            ],
+            "environment": {
+                "DB_NAME": "erp_system_db",
+                "DB_USER": "sda",
+                "DB_PASS": "sda",
+                "FILE_UPLOAD_DIR": "../frontend/public/uploads",
+                "DB_URL": "localhost",
+                "DB_PORT": "3306",
+                "JWT_SECRET": "Ym5qaWJqQkpLQmpoaWxnYkpLSEdqaHlUR2lwdWdJVVRHaXVBRVRHdWl0Z2hFSXRoOlBFUDpldHc="
+            }
+        },
+        {
+            "type": "gradle",
+            "name": "Gradle Run SpringBootTest",
+            "tasks": [
+                "clean",
+                "test"
+            ],
+            "environment": {
+                "FILE_UPLOAD_DIR": "./frontend/public/uploads",
+                "JWT_SECRET": "Ym5qaWJqQkpLQmpoaWxnYkpLSEdqaHlUR2lwdWdJVVRHaXVBRVRHdWl0Z2hFSXRoOlBFUDpldHc="
+            }
+        },
+        {
+            "type": "command",
+            "name": "Run Bun dev",
+            "workingDir": "frontend/",
+            "program": "bun",
+            "allowParallelRun": true,
+            "args": ["run", "dev"]
+        }
+    ]
+}

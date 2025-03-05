@@ -29,9 +29,17 @@ class RoleControllerTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize a sample role object for testing
         role = new Role(1L, "ROLE_TEST", new HashSet<>());
     }
 
+    /**
+     * Test: Should return a list of roles.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null list containing at least one role
+     * - The first role's name should be "ROLE_TEST"
+     */
     @Test
     void getAllRoles_ShouldReturnListOfRoles() {
         when(roleService.getAllRoles()).thenReturn(List.of(role));
@@ -40,11 +48,18 @@ class RoleControllerTest {
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).isNotNull().hasSize(1);
-        assertThat(response.getBody().get(0).getName()).isEqualTo("ROLE_TEST");
+        assertThat(response.getBody().getFirst().getName()).isEqualTo("ROLE_TEST");
 
         verify(roleService, times(1)).getAllRoles();
     }
 
+    /**
+     * Test: Should return a role by its ID.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null role object
+     * - The role name should be "ROLE_TEST"
+     */
     @Test
     void getRoleById_ShouldReturnRole() {
         when(roleService.getRoleById(1L)).thenReturn(role);
@@ -58,6 +73,13 @@ class RoleControllerTest {
         verify(roleService, times(1)).getRoleById(1L);
     }
 
+    /**
+     * Test: Should return a role by its name.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null role object
+     * - The role name should be "ROLE_TEST"
+     */
     @Test
     void getRoleByName_ShouldReturnRole() {
         when(roleService.getRoleByName("ROLE_TEST")).thenReturn(role);
@@ -71,6 +93,13 @@ class RoleControllerTest {
         verify(roleService, times(1)).getRoleByName("ROLE_TEST");
     }
 
+    /**
+     * Test: Should create a new role.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null role object
+     * - The created role name should be "ROLE_TEST"
+     */
     @Test
     void createRole_ShouldReturnCreatedRole() {
         when(roleService.createRole(role.getName())).thenReturn(role);
@@ -84,6 +113,11 @@ class RoleControllerTest {
         verify(roleService, times(1)).createRole("ROLE_TEST");
     }
 
+    /**
+     * Test: Should delete a role by ID.
+     * Expected Outcome:
+     * - HTTP 204 No Content status
+     */
     @Test
     void deleteRole_ShouldReturnNoContent_WhenRoleExists() {
         doNothing().when(roleService).deleteRole(1L);
@@ -95,6 +129,12 @@ class RoleControllerTest {
         verify(roleService, times(1)).deleteRole(1L);
     }
 
+    /**
+     * Test: Should assign a permission to a role.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null updated role object
+     */
     @Test
     void addPermissionToRole_ShouldReturnUpdatedRole() {
         when(roleService.assignPermissionToRole(1L, 1L)).thenReturn(role);
@@ -107,6 +147,12 @@ class RoleControllerTest {
         verify(roleService, times(1)).assignPermissionToRole(1L, 1L);
     }
 
+    /**
+     * Test: Should remove a permission from a role.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null updated role object
+     */
     @Test
     void removePermissionFromRole_ShouldReturnUpdatedRole() {
         when(roleService.removePermissionFromRole(1L, 1L)).thenReturn(role);
@@ -119,6 +165,12 @@ class RoleControllerTest {
         verify(roleService, times(1)).removePermissionFromRole(1L, 1L);
     }
 
+    /**
+     * Test: Should assign multiple permissions to a role.
+     * Expected Outcome:
+     * - HTTP 200 OK status
+     * - A non-null updated role object
+     */
     @Test
     void assignPermissionsToRole_ShouldReturnUpdatedRole() {
         List<Long> permissionIds = List.of(1L, 2L);

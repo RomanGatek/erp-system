@@ -56,6 +56,9 @@ public class MeController {
         currentUser.setFirstName(user.getFirstName());
         currentUser.setLastName(user.getLastName());
         currentUser.setActive(user.isActive());
+        if (user.getAvatar() == null) {
+            currentUser.setAvatar(null);
+        }
         var savedUser = userRepository.save(currentUser);
         logger.info("UPDATE me user: {}", savedUser);
         return ResponseEntity.ok(savedUser);

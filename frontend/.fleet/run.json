@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        
+        {
+            "name": "products.spec.js (1)",
+            "type": "vitest",
+            "workingDir": "$PROJECT_DIR$",
+            "file": "$PROJECT_DIR$/tests/products.spec.js",
+            "testNames": [],
+            "vitestOptions": ["--run"]
+        }
+    ]
+}

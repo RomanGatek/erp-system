@@ -1,165 +1,88 @@
 import { defineStore } from 'pinia';
-import {user as api} from '@/services/api'
-import { ref, computed } from 'vue'
-import { notify } from '@kyvg/vue3-notification'
+import { api } from '@/services/api'
+import {
+  filter,
+  setupSort
+} from '@/utils/table-utils.js'
+import { __paginate } from '@/utils/pagination.js'
 
-export const useProductsStore = defineStore('products', () => {
-    const products = ref([])
-    const error = ref(null)
-    const searchQuery = ref('')
-    const sorting = ref({ field: 'name', direction: 'asc' })
-    const pagination = ref({
-        currentPage: 1,
-        perPage: 10
-    })
-
-    const filteredProducts = computed(() => {
-        if (!searchQuery.value) return products.value
-
-        return products.value.filter(product =>
-            product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            product.price.toString().includes(searchQuery.value)
-        )
-    })
-
-    // Seřazené a stránkované produkty
-    const paginatedProducts = computed(() => {
-        const sorted = [...filteredProducts.value].sort((a, b) => {
-            const aValue = a[sorting.value.field]
-            const bValue = b[sorting.value.field]
-
-            if (sorting.value.direction === 'asc') {
-                return aValue > bValue ? 1 : -1
+export const useProductsStore = defineStore('products', {
+    state: () => ({
+        items: [],
+        loading: false,
+        error: null,
+        pagination: { currentPage: 1, perPage: 10 },
+        sorting: setupSort('name'),
+        searchQuery: '',
+    }),
+    getters: {
+        filtered: (state) => filter(state, (product) => {
+            const search = state.searchQuery.toLocaleLowerCase();
+            return product.name.toLowerCase().includes(search) ||
+            product.price.toString().includes(search)
+        }),
+        paginateItems: (state) => __paginate(state)
+    },
+    actions: {
+        async fetchProducts() {
+            console.log('fetchin intems')
+            this.loading = true;
+            try {
+                const response = await api.get('/products');
+                this.items = response.data;
+                this.error = null;
+            } catch (err) {
+                this.error = err;
+            } finally {
+                this.loading = false;
             }
-            return aValue < bValue ? 1 : -1
-        })
-
-        const start = (pagination.value.currentPage - 1) * pagination.value.perPage
-        const end = start + pagination.value.perPage
-
-        return sorted.slice(start, end)
-    })
-
-    // Metody
-    const fetchProducts = async () => {
-        try {
-            const response = await api.get('/products');
-            products.value = response.data;
-            error.value = null;
-        } catch (err) {
-            error.value = err.message;
-        }
-    }
-
-    const addProduct = async (product) => {
-        try {
-            await api.post('/products', product);
-            await fetchProducts();
-            notify({
-                type: 'success',
-                text: 'Produkt byl úspěšně přidán',
-                duration: 5000,
-                speed: 500
-            });
-            error.value = null;
-        } catch (err) {
-            error.value = err.message;
-            notify({
-                type: 'error',
-                text: 'Chyba při přidání produktu: ' + err.message,
-                duration: 5000,
-                speed: 500
-            });
-            throw err;
-        }
-    }
-
-    const updateProduct = async (id, productData) => {
-        try {
-            await api.put(`/products/${id}`, productData);
-
-            const index = products.value.findIndex(p => p.id === id);
-            if (index !== -1) {
-                products.value[index] = {
-                    ...products.value[index],
-                    ...productData,
-                    id
-                };
+        },
+        async addProduct(product) {
+            try {
+                await api.post('/products', product);
+                await this.fetchProducts();
+            } catch (err) {
+                this.error = err;
             }
-
-            notify({
-                type: 'success',
-                text: 'Produkt byl úspěšně aktualizován',
-                duration: 5000,
-                speed: 500
-            });
-
-            error.value = null;
-        } catch (err) {
-            error.value = err.message;
-            notify({
-                type: 'error',
-                text: 'Chyba při aktualizaci produktu: ' + err.message,
-                duration: 5000,
-                speed: 500
-            });
-            throw err;
+        },
+        async updateProduct(id, productData) {
+            try {
+                await api.put(`/products/${id}`, productData);
+                const index = this.items.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    this.items[index] = {
+                        ...this.items[index],
+                        ...productData,
+                        id
+                    };
+                }
+            } catch (err) {
+                this.error = err;
+            }
+        },
+        async deleteProduct(productId) {
+            try {
+                await api.delete(`/products/${productId}`);
+                await this.fetchProducts();
+                this.error = null;
+            } catch (err) {
+                this.error = err;
+            }
+        },
+        setSearch(query) {
+            this.searchQuery = query;
+            this.pagination.currentPage = 1; // Reset to the first page when searching
+        },
+        setSorting(field) {
+            if (this.sorting.field === field) {
+                this.sorting.direction = this.sorting.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sorting.field = field;
+                this.sorting.direction = 'asc';
+            }
+        },
+        setPage(page) {
+            this.pagination.currentPage = page;
         }
-    }
-
-    const deleteProduct = async (productId) => {
-        try {
-            await api.delete(`/products/${productId}`);
-            await fetchProducts();
-            notify({
-                type: 'success',
-                text: 'Produkt byl úspěšně smazán',
-                duration: 5000,
-                speed: 500
-            });
-            error.value = null;
-        } catch (err) {
-            error.value = err.message;
-            notify({
-                type: 'error',
-                text: 'Chyba při mazání produktu: ' + err.message,
-                duration: 5000,
-                speed: 500
-            });
-            throw err;
-        }
-    }
-
-    const setSearch = (query) => {
-        searchQuery.value = query
-        pagination.value.currentPage = 1 // Reset na první stránku při vyhledávání
-    }
-
-    const setSorting = (field) => {
-        if (sorting.value.field === field) {
-            sorting.value.direction = sorting.value.direction === 'asc' ? 'desc' : 'asc'
-        } else {
-            sorting.value = { field, direction: 'asc' }
-        }
-    }
-
-    const setPage = (page) => {
-        pagination.value.currentPage = page
-    }
-
-    return {
-        products,
-        error,
-        sorting,
-        pagination,
-        filteredProducts,
-        paginatedProducts,
-        fetchProducts,
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        setSearch,
-        setSorting,
-        setPage
     }
 })

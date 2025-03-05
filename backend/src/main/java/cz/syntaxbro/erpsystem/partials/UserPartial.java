@@ -25,4 +25,6 @@ public class UserPartial {
     private boolean isActive;
 
     private Set<String> roles;
+    
+    private String avatar;
 }

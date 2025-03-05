@@ -1,14 +1,14 @@
 <template>
   <div class="w-full max-w-7xl mx-auto px-4">
     <div class="flex justify-center mb-16 space-x-4">
-      <button 
+      <button
         @click="$emit('changeSection', 'hero')"
         class="group px-6 py-3 bg-white/15 backdrop-blur-lg text-gray-700 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
       >
         <span class="relative z-10">Back to Home</span>
         <div class="absolute inset-0 bg-gradient-to-r from-gray-500/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </button>
-      <button 
+      <button
         @click="$emit('changeSection', 'about')"
         class="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden"
       >
@@ -16,16 +16,16 @@
         <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </button>
     </div>
-    
+
     <h2 class="text-5xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
       Our Development Team
     </h2>
     <p class="text-xl text-gray-600 text-center mb-16 max-w-3xl mx-auto leading-relaxed">
       Meet our talented team of developers working on this ERP system
     </p>
-    
+
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-      <div v-for="member in teamMembers" :key="member.name" 
+      <div v-for="member in teamMembers" :key="member.name"
         class="group relative bg-white/10 backdrop-blur-2xl rounded-2xl p-6 transition-all duration-500 hover:bg-white/15 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] overflow-hidden border-b-[3px] border-transparent hover:border-blue-500/50"
       >
         <div class="relative z-10 flex flex-col items-center">
@@ -37,9 +37,9 @@
                 {{ getInitials(member.name) }}
               </span>
             </div>
-            
+
             <!-- GitHub Avatar Overlay -->
-            <img 
+            <img
               v-if="member.github"
               :src="`${member.github}.png`"
               :alt="`${member.name}'s GitHub avatar`"
@@ -47,11 +47,11 @@
               @error="handleImageError"
             />
           </div>
-          
+
           <!-- Info -->
           <h3 class="text-base font-semibold text-gray-800 mb-1 text-center">{{ member.name }}</h3>
           <p class="text-sm text-gray-500 text-center mb-2">{{ member.role }}</p>
-          <p v-if="member.description || memberBios[member.name]" 
+          <p v-if="member.description || memberBios[member.name]"
              :class="[
                'text-sm text-gray-500 text-center mb-4 line-clamp-2',
                { 'animate-pulse': isLoading[member.name] }
@@ -61,7 +61,7 @@
           </p>
 
           <!-- GitHub Link -->
-          <a v-if="member.github" 
+          <a v-if="member.github"
              :href="member.github"
              target="_blank"
              class="text-blue-500 hover:text-blue-600 transition-colors duration-300"
@@ -81,6 +81,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   teamMembers: {
@@ -118,11 +119,10 @@ const handleImageError = (e) => {
 const fetchGithubBio = async (githubUrl) => {
   try {
     const username = githubUrl.split('/').pop()
-    const response = await fetch(`https://api.github.com/users/${username}`)
-    const data = await response.json()
-    
+    const response = await axios.get(`https://api.github.com/users/${username}`)
+    const data = await response.data;
+
     if (data.bio) {
-      // Omezíme délku na 100 znaků a přidáme tři tečky pokud je delší
       return data.bio.length > 100 ? data.bio.substring(0, 97) + '...' : data.bio
     }
     return null
@@ -150,13 +150,15 @@ onMounted(async () => {
 .gradient-text {
   background: linear-gradient(to right, #3b82f6, #2563eb);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-</style> 
+</style>

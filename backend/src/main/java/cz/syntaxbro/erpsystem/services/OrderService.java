@@ -18,7 +18,7 @@ public interface OrderService {
 
     List<Order> getOrdersByProduct(Long productId);
 
-    Order createdOrder(OrderRequest orderDto);
+    Order createdOrder(Long itemId, int quantity);
 
     void updateOrder(Long id, OrderRequest orderDto);
 
@@ -28,4 +28,5 @@ public interface OrderService {
 
     void deleteOrderByProductId(Long productId);
 
+    void cancelOrder(Long orderId);
 }

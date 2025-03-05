@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.InventoryItem;
+import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.impl.InventoryServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
@@ -10,6 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -24,14 +29,12 @@ public class InventoryServiceTest {
     private InventoryServiceImpl inventoryService;
 
     private InventoryItem item1;
-    private InventoryItem item2;
-    private InventoryItem item3;
+
+    private final Product product = new Product(1L, "Test Product", 50.0, "Sample product description");
 
     @BeforeEach
     void setUp() {
-        item1 = new InventoryItem(1L, "Test Item", 10);
-        item2 = new InventoryItem(2L, "Test Item", 5);
-        item3 = new InventoryItem(3L, "Test Item", 5);
+        item1 = new InventoryItem(1L, product, 10);
     }
 
     @Test
@@ -42,29 +45,63 @@ public class InventoryServiceTest {
 
         assertNotNull(result);
         assertEquals(item1.getId(), result.getId());
-        assertEquals("Test Item", result.getName());
+        assertEquals("Test Product", result.getProduct().getName());
     }
 
     @Test
     void testUpdateQuantity() {
-        when(inventoryRepository.updateQuantity(1L, 20)).thenReturn(1);
+        Long itemId = 1L;
+        int newQuantity = 20;
 
-        assertDoesNotThrow(() -> inventoryService.updateQuantity(1L, 20));
+        when(inventoryRepository.updateQuantity(itemId, newQuantity)).thenReturn(1);
 
-        verify(inventoryRepository, times(1)).updateQuantity(1L, 20);
+        assertDoesNotThrow(() -> inventoryService.updateQuantity(itemId, newQuantity));
+
+        verify(inventoryRepository, times(1)).updateQuantity(itemId, newQuantity);
     }
 
     @Test
     void testUpdateInvalidQuantity() {
-// Arrange: Mock the repository to return 0 (no rows updated)
-        when(inventoryRepository.updateQuantity(99L, 20)).thenReturn(0);
+        Long itemId = 1L;
+        int newQuantity = 20;
+
+        when(inventoryRepository.updateQuantity(itemId, newQuantity)).thenReturn(0);
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
-                inventoryService.updateQuantity(99L, 20)
+                inventoryService.updateQuantity(itemId, newQuantity)
         );
 
-        assertEquals("Item with id 99 not found", exception.getMessage());
+        assertEquals("Item with id 1 not found", exception.getMessage());
 
-        verify(inventoryRepository, times(1)).updateQuantity(99L, 20);
+        verify(inventoryRepository, times(1)).updateQuantity(itemId, newQuantity);
+    }
+
+
+    @Test
+    void receiveStock_successfully() {
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
+        inventoryService.receiveStock(1L, 100);
+        assertEquals(110, item1.getQuantity());
+        verify(inventoryRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void releaseStock_successfully() {
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
+        inventoryService.receiveStock(1L, 400);
+        inventoryService.releaseStock(1L, 1);
+        assertEquals(409, item1.getQuantity());
+        verify(inventoryRepository, times(2)).findById(1L);
+    }
+
+    @Test void releaseStock_config_noEnoughQuantity() {
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> inventoryService.releaseStock(1L, 300)
+        );
+        assertEquals(HttpStatus.NOT_ACCEPTABLE, exception.getStatusCode());
+        assertEquals("not enough quantity of product", exception.getReason());
     }
 }

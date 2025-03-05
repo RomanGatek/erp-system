@@ -75,7 +75,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorEntity> handleDuplicateEntry(DataIntegrityViolationException ex) {
         var entity = new ErrorEntity("database", ex.getMessage());
         if (ex.getMessage().contains("Duplicate entry")) {
-            entity.setMessage("Item with this name already exists.");
+
+            ErpSystemApplication.getLogger().warn(ex.getMessage());
+
+            String key = ex.getMessage().substring(ex.getMessage().indexOf("entry '") + 7, ex.getMessage().indexOf("' for"));
+
+            ErpSystemApplication.getLogger().warn(ex.getMessage());
+            entity.setMessage("Entity with this name '" + key + "' already exists.");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(entity);
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
