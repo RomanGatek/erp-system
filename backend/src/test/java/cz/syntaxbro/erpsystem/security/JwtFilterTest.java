@@ -74,16 +74,20 @@ class JwtFilterTest {
      */
     @Test
     void shouldAuthenticateUser_whenValidTokenProvided() throws ServletException, IOException {
-        // Act: Execute the filter
+        // Arrange
+        when(jwtUtil.validateToken(validToken, userDetails)).thenReturn(true);
+        when(jwtUtil.extractUsername(validToken)).thenReturn("testUser");
+        when(userDetailsService.loadUserByUsername("testUser")).thenReturn(userDetails);
+
+        // Act
         jwtFilter.doFilterInternal(request, response, filterChain);
 
-        // Assert: Verify authentication is set in security context
+        // Assert
         UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 
         assertThat(auth).isNotNull();
         assertThat(auth.getPrincipal()).isEqualTo(userDetails);
 
-        // Verify that request was passed to next filter
         verify(filterChain).doFilter(request, response);
     }
 
