@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Unit test for JwtFilter.
  * Ensures that JWT tokens are correctly processed and authentication is applied.
  */
+@SpringBootTest(properties = {"spring.profiles.active=test"})
 class JwtFilterTest {
 
     @Mock
