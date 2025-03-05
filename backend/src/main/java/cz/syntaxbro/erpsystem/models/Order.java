@@ -30,7 +30,7 @@ public class Order {
     private double cost;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", length = 10)
     private Status status;
 
     @Column(name = "order_time")
