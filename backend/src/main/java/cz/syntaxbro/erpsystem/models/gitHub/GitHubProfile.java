@@ -29,7 +29,7 @@ public class GitHubProfile {
     private String url;
     @Column(name = "user_information")
     private String userInformation;
-    @OneToMany(mappedBy = "git_hub_profile")
+    @OneToMany(mappedBy = "gitHubProfile")
     private List<Branch> branch = new ArrayList<>();
 
 }

@@ -15,8 +15,10 @@ public class Commit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String sha;
     private String message;
-    @OneToOne(mappedBy = "commit")
-    private Commit commit;
+    @ManyToOne
+    @JoinColumn(name = "branch_id", referencedColumnName = "id")
+    private Branch branch;
 }

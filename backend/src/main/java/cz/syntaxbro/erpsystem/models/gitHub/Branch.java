@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Builder
 @Entity
 @NoArgsConstructor
@@ -15,12 +17,12 @@ public class Branch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String name;
     private String author;
+    @OneToMany(mappedBy = "branch")
+    private List<Commit> commits;
     @ManyToOne
-    @JoinColumn(name = "commit_id", referencedColumnName = "id")
-    private Commit commit;
-    @ManyToOne
-    @JoinColumn(name = "git_hub_profile_id", referencedColumnName = "id")
+    @JoinColumn(name = "gitHubProfile_id", referencedColumnName = "id")
     private GitHubProfile gitHubProfile;
 }

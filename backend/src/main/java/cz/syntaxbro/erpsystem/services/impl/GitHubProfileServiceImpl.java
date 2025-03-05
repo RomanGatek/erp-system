@@ -156,7 +156,7 @@ public class GitHubProfileServiceImpl implements GitHubProfileService {
         Branch branch = Branch.builder()
                 .name(branchName)
                 .author(branchAuthor)
-                .commit(commit)
+                .commits(List.of(commit))
                 .build();
         branchRepository.save(branch);
     }
