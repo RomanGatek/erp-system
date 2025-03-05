@@ -3,6 +3,7 @@ export const setupSort = (field) => {
   return { field, direction: 'asc' }
 }
 
+
 export const sort = (state, filtered) => {
   if (state.sorting.field !== 'actions') {
     filtered.sort((a, b) => {
