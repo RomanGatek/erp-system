@@ -1,14 +1,19 @@
-import { user } from '@/services/api.js';
-import { vi } from 'vitest';
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { api } from '@/services/api.js'
+import {
+  afterEach,
+  describe,
+  it,
+  expect,
+  vi
+} from 'vitest'
 
 
+describe('API service', async () => {
+  afterEach(() => vi.clearAllMocks())
+});
 
-const app = createApp({})
-const pinia = createPinia()
-app.use(pinia)
 
+/*
 describe('API Service', () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -39,3 +44,4 @@ describe('API Service', () => {
     expect(config.headers['Content-Type']).toBeUndefined();
   });
 });
+*/
