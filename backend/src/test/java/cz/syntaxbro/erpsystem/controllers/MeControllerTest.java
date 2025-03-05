@@ -4,6 +4,7 @@ import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.partials.UserPartial;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.PasswordChangeRequest;
+import cz.syntaxbro.erpsystem.security.FileStorageConfig;
 import cz.syntaxbro.erpsystem.services.AuthService;
 import cz.syntaxbro.erpsystem.services.impl.FileStorageServiceImp;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,10 +13,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,6 +48,8 @@ class MeControllerTest {
     private MeController meController;
 
     private User testUser;
+
+    private final FileStorageConfig fileStorageConfig = new FileStorageConfig();
 
     @BeforeEach
     void setUp() {
@@ -137,7 +150,7 @@ class MeControllerTest {
      * Test: Should throw an exception when the uploaded file is not an image.
      */
     @Test
-    void updateAvatar_ShouldThrowException_WhenFileIsNotImage() {
+    void updateAvatar_ShouldThrowException_WhenFileIsNotImage() throws IOException, URISyntaxException {
         MultipartFile invalidFile = new MockMultipartFile(
                 "avatar", "avatar.jpg", MediaType.TEXT_PLAIN_VALUE, new byte[10]
         );
@@ -150,5 +163,21 @@ class MeControllerTest {
 
         verify(fileStorageService, never()).storeFile(any(MultipartFile.class), anyString());
         verify(userRepository, never()).save(any(User.class));
+        deleteDirectoryRecursively(Paths.get(this.fileStorageConfig.getUploadDir()).toAbsolutePath().normalize());
+    }
+
+    static void deleteDirectoryRecursively(Path path) throws IOException {
+        if (Files.exists(path)) {
+            try (Stream<Path> stream = Files.walk(path)) {
+                stream.sorted(Comparator.reverseOrder()) // nejprve smazat soubory, potom adresáře
+                      .forEach(p -> {
+                          try {
+                              Files.delete(p);
+                          } catch (IOException e) {
+                              throw new RuntimeException("Chyba při mazání " + p, e);
+                          }
+                      });
+            }
+        }
     }
 }
