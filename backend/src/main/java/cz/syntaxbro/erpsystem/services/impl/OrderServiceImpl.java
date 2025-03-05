@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.events.OrderStatusChangedEvent;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
@@ -8,6 +9,7 @@ import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,12 +26,14 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final ProductService productService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService) {
+    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService, ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.productService = productService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -92,6 +96,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrderById(id);
         order.setStatus(newStatus);
         orderRepository.save(order);
+        eventPublisher.publishEvent(new OrderStatusChangedEvent(id, newStatus));
     }
 
     @Override
