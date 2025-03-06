@@ -4,13 +4,17 @@ import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.services.impl.OrderServiceImpl; // Předpokládáme, že máte implementaci
 // Přidejte import pro ProductService
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -28,25 +32,37 @@ public class OrderServiceTest {
     @Mock
     private InventoryService inventoryService; // Přidejte mock pro InventoryService
 
+    @Mock
+    private ProductService productService;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
     private Product testProduct;
     private InventoryItem testItem;
     private Order testOrder;
+    private OrderRequest testOrderDto;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         testProduct = new Product(1L, "Test Product", 50.0, "Test Product Description");
         testItem = new InventoryItem(1L, testProduct, 100);
+        LocalDateTime now = LocalDateTime.now();
         testOrder = Order.builder()
                 .id(1L)
                 .product(testProduct)
                 .amount(10)
                 .cost(testProduct.getPrice() * 10)
                 .status(Order.Status.PENDING)
-                .orderTime(LocalDateTime.now())
+                .orderTime(now)
+                .build();
+        this.testOrderDto = OrderRequest.builder()
+                .productId(testOrder.getProduct().getId())
+                .orderTime(now)
+                .status(testOrder.getStatus())
+                .amount(testOrder.getAmount())
+                .cost(testOrder.getCost())
                 .build();
     }
 
@@ -149,16 +165,23 @@ public class OrderServiceTest {
     @Test
     void testCancelOrderSuccessfully() {
         Long orderId = 1L;
+        int itemQuantityBeforeCanceled = this.testItem.getQuantity();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(testOrder));
         when(inventoryService.findItemByProduct(testProduct)).thenReturn(testItem);
+        doAnswer(invocation -> {
+            testItem.setQuantity(testItem.getQuantity() + testOrder.getAmount());
+            return null; // Because it's void
+        }).when(inventoryService).receiveStock(testItem.getId(), testOrder.getAmount());
 
         orderService.cancelOrder(orderId);
 
         assertEquals(Order.Status.CANCELED, testOrder.getStatus());
 
-        verify(inventoryService, times(1)).releaseStock(testItem.getId(), testOrder.getAmount());
+        assertNotNull(testOrder.getOrderTime());
+        assertEquals(testItem.getQuantity(), testOrder.getAmount() + itemQuantityBeforeCanceled);
         verify(orderRepository, times(1)).findById(orderId);
+        verify(orderRepository, times(1)).save(testOrder);
     }
 
     @Test
@@ -188,4 +211,39 @@ public class OrderServiceTest {
         assertEquals(Order.Status.CONFIRMED, testOrder.getStatus()); // Stav objednávky zostáva nezmenený
         verify(inventoryService, times(0)).releaseStock(anyLong(), anyInt()); // Metóda releaseStock nebola volaná
     }
+
+    @Test
+    void updateOrder_updateOrderWhenItemNotFound() {
+        //Arrest
+        Long orderId = 1L;
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+        //Act
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            orderService.updateOrder(orderId, this.testOrderDto);
+        });
+        //Assert
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("No order found", exception.getReason());
+    }
+
+//    @Test
+//    void updateOrder_updateOrderWhenStatusIsPendingException() {
+//        //Arrest
+//        Long orderId = 1L;
+//        int itemQuantity = this.testItem.getQuantity();
+//        this.testOrderDto.setAmount(5);
+//        when(orderRepository.findById(orderId)).thenReturn(Optional.of(testOrder));
+//        when(inventoryService.findItemByProduct(testProduct)).thenReturn(testItem);
+//        when(productService.isExistById(testProduct.getId())).thenReturn(true);
+//        //Act
+//        doAnswer(invocation -> {
+//            testItem.setQuantity(itemQuantity + testOrder.getAmount());
+//            return null; // Because it's void
+//        }).when(inventoryService).releaseStock(testItem.getId(), testOrder.getAmount());
+//
+//        orderService.updateOrder(orderId, this.testOrderDto);
+//
+//        assertEquals(testOrderDto.getAmount(), testOrder.getAmount());
+//        assertEquals(testOrder.getAmount() + itemQuantity, testItem.getQuantity());
+//    }
 } 
