@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OrderRequest {
 
+    @NotNull(message = "Cost cannot be null")
+    @Positive(message = "Cost must be greater than 0")
     private Integer amount;
 
     @NotNull(message = "Cost cannot be null")
