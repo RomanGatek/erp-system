@@ -158,14 +158,17 @@ public class OrderServiceImpl implements OrderService {
     private Order mapToEntity(OrderRequest orderDto, Order order) {
         long itemId = inventoryService.findItemByProduct(order.getProduct()).getId();
         //Check is orderDto status is PENDING and update order by validates
-        validateForChangesIfStatusIsPending(itemId, orderDto, order);
-        //Check if orderDto status is not PENDING and update order by validates
-        validateForChangesIfStatusIsNotPending(itemId, orderDto, order);
-        return order;
+        if(validateForChangesIfStatusIsPending(itemId, orderDto, order)){
+            return order;
+            //Check if orderDto status is not PENDING and update order by validates
+        }if(validateForChangesIfStatusIsNotPending(itemId, orderDto, order)){
+            return order;
+        }
+        return null;
     }
 
     //If status is pending you can change all
-    private void validateForChangesIfStatusIsPending(long itemId, OrderRequest orderDto, Order order) {
+    private boolean validateForChangesIfStatusIsPending(long itemId, OrderRequest orderDto, Order order) {
         if (orderDto.getStatus() == Order.Status.PENDING) {
             //after change provide changes to item quantity
             setAmount(itemId, orderDto, order);
@@ -174,18 +177,20 @@ public class OrderServiceImpl implements OrderService {
             //after changes provide changes to item quantity
             setStatus(itemId, orderDto, order);
             setOrderTime(orderDto, order);
-        }
+            return true;
+        }return false;
     }
 
     //if orderDto is not PENDING you can change only the STATUS
-    private void validateForChangesIfStatusIsNotPending(long itemId, OrderRequest orderDto, Order order) {
+    private boolean validateForChangesIfStatusIsNotPending(long itemId, OrderRequest orderDto, Order order) {
         if(orderDto.getStatus() != Order.Status.PENDING) {
         if (orderDto.getAmount() != order.getAmount()) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes amount if status is not PENDING");}
         if (!orderDto.getOrderTime().isEqual(order.getOrderTime())) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes order time if status is not PENDING");}
         if (orderDto.getCost() != order.getCost()) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes cost if status is not PENDING");}
         if (!Objects.equals(orderDto.getProductId(), order.getProduct().getId())) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes product if status is not PENDING");}
             setStatus(itemId, orderDto, order);
-        }
+        return true;
+        }return false;
     }
 
     //if change amount get the different between old and new data and change the item quantity
