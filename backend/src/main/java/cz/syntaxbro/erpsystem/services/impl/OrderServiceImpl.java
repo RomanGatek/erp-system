@@ -9,6 +9,7 @@ import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -113,14 +114,15 @@ public class OrderServiceImpl implements OrderService {
 
     //update order with validations by status
     @Override
-    public void updateOrder(Long id, OrderRequest orderDto) {
-        Optional<Order> orderOptional = orderRepository.findById(id);
+    public void updateOrder(Long orderId, @Valid OrderRequest orderDto) {
+        Optional<Order> orderOptional = orderRepository.findById(orderId);
         if (orderOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No order found");
         }
         Order order = orderOptional.get();
         // mapped order with validations
         Order mappedOrder = mapToEntity(orderDto, order);
+        assert mappedOrder != null;
         orderRepository.save(mappedOrder);
     }
 
