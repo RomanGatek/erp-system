@@ -104,8 +104,9 @@ public class OrderServiceImpl implements OrderService {
 
         if (order.getStatus() == Order.Status.PENDING) {
             Long itemId = inventoryService.findItemByProduct(order.getProduct()).getId();
-            inventoryService.releaseStock(itemId, order.getAmount());
+            inventoryService.receiveStock(itemId, order.getAmount());
             order.setStatus(Order.Status.CANCELED);
+            orderRepository.save(order);
         }
     }
 
