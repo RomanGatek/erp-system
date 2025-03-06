@@ -126,6 +126,7 @@ public class OrderServiceImpl implements OrderService {
         if(getOrderById(id) == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
+
         orderRepository.deleteById(id);
 
     }
@@ -133,12 +134,15 @@ public class OrderServiceImpl implements OrderService {
     //delete all orders with witch include order
     @Override
     public void deleteOrderByProductId(Long productId) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isEmpty()) {
+        Product product = productRepository.findById(productId).orElse(null);
+        List<Order> orders = orderRepository.findByProduct(product);
+        if (orders.isEmpty() || product == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found with product id " + productId);
         }
-        Product product = productOptional.get();
-        orderRepository.deleteAll(orderRepository.findByProduct(product));
+        int sumAmountOfOrders = orderRepository.sumAmountWithProduct(product);
+        InventoryItem inventoryItem = inventoryService.findItemByProduct(product);
+        inventoryService.receiveStock(inventoryItem.getId(), sumAmountOfOrders);
+        orderRepository.deleteAll(orders);
     }
 
 
