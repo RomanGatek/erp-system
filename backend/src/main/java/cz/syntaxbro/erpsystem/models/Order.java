@@ -35,6 +35,15 @@ public class Order {
 
     @Column(name = "order_time")
     private LocalDateTime orderTime;
+    
+    @Column(name = "comment", length = 500)
+    private String comment;
+    
+    @Column(name = "approved_by")
+    private String approvedBy;
+    
+    @Column(name = "decision_time")
+    private LocalDateTime decisionTime;
 
     public enum Status {
         PENDING, CONFIRMED, CANCELED

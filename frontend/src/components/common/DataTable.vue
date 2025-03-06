@@ -29,15 +29,16 @@ defineProps({
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-lg border border-gray-100">
+  <div class="relative rounded-lg border border-gray-100">
+    <!-- Fixed Header -->
     <table class="w-full">
-      <thead>
-        <tr class="bg-gray-50 border-b border-gray-100">
+      <thead class="sticky top-0 z-10 bg-gray-50">
+        <tr class="border-b border-gray-100">
           <th
             v-for="header in headers"
             :key="header.field"
             :class="[
-              'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider',
+              'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50',
               header.field === 'actions' ? 'text-right' : 'text-left',
               header.sortable ? 'cursor-pointer hover:bg-gray-100' : '',
               header.class || ''
@@ -65,7 +66,9 @@ defineProps({
           </th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+
+      <!-- Scrollable Body -->
+      <tbody class="divide-y divide-gray-100 bg-white">
         <tr
           v-for="(item, index) in items"
           :key="item.id"
@@ -119,3 +122,42 @@ defineProps({
     </table>
   </div>
 </template>
+
+<style scoped>
+.relative {
+  height: calc(100vh - 300px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+.relative::-webkit-scrollbar {
+  width: 6px;
+}
+
+.relative::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.relative::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 20px;
+}
+
+thead {
+  background-color: #F9FAFB;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure columns align properly */
+th, td {
+  min-width: 100px; /* Adjust based on your needs */
+}
+
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 1;
+}
+</style>

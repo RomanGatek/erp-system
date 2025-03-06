@@ -5,6 +5,7 @@ import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,4 +32,11 @@ public class OrderRequest {
     @NotNull(message = "Status cannot be null")
     @Min(value = 1, message = "Product ID must be greater than 0")
     private Long productId;
+    
+    @Size(max = 500, message = "Comment cannot exceed 500 characters")
+    private String comment;
+    
+    private String approvedBy;
+    
+    private LocalDateTime decisionTime;
 }

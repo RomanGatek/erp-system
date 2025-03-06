@@ -36,13 +36,19 @@ export const navLinks = ref([
         },
         {
           to: '/orders',
-          text: 'Orders',
+          text: 'Create Order',
           requiredRole: 'MANAGER',
           icon: ordersIcon
         },
         {
           to: '/storage',
           text: 'Storage',
+          requiredRole: 'MANAGER',
+          icon: storageIcon
+        },
+        {
+          to: '/stock-orders',
+          text: 'Stock Orders',
           requiredRole: 'MANAGER',
           icon: storageIcon
         }
