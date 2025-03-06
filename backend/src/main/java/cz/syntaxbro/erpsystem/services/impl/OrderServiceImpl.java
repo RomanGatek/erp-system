@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.exceptions.ResourceNotFoundException;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
@@ -11,6 +12,8 @@ import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -40,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long id) {
         return orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order with id " + id + " not found"));
     }
 
     @Override
@@ -63,38 +66,31 @@ public class OrderServiceImpl implements OrderService {
                                               LocalDateTime end) {
         if (end.isBefore(start)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal than start");
-        }return orderRepository.findByDateBetween(start,end);
+        }
+        return orderRepository.findByOrderTimeBetween(start, end);
     }
 
     @Override
     public List<Order> getOrdersByProduct(Long productId) {
-        Product product = productRepository.findById(productId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Product does not exist"));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + productId + " not found"));
         return orderRepository.findByProduct(product);
     }
 
     @Override
     public Order createdOrder(Long itemId, int quantity) {
-        if (!inventoryService.isStockAvailable(itemId, quantity)) {
-            throw new IllegalArgumentException("Not enough stock available");
-        }
-
-        inventoryService.reserveStock(itemId, quantity);
-
-        InventoryItem item = inventoryService.getItem(itemId);
-        double productCost = item.getProduct().getPrice();
+        Product product = productRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + itemId + " not found"));
 
         Order order = Order.builder()
-                .cost(productCost * quantity)
-                .product(item.getProduct())
-                .orderTime(LocalDateTime.now())
+                .product(product)
                 .amount(quantity)
+                .cost(product.getPrice() * quantity)
                 .status(Order.Status.PENDING)
+                .orderTime(LocalDateTime.now())
                 .build();
 
-        orderRepository.save(order);
-
-        return order;
+        return orderRepository.save(order);
     }
 
     @Override
@@ -112,36 +108,88 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void updateOrder(Long id, OrderRequest orderDto) {
-        Optional<Order> orderOptional = orderRepository.findById(id);
-        if (orderOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
-        }
-        Order order = orderOptional.get();
-        Order mappedOrder = mapToEntity(orderDto, order);
-        orderRepository.save(mappedOrder);
+        Order order = getOrderById(id);
+        Product product = productRepository.findById(orderDto.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + orderDto.getProductId() + " not found"));
+
+        order.setProduct(product);
+        order.setAmount(orderDto.getAmount());
+        order.setCost(orderDto.getCost());
+        order.setStatus(orderDto.getStatus());
+        order.setOrderTime(orderDto.getOrderTime());
+        order.setComment(orderDto.getComment());
+        order.setApprovedBy(orderDto.getApprovedBy());
+        order.setDecisionTime(orderDto.getDecisionTime());
+
+        orderRepository.save(order);
     }
 
     @Override
     public void deleteOrder(Long id) {
-        if(getOrderById(id) == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
-        }
-        orderRepository.deleteById(id);
-
+        Order order = getOrderById(id);
+        orderRepository.delete(order);
     }
 
-    //delete all orders with witch include order
     @Override
     public void deleteOrderByProductId(Long productId) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found with product id " + productId);
-        }
-        Product product = productOptional.get();
-        orderRepository.deleteAll(orderRepository.findByProduct(product));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + productId + " not found"));
+        orderRepository.deleteByProduct(product);
     }
 
+    @Override
+    public Order confirmOrder(Long id, String comment) {
+        Order order = getOrderById(id);
+        
+        // Only pending orders can be confirmed
+        if (order.getStatus() != Order.Status.PENDING) {
+            throw new IllegalStateException("Only pending orders can be confirmed");
+        }
+        
+        // Get current user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        order.setStatus(Order.Status.CONFIRMED);
+        order.setComment(comment);
+        order.setApprovedBy(username);
+        order.setDecisionTime(LocalDateTime.now());
+        
+        return orderRepository.save(order);
+    }
 
+    @Override
+    public Order cancelOrder(Long id, String comment) {
+        Order order = getOrderById(id);
+        
+        // Only pending orders can be canceled
+        if (order.getStatus() != Order.Status.PENDING) {
+            throw new IllegalStateException("Only pending orders can be canceled");
+        }
+        
+        // Get current user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        order.setStatus(Order.Status.CANCELED);
+        order.setComment(comment);
+        order.setApprovedBy(username);
+        order.setDecisionTime(LocalDateTime.now());
+        
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public Order addWorkflowComment(Long id, String comment) {
+        Order order = getOrderById(id);
+        order.setComment(comment);
+        return orderRepository.save(order);
+    }
+
+    @Override
+    public List<Order> getOrdersByStatus(Order.Status status) {
+        return orderRepository.findByStatus(status);
+    }
 
     // Converts OrderDto to Order with exceptions.
     private Order mapToEntity(OrderRequest orderDto, Order order) {

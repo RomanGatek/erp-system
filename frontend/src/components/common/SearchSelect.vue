@@ -1,6 +1,6 @@
 <template>
     <div class="relative">
-        <BaseInput v-model="searchQuery" placeholder="Hledat..." :label="label" @focus="showDropdown = true"
+        <BaseInput v-model="searchQuery" placeholder="Search..." :label="label" @focus="showDropdown = true"
             @blur="hideDropdown" v-bind="$attrs" />
         <transition name="fade">
             <div v-if="showDropdown"

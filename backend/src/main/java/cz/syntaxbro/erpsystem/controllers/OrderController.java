@@ -6,6 +6,7 @@ import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class OrderController {
             return ResponseEntity.ok(order);
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<Order>> getAllOrders() {
         return ResponseEntity.ok(orderService.getOrders());
     }
@@ -95,11 +96,29 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/cancel")
-    public ResponseEntity<Void> cancelOrder(
-            @PathVariable @Min(value = 1, message = "Must be a number") Long orderId) {
-        orderService.cancelOrder(orderId);
+    public ResponseEntity<Order> cancelOrder(
+            @PathVariable @Min(value = 1, message = "Must be a number") Long orderId,
+            @RequestBody(required = false) String comment) {
+        Order canceledOrder = orderService.cancelOrder(orderId, comment);
+        return ResponseEntity.ok(canceledOrder);
+    }
 
-        return ResponseEntity.ok().build();
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<Order> confirmOrder(
+            @PathVariable(name = "id") @NotNull Long id,
+            @RequestBody(required = false) String comment) {
+
+        Order confirmedOrder = orderService.confirmOrder(id, comment);
+        return ResponseEntity.ok(confirmedOrder);
+    }
+
+    @PutMapping("/{id}/workflow-comment")
+    public ResponseEntity<Order> addWorkflowComment(
+            @PathVariable(name = "id") @NotNull Long id,
+            @RequestBody @NotNull @Size(max = 500) String comment) {
+
+        Order updatedOrder = orderService.addWorkflowComment(id, comment);
+        return ResponseEntity.ok(updatedOrder);
     }
 
     @PutMapping("/{id}")
@@ -128,5 +147,23 @@ public class OrderController {
             Long id) {
             orderService.deleteOrderByProductId(id);
             return ResponseEntity.ok("Orders with product id " + id + " are deleted");
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<Order>> getPendingOrders() {
+        List<Order> pendingOrders = orderService.getOrdersByStatus(Order.Status.PENDING);
+        return ResponseEntity.ok(pendingOrders);
+    }
+
+    @GetMapping("/confirmed")
+    public ResponseEntity<List<Order>> getConfirmedOrders() {
+        List<Order> confirmedOrders = orderService.getOrdersByStatus(Order.Status.CONFIRMED);
+        return ResponseEntity.ok(confirmedOrders);
+    }
+
+    @GetMapping("/canceled")
+    public ResponseEntity<List<Order>> getCanceledOrders() {
+        List<Order> canceledOrders = orderService.getOrdersByStatus(Order.Status.CANCELED);
+        return ResponseEntity.ok(canceledOrders);
     }
 }

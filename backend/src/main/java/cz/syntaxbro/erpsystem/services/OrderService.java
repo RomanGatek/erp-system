@@ -24,7 +24,13 @@ public interface OrderService {
 
     void deleteOrder(Long id);
 
-    void deleteOrderByProductId(Long productId);
+    void deleteOrderByProductId(Long id);
 
     void cancelOrder(Long orderId);
+
+    // New workflow-related methods
+    Order confirmOrder(Long id, String comment);
+    Order cancelOrder(Long id, String comment);
+    Order addWorkflowComment(Long id, String comment);
+    List<Order> getOrdersByStatus(Order.Status status);
 }

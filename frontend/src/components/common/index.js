@@ -10,3 +10,7 @@ export { default as PasswordInput } from './PasswordInput.vue'
 export { default as SearchBar } from './SearchBar.vue'
 export { default as StatusBar } from './StatusBar.vue'
 export { default as SearchSelect } from './SearchSelect.vue'
+export { default as DateTimePicker } from './DateTimePicker.vue'
+
+// Icons
+export * from './rawIcons'

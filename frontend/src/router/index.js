@@ -10,6 +10,9 @@ import Profile from '@/views/Profile.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
 import { useNotifier } from '@/stores/notifier.js'
 import { useErrorStore } from '@/stores/errors.js'
+import Workflow from '@/views/Workflow.vue'
+import Orders from '@/views/Orders.vue'
+import Inventory from '@/views/Inventory.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -18,6 +21,9 @@ const routes = [
   { path: '/users', component: Users, meta: { requiresAuth: true, role: "ADMIN" } },
   { path: '/products', component: Products, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/storage', component: Storage, meta: { requiresAuth: true, role: "ADMIN" } },
+  { path: '/workflow', component: Workflow, meta: { requiresAuth: true, role: "ADMIN" } },
+  { path: '/orders', component: Orders, meta: { requiresAuth: true, role: "MANAGER" } },
+  { path: '/stock-orders', component: Inventory, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 ]
