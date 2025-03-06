@@ -111,7 +111,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-
+    //update order with validations by status
     @Override
     public void updateOrder(Long id, OrderRequest orderDto) {
         Optional<Order> orderOptional = orderRepository.findById(id);
@@ -119,10 +119,12 @@ public class OrderServiceImpl implements OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
         Order order = orderOptional.get();
+        // mapped order with validations
         Order mappedOrder = mapToEntity(orderDto, order);
         orderRepository.save(mappedOrder);
     }
 
+    //delete order and return order amount to item quantity
     @Override
     public void deleteOrder(Long id) {
         Order order = getOrderById(id);
@@ -135,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    //delete all orders with witch include order
+    //delete all orders with witch include product and return all products amount to item quantity
     @Override
     public void deleteOrderByProductId(Long productId) {
         Product product = productRepository.findById(productId).orElse(null);
@@ -145,6 +147,7 @@ public class OrderServiceImpl implements OrderService {
         }
         int sumAmountOfOrders = orderRepository.sumAmountWithProduct(product);
         InventoryItem inventoryItem = inventoryService.findItemByProduct(product);
+        //return all amount products to item quantity
         inventoryService.receiveStock(inventoryItem.getId(), sumAmountOfOrders);
         orderRepository.deleteAll(orders);
     }
@@ -154,21 +157,27 @@ public class OrderServiceImpl implements OrderService {
     // Converts OrderDto to Order with exceptions.
     private Order mapToEntity(OrderRequest orderDto, Order order) {
         long itemId = inventoryService.findItemByProduct(order.getProduct()).getId();
+        //Check is orderDto status is PENDING and update order by validates
         validateForChangesIfStatusIsPending(itemId, orderDto, order);
+        //Check if orderDto status is not PENDING and update order by validates
         validateForChangesIfStatusIsNotPending(itemId, orderDto, order);
         return order;
     }
 
+    //If status is pending you can change all
     private void validateForChangesIfStatusIsPending(long itemId, OrderRequest orderDto, Order order) {
         if (orderDto.getStatus() == Order.Status.PENDING) {
+            //after change provide changes to item quantity
             setAmount(itemId, orderDto, order);
             setProduct(orderDto, order);
             order.setCost(orderDto.getCost());
+            //after changes provide changes to item quantity
             setStatus(itemId, orderDto, order);
             setOrderTime(orderDto, order);
         }
     }
 
+    //if orderDto is not PENDING you can change only the STATUS
     private void validateForChangesIfStatusIsNotPending(long itemId, OrderRequest orderDto, Order order) {
         if(orderDto.getStatus() != Order.Status.PENDING) {
         if (orderDto.getAmount() != order.getAmount()) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes amount if status is not PENDING");}
@@ -179,11 +188,14 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    //if change amount get the different between old and new data and change the item quantity
     private void setAmount(long itemId, OrderRequest orderDto, Order order){
+        //if new data are bigger than old data change item quantity to down
         if(orderDto.getAmount() > order.getAmount() && order.getStatus() != Order.Status.CANCELED) {
             int amountDifference = orderDto.getAmount() - order.getAmount();
             inventoryService.releaseStock(itemId, amountDifference);
         }
+        //if new data are bigger than old data change item quantity to up
         if(orderDto.getAmount() < order.getAmount() && order.getStatus() != Order.Status.CANCELED) {
             int amountDifference = order.getAmount() - orderDto.getAmount();
             inventoryService.receiveStock(itemId, amountDifference);
