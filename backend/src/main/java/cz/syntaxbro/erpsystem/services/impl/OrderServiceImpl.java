@@ -123,9 +123,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void deleteOrder(Long id) {
-        if(getOrderById(id) == null) {
+        Order order = getOrderById(id);
+        if(order == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No order found");
         }
+        InventoryItem inventory = inventoryService.findItemByProduct(order.getProduct());
+        inventoryService.receiveStock(inventory.getId(), order.getAmount());
         orderRepository.deleteById(id);
 
     }
