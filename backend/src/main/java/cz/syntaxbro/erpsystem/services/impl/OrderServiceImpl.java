@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -152,21 +153,57 @@ public class OrderServiceImpl implements OrderService {
 
     // Converts OrderDto to Order with exceptions.
     private Order mapToEntity(OrderRequest orderDto, Order order) {
-        order.setAmount(orderDto.getAmount());
-        setProduct(orderDto, order);
-        order.setCost(orderDto.getCost());
-        setStatus(orderDto, order);
-        setOrderTime(orderDto, order);
+        long itemId = inventoryService.findItemByProduct(order.getProduct()).getId();
+        validateForChangesIfStatusIsPending(itemId, orderDto, order);
+        validateForChangesIfStatusIsNotPending(itemId, orderDto, order);
         return order;
     }
 
+    private void validateForChangesIfStatusIsPending(long itemId, OrderRequest orderDto, Order order) {
+        if (orderDto.getStatus() == Order.Status.PENDING) {
+            setAmount(itemId, orderDto, order);
+            setProduct(orderDto, order);
+            order.setCost(orderDto.getCost());
+            setStatus(itemId, orderDto, order);
+            setOrderTime(orderDto, order);
+        }
+    }
+
+    private void validateForChangesIfStatusIsNotPending(long itemId, OrderRequest orderDto, Order order) {
+        if(orderDto.getStatus() != Order.Status.PENDING) {
+        if (orderDto.getAmount() != order.getAmount()) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes amount if status is not PENDING");}
+        if (!orderDto.getOrderTime().isEqual(order.getOrderTime())) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes order time if status is not PENDING");}
+        if (orderDto.getCost() != order.getCost()) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes cost if status is not PENDING");}
+        if (!Objects.equals(orderDto.getProductId(), order.getProduct().getId())) {throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "you can't changes product if status is not PENDING");}
+            setStatus(itemId, orderDto, order);
+        }
+    }
+
+    private void setAmount(long itemId, OrderRequest orderDto, Order order){
+        if(orderDto.getAmount() > order.getAmount() && order.getStatus() != Order.Status.CANCELED) {
+            int amountDifference = orderDto.getAmount() - order.getAmount();
+            inventoryService.releaseStock(itemId, amountDifference);
+        }
+        if(orderDto.getAmount() < order.getAmount() && order.getStatus() != Order.Status.CANCELED) {
+            int amountDifference = order.getAmount() - orderDto.getAmount();
+            inventoryService.receiveStock(itemId, amountDifference);
+        }
+        order.setAmount(orderDto.getAmount());
+    }
+
     //Validate Status
-    private void setStatus(OrderRequest orderDto, Order order){
+    private void setStatus(long itemId, OrderRequest orderDto, Order order){
         List<String> list = Arrays.stream(Order.Status.values())
                 .map(Enum::name)
                 .toList();
         if (!list.contains(orderDto.getStatus().toString())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is not valid");
+        }
+        if(order.getStatus() == Order.Status.CANCELED && orderDto.getStatus() != Order.Status.CANCELED) {
+            inventoryService.releaseStock(itemId, order.getAmount());
+        }
+        if(order.getStatus() != Order.Status.CANCELED && orderDto.getStatus() == Order.Status.CANCELED) {
+            inventoryService.receiveStock(itemId, order.getAmount());
         }
         order.setStatus(orderDto.getStatus());
     }
