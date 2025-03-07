@@ -166,4 +166,12 @@ public class OrderController {
         List<Order> canceledOrders = orderService.getOrdersByStatus(Order.Status.CANCELED);
         return ResponseEntity.ok(canceledOrders);
     }
+
+    @PutMapping("/{orderId}/change-status")
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable ("orderId") long orderId,
+                                                   @RequestParam Order.Status status) {
+        orderService.updateOrderStatus(orderId, status);
+        Order order = orderService.getOrderById(orderId);
+        return ResponseEntity.ok(order);
+    }
 }
