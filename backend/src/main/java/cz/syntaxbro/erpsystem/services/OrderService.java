@@ -33,4 +33,5 @@ public interface OrderService {
     Order cancelOrder(Long id, String comment);
     Order addWorkflowComment(Long id, String comment);
     List<Order> getOrdersByStatus(Order.Status status);
+    void updateOrderStatus(Long orderId, Order.Status status);
 }

@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -233,5 +232,65 @@ public class OrderServiceImpl implements OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product does not exist");
         }
         return productService.getProductById(id);
+    }
+
+    //Update order status
+    public void updateOrderStatus(Long orderId, Order.Status status){
+        Order order = getOrderById(orderId);
+        Order.Status oldStatus = order.getStatus();
+        InventoryItem item = inventoryService.findItemByProduct(order.getProduct());
+        if(isChangeStatusFromCANCELEDtoPENDINGorCONFIRMED(order, item, status)){
+            if(status == Order.Status.PENDING){
+                throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s", oldStatus, status));
+            }
+            if(status == Order.Status.CONFIRMED){
+                throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s and locked", oldStatus, status));
+            }
+        }
+        if(isChangeStatusFromPENDINGtoCANCELED(order, item, status)){
+            throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s", oldStatus, status));
+        }
+        if(isChangeStatusFromCONFIRMEDtoDifferentStatus(order)){
+            throw  new ResponseStatusException(HttpStatus.OK, String.format("Order status is already %s you can't change status", order.getStatus()));
+        }
+        if(isChangeStatusFromPENDINGtoCONFIRMED(order, item, status)){
+            throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s and locked", oldStatus, status));
+        }
+    }
+
+    //if change status from PENDING to CANCELED the amount of order come back to inventory item Quantity
+    private boolean isChangeStatusFromPENDINGtoCANCELED(Order order, InventoryItem item, Order.Status status) {
+        if(order.getStatus() == Order.Status.PENDING && status == Order.Status.CANCELED){
+            order.setStatus(status);
+            inventoryService.receiveStock(item.getId(), order.getAmount());
+            orderRepository.save(order);
+            return true;
+        }return false;
+    }
+
+    //if change status from CANCELED to PENDING or CONFIRMED the amount of order get from inventory quantity
+    private boolean isChangeStatusFromCANCELEDtoPENDINGorCONFIRMED(Order order, InventoryItem item, Order.Status status){
+        if(order.getStatus() == Order.Status.CANCELED && status != Order.Status.CANCELED){
+            order.setStatus(status);
+            inventoryService.releaseStock(item.getId(), order.getAmount());
+            orderRepository.save(order);
+            return true;
+        }return false;
+    }
+
+    //if order status is CONFIRMED you can not change status
+    private boolean isChangeStatusFromCONFIRMEDtoDifferentStatus(Order order){
+        if(order.getStatus() == Order.Status.CONFIRMED){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is confirmed you cannot change status");
+        }return false;
+    }
+
+    //if order status set to CONFIRMED save and lock
+    private boolean isChangeStatusFromPENDINGtoCONFIRMED(Order order, InventoryItem item, Order.Status status){
+        if(order.getStatus() == Order.Status.PENDING && status == Order.Status.CONFIRMED){
+            order.setStatus(status);
+            orderRepository.save(order);
+            return true;
+        }return false;
     }
 }
