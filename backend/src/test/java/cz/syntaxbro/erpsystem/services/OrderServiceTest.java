@@ -225,25 +225,4 @@ public class OrderServiceTest {
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("No order found", exception.getReason());
     }
-
-//    @Test
-//    void updateOrder_updateOrderWhenStatusIsPendingException() {
-//        //Arrest
-//        Long orderId = 1L;
-//        int itemQuantity = this.testItem.getQuantity();
-//        this.testOrderDto.setAmount(5);
-//        when(orderRepository.findById(orderId)).thenReturn(Optional.of(testOrder));
-//        when(inventoryService.findItemByProduct(testProduct)).thenReturn(testItem);
-//        when(productService.isExistById(testProduct.getId())).thenReturn(true);
-//        //Act
-//        doAnswer(invocation -> {
-//            testItem.setQuantity(itemQuantity + testOrder.getAmount());
-//            return null; // Because it's void
-//        }).when(inventoryService).releaseStock(testItem.getId(), testOrder.getAmount());
-//
-//        orderService.updateOrder(orderId, this.testOrderDto);
-//
-//        assertEquals(testOrderDto.getAmount(), testOrder.getAmount());
-//        assertEquals(testOrder.getAmount() + itemQuantity, testItem.getQuantity());
-//    }
 } 
