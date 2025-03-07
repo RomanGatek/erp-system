@@ -148,22 +148,4 @@ public class OrderController {
             orderService.deleteOrderByProductId(id);
             return ResponseEntity.ok("Orders with product id " + id + " are deleted");
     }
-
-    @GetMapping("/pending")
-    public ResponseEntity<List<Order>> getPendingOrders() {
-        List<Order> pendingOrders = orderService.getOrdersByStatus(Order.Status.PENDING);
-        return ResponseEntity.ok(pendingOrders);
-    }
-
-    @GetMapping("/confirmed")
-    public ResponseEntity<List<Order>> getConfirmedOrders() {
-        List<Order> confirmedOrders = orderService.getOrdersByStatus(Order.Status.CONFIRMED);
-        return ResponseEntity.ok(confirmedOrders);
-    }
-
-    @GetMapping("/canceled")
-    public ResponseEntity<List<Order>> getCanceledOrders() {
-        List<Order> canceledOrders = orderService.getOrdersByStatus(Order.Status.CANCELED);
-        return ResponseEntity.ok(canceledOrders);
-    }
 }

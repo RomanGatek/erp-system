@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia';
 import { useNotifier } from './notifier';
 import { api } from '@/services/api';
-import { filter, setupSort } from '@/utils/table-utils.js';
+import { setupSort } from '@/utils/table-utils.js';
 import { __paginate } from '@/utils/pagination.js';
-import { useInventoryStore } from './storage';
+import { useInventoryStore } from './storage.store.js';
 
 export const useWorkflowStore = defineStore('workflow', {
   state: () => ({
-    orders: [],
+    items: [],
     loading: false,
     error: null,
     selectedOrder: null,
@@ -17,18 +17,18 @@ export const useWorkflowStore = defineStore('workflow', {
   }),
   
   getters: {
-    pendingOrders: (state) => state.orders.filter(order => order.status === 'PENDING'),
-    confirmedOrders: (state) => state.orders.filter(order => order.status === 'CONFIRMED'),
-    canceledOrders: (state) => state.orders.filter(order => order.status === 'CANCELED'),
+    pendingOrders: (state) => state.items.filter(order => order.status === 'PENDING'),
+    confirmedOrders: (state) => state.items.filter(order => order.status === 'CONFIRMED'),
+    canceledOrders: (state) => state.items.filter(order => order.status === 'CANCELED'),
     
     filteredOrders: (state) => (filter, searchQuery) => {
-      if (!Array.isArray(state.orders)) {
+      if (!Array.isArray(state.items)) {
         return [];
       }
       
       let filtered = filter === 'all' 
-        ? state.orders
-        : state.orders.filter(order => order.status.toLowerCase() === filter);
+        ? state.items
+        : state.items.filter(order => order.status.toLowerCase() === filter);
       
       if (searchQuery?.trim()) {
         const query = searchQuery.toLowerCase();
@@ -52,10 +52,10 @@ export const useWorkflowStore = defineStore('workflow', {
       try {
         const response = await api.get('/orders');
         if (Array.isArray(response.data)) {
-          this.orders = response.data;
+          this.items = response.data;
         } else {
           console.error('Expected array but received:', response);
-          this.orders = [];
+          this.items = [];
           this.error = 'Received invalid data format from server';
         }
       } catch (err) {
@@ -76,8 +76,6 @@ export const useWorkflowStore = defineStore('workflow', {
         if (response.data?.id) {
           this.selectedOrder = response.data;
           return response.data;
-        } else {
-          throw new Error('Invalid order data received');
         }
       } catch (err) {
         this.error = err.response?.data?.message || `Failed to fetch order #${id}`;
@@ -96,7 +94,7 @@ export const useWorkflowStore = defineStore('workflow', {
       
       try {
         // Nejdřív zkontrolujeme dostupnost na skladě
-        const order = this.orders.find(o => o.id === orderId);
+        const order = this.items.find(o => o.id === orderId);
         if (!order?.product?.id) {
           throw new Error('Order or product not found');
         }
@@ -122,10 +120,10 @@ export const useWorkflowStore = defineStore('workflow', {
           });
           
           // Aktualizujeme lokální stav
-          const index = this.orders.findIndex(o => o.id === orderId);
+          const index = this.items.findIndex(o => o.id === orderId);
           if (index !== -1) {
-            this.orders[index] = {
-              ...this.orders[index],
+            this.items[index] = {
+              ...this.items[index],
               ...response.data,
               status: 'CONFIRMED',
               comment: comment,
@@ -158,16 +156,15 @@ export const useWorkflowStore = defineStore('workflow', {
     async rejectOrder(orderId, comment) {
       this.loading = true;
       this.error = null;
-      const notifier = useNotifier();
-      
+
       try {
         const response = await api.put(`/orders/${orderId}/cancel`, comment);
         
         if (response.status >= 200 && response.status < 300) {
-          const index = this.orders.findIndex(o => o.id === orderId);
+          const index = this.items.findIndex(o => o.id === orderId);
           if (index !== -1) {
-            this.orders[index] = {
-              ...this.orders[index],
+            this.items[index] = {
+              ...this.items[index],
               ...response.data,
               status: 'CANCELED',
               comment: comment,
@@ -201,7 +198,7 @@ export const useWorkflowStore = defineStore('workflow', {
       
       try {
         await api.delete(`/orders/${orderId}`);
-        this.orders = this.orders.filter(o => o.id !== orderId);
+        this.items = this.items.filter(o => o.id !== orderId);
         
         if (this.selectedOrder?.id === orderId) {
           this.selectedOrder = null;

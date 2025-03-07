@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useInventoryStore } from '@/stores/storage'
+import { useInventoryStore } from '@/stores/storage.store.js'
 import { api as user } from '@/services/api'
 
 // Stub external utilities so our tests are isolated

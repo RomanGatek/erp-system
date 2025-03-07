@@ -13,6 +13,7 @@
       :auto-apply="true"
       :text-input="true"
       locale="cs-CZ"
+      :start-date="minDate"
       :week-start="1"
       :month-name-format="'long'"
       :day-names="['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']"
@@ -21,6 +22,7 @@
       menu-class-name="dp-menu"
       :error="!!error"
       class="dp-custom"
+      timezone="Europe/Prague"
       @update:model-value="handleUpdate"
     >
       <template #trigger>

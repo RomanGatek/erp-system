@@ -125,14 +125,22 @@ defineProps({
 
 <style scoped>
 .relative {
-  height: calc(100vh - 300px);
+  height: auto;
+  min-height: 100px;
+  max-height: calc(100vh - 350px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #CBD5E1 transparent;
 }
 
+/* Show scrollbar only when content overflows */
+.relative {
+  scrollbar-gutter: stable;
+}
+
 .relative::-webkit-scrollbar {
   width: 6px;
+  height: 6px; /* For horizontal scrollbar */
 }
 
 .relative::-webkit-scrollbar-track {
@@ -142,6 +150,11 @@ defineProps({
 .relative::-webkit-scrollbar-thumb {
   background-color: #CBD5E1;
   border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.relative::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8;
 }
 
 thead {
@@ -149,12 +162,28 @@ thead {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Ensure columns align properly */
+/* Column sizing */
 th, td {
-  min-width: 100px; /* Adjust based on your needs */
+  min-width: 120px;
 }
 
-th:first-child, td:first-child {
+/* Make description column wider */
+th[data-field="description"],
+td[data-field="description"] {
+  min-width: 200px;
+  max-width: 400px;
+}
+
+/* Make action column narrower */
+th[data-field="actions"],
+td[data-field="actions"] {
+  min-width: 100px;
+  width: 100px;
+}
+
+/* First column sticky behavior */
+th:first-child,
+td:first-child {
   position: sticky;
   left: 0;
   background: inherit;
