@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -108,10 +109,12 @@ public class InventoryController {
     @PostMapping("/{itemId}/stock-order")
     public ResponseEntity<StockOrder> addStockOrder(@PathVariable ("itemId") Long itemId,
                                                     @RequestParam int quantity,
-                                                    @RequestParam String comment) {
+                                                    @RequestParam String comment,
+                                                    @RequestParam LocalDateTime expectedDeliveryDate) {
         StockOrder stockOrder = StockOrder.builder()
                 .quantity(quantity)
                 .comment(comment)
+                .expectedDeliveryDate(expectedDeliveryDate)
                 .build();
         inventoryService.createOrderToStock(itemId, stockOrder);
         return ResponseEntity.ok(stockOrder);
@@ -122,4 +125,5 @@ public class InventoryController {
         StockOrder stockOrder = inventoryService.getStockOrderById(stockOrderId);
         return ResponseEntity.ok(stockOrder);
     }
+
 }
