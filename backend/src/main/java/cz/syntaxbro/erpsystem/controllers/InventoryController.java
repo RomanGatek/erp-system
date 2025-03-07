@@ -2,7 +2,6 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
-import cz.syntaxbro.erpsystem.models.StockOrder;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import jakarta.validation.Valid;
@@ -103,23 +102,5 @@ public class InventoryController {
             @Min(value = 0, message = "Must be positive number or zero") int quantity){
         inventoryService.releaseStock(itemId, quantity);
         return ResponseEntity.ok(inventoryService.getItem(itemId));
-    }
-
-    @PostMapping("/{itemId}/stock-order")
-    public ResponseEntity<StockOrder> addStockOrder(@PathVariable ("itemId") Long itemId,
-                                                    @RequestParam int quantity,
-                                                    @RequestParam String comment) {
-        StockOrder stockOrder = StockOrder.builder()
-                .quantity(quantity)
-                .comment(comment)
-                .build();
-        inventoryService.createOrderToStock(itemId, stockOrder);
-        return ResponseEntity.ok(stockOrder);
-    }
-
-    @GetMapping("/stock-order/{stockOrderId}")
-    public ResponseEntity<StockOrder> getStockOrder(@PathVariable ("stockOrderId") Long stockOrderId) {
-        StockOrder stockOrder = inventoryService.getStockOrderById(stockOrderId);
-        return ResponseEntity.ok(stockOrder);
     }
 }
