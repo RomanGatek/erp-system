@@ -31,7 +31,7 @@
 
       <!-- Data table -->
       <template v-else>
-        <div class="max-h-[500px] overflow-y-auto">
+        <div class="flex-1 overflow-hidden">
           <DataTable
             :headers="tableHeaders"
             :items="productsStore.paginateItems"
@@ -45,9 +45,9 @@
                 {{ item.name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ item.price }}
+                {{ formatPrice(item.price) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+              <td class="px-6 py-4 whitespace-normal text-gray-600 line-clamp-2">
                 {{ item.description }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -242,5 +242,12 @@ const cancelAdd = () => {
   isAddModalOpen.value = false
   reactiveProduct.$clear();
   errorStore.clearServerErrors()
+}
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('cs-CZ', {
+    style: 'currency',
+    currency: 'CZK'
+  }).format(price)
 }
 </script>

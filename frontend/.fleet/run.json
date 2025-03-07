@@ -1,11 +1,4 @@
 {
     "configurations": [
-        {
-            "name": "All Tests (1)",
-            "type": "vitest",
-            "workingDir": "$PROJECT_DIR$",
-            "file": "",
-            "testNames": []
-        }
     ]
 }

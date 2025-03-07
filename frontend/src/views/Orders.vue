@@ -41,7 +41,6 @@
             v-model="orderTime"
             label="Order Time"
             :error="orderTimeError"
-            :min-date="new Date()"
           />
 
           <!-- Comment -->

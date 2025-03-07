@@ -304,8 +304,8 @@ const selectedOrder = computed(() => workflowStore.selectedOrder)
 // Filtrované objednávky podle vyhledávání a filtru
 const filteredOrders = computed(() => {
   // Ensure we have an array, not HTML content
-  if (!Array.isArray(workflowStore.orders)) {
-    console.error('Orders is not an array:', workflowStore.orders);
+  if (!Array.isArray(workflowStore.items)) {
+    console.error('Orders is not an array:', workflowStore.items);
     return [];
   }
   

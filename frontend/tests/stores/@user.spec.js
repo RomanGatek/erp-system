@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/user.store.js'
 import { api } from '@/services/api'
 import { useMeStore } from '@/stores/me'
 

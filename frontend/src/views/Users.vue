@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/user.store.js'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 

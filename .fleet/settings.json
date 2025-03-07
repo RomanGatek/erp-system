@@ -1,0 +1,22 @@
+{
+    "files.exclude": [
+        ".DS_Store",
+        ".git",
+        ".gradle",
+        ".idea",
+        "gradlew.bat",
+        ".kotlin/*",
+        "composeApp/*",
+        ".github",
+        "gradle*",
+        ".git*",
+        "backend/build",
+        "frontend/node_modules",
+        "frontend/.fleet",
+        "frontend/eslint.config.js",
+        "frontend/.editorconfig",
+        "frontend/.prettierrc.json",
+        "frontend/bun.lock",
+        "frontend/package-lock.json"
+    ],
+}
