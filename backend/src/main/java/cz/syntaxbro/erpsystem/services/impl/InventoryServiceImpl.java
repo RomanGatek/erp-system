@@ -1,8 +1,11 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.InventoryItem;
+import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.StockOrder;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
+import cz.syntaxbro.erpsystem.repositories.StockOrderRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +20,12 @@ import java.util.List;
 @Service
 public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
+    private final StockOrderRepository stockOrderRepository;
 
     @Autowired
-    public InventoryServiceImpl(InventoryRepository inventoryRepository) {
+    public InventoryServiceImpl(InventoryRepository inventoryRepository, StockOrderRepository stockOrderRepository) {
         this.inventoryRepository = inventoryRepository;
+        this.stockOrderRepository = stockOrderRepository;
     }
 
     public InventoryItem addItem(InventoryItem item) {
@@ -103,6 +108,19 @@ public class InventoryServiceImpl implements InventoryService {
         return inventoryRepository.findByProduct(product).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Inventory item for product '%s' not found", product.getName()))
         );
+    }
+
+    @Override
+    public void createOrderToStock(Long itemId, StockOrder stockOrderDto) {
+        InventoryItem item = this.getItem(itemId);
+        stockOrderDto.setProduct(item.getProduct());
+        stockOrderDto.setStatus(Order.Status.PENDING);
+        stockOrderRepository.save(stockOrderDto);
+    }
+
+    public StockOrder getStockOrderById(Long id) {
+        return stockOrderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Order with id %s not found", id)));
     }
 
     private int supplierDeliveryDelay() {
