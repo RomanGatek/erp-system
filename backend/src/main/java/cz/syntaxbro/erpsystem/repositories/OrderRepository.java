@@ -21,4 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("select o from Order o where o.product = :product")
     List<Order> findByProduct(@Param("product") Product product);
+
+    @Query("select sum(o.amount) from Order o where o.product = :product")
+    int sumAmountWithProduct(@Param("product") Product product);
 }

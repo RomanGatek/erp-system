@@ -49,10 +49,16 @@ class OrderRepositoryTest {
         // Creating orders linked to the products
         Order orderOne = new Order(null, productOne, 2, 200, Order.Status.PENDING, orderDateOne);
         Order orderTwo = new Order(null, productTwo, 5, 1000, Order.Status.PENDING, orderDateTwo);
+        Order orderThree = new Order(null, productOne, 5, 50, Order.Status.PENDING, orderDateTwo);
+        Order orderFour = new Order(null, productOne, 5, 10, Order.Status.CANCELED, orderDateTwo);
+        Order orderFive = new Order(null, productOne, 5, 400, Order.Status.CONFIRMED, orderDateTwo);
 
         // Saving orders
         orderRepository.save(orderOne);
         orderRepository.save(orderTwo);
+        orderRepository.save(orderThree);
+        orderRepository.save(orderFour);
+        orderRepository.save(orderFive);
     }
 
     /**
@@ -62,9 +68,9 @@ class OrderRepositoryTest {
      * - The cost of the retrieved order should be 200.
      */
     @Test
-    void findByCostBetweenWithOneResult() {
-        List<Order> orders = orderRepository.findByCostBetween(100.0, 300.0);
-        assertEquals(1, orders.size());
+    void findByCostBetweenWithFourResult() {
+        List<Order> orders = orderRepository.findByCostBetween(10.0, 900.0);
+        assertEquals(4, orders.size());
         assertEquals(200, orders.getFirst().getCost());
     }
 
@@ -75,7 +81,7 @@ class OrderRepositoryTest {
      */
     @Test
     void findByCostBetweenWithTwoResults() {
-        List<Order> orders = orderRepository.findByCostBetween(100.0, 1000.0);
+        List<Order> orders = orderRepository.findByCostBetween(50.0, 200.0);
         assertEquals(2, orders.size());
     }
 
@@ -98,11 +104,11 @@ class OrderRepositoryTest {
      * - Two orders should be retrieved.
      */
     @Test
-    void findByDateBetweenOrderDateWithTwoResults() {
+    void findByDateBetweenOrderDateWithFourResults() {
         List<Order> orders = orderRepository.findByDateBetween(
                 LocalDateTime.of(2025, 2, 1, 0, 0),
-                LocalDateTime.of(2025, 2, 25, 0, 0));
-        assertEquals(2, orders.size());
+                LocalDateTime.of(2025, 2, 10, 0, 0));
+        assertEquals(4, orders.size());
     }
 
     /**
@@ -121,7 +127,26 @@ class OrderRepositoryTest {
         List<Order> orders = orderRepository.findByProduct(product);
 
         // Assertions
-        assertEquals(1, orders.size());
+        assertEquals(4, orders.size());
         assertEquals("ProductOne", orders.getFirst().getProduct().getName());
     }
+
+    @Test
+    public void sumAmountWithProduct_GetSumFirstProduct() {
+        //Arrest
+        Product product =  productRepository.findByName(productOne.getName()).get();
+        //Act
+        int sumAmount = orderRepository.sumAmountWithProduct(product);
+        assertEquals(17, sumAmount);
+    }
+
+    @Test
+    public void sumAmountWithProduct_GetDumWithSecondProduct(){
+        //Arrest
+        Product product =  productRepository.findByName("ProductTwo").get();
+        //Act
+        int sumAmount = orderRepository.sumAmountWithProduct(product);
+        assertEquals(5, sumAmount);
+    }
+
 }

@@ -84,8 +84,7 @@ public class InventoryServiceImpl implements InventoryService {
 
             if (inventoryItem.getQuantity() < quantityWarning()) {
                 inventoryRepository.save(inventoryItem);
-                System.out.println(inventoryItem);
-                throw new ResponseStatusException(HttpStatus.OK, "last pieces in stock");
+//                throw new ResponseStatusException(HttpStatus.OK, "last pieces in stock");
             }
             inventoryRepository.save(inventoryItem);
         }
