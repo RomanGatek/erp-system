@@ -11,6 +11,7 @@ export { default as SearchBar } from './SearchBar.vue'
 export { default as StatusBar } from './StatusBar.vue'
 export { default as SearchSelect } from './SearchSelect.vue'
 export { default as DateTimePicker } from './DateTimePicker.vue'
+export { default as MultiProductSelect } from './MultiProductSelect.vue'
 
 // Icons
 export * from './rawIcons'
