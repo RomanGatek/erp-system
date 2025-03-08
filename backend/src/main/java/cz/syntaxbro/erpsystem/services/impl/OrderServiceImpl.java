@@ -5,6 +5,7 @@ import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -70,7 +72,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createdOrder(Order order) {
+    public Order createdOrder(OrderCreateRequest orderRequest) {
+
+        Order order = Order.builder()
+                .orderTime(LocalDateTime.now())
+                .orderType(orderRequest.getOrderType())
+                .comment(orderRequest.getComment())
+                .approvedBy(getCurrentUser())
+                .decisionTime(LocalDateTime.now())
+                .build();
         return orderRepository.save(order);
     }
 
@@ -102,7 +112,13 @@ public class OrderServiceImpl implements OrderService {
         User user = userDetails.getUser();
 
         for (var item : order.getOrderItems()) {
-            if (item != null) inventoryService.releaseStock(item.getId(), item.getQuantity());
+            if (item != null) {
+                if (order.getOrderType().equals(Order.OrderType.SELL)) {
+                    inventoryService.releaseStock(item.getInventoryItem().getId(), item.getQuantity());
+                } else {
+                    inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
+                }
+            }
         }
         order.setStatus(Order.Status.CONFIRMED);
         order.setComment(comment);
@@ -123,12 +139,16 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Get current user
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.getUser();
+        User user = getCurrentUser();
 
             for (var item : order.getOrderItems()) {
-                if (item != null) inventoryService.receiveStock(item.getId(), item.getQuantity());
+                if (item != null) {
+                    if (order.getOrderType().equals(Order.OrderType.SELL)) {
+                        inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
+                    } else {
+                        inventoryService.releaseStock(item.getInventoryItem().getId(), item.getQuantity());
+                    }
+                }
             }
             order.setStatus(Order.Status.CANCELED);
             order.setComment(comment);
@@ -161,5 +181,11 @@ public class OrderServiceImpl implements OrderService {
          */
 
         return ResponseEntity.status(HttpStatus.OK).body("Order with id " + orderId + " has been updated to " + status);
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        return userDetails.getUser();
     }
 }

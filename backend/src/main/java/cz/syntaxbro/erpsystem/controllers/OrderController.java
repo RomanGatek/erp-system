@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.services.OrderService;
@@ -53,8 +54,8 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@Valid @RequestBody Order order) {
-        Order createdOrder = orderService.createdOrder(order);
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderCreateRequest orderRequest) {
+        Order createdOrder = orderService.createdOrder(orderRequest);
         return ResponseEntity.ok(createdOrder);
     }
 
@@ -69,8 +70,8 @@ public class OrderController {
     @PutMapping("/{id}/confirm")
     public ResponseEntity<Order> confirmOrder(
             @PathVariable(name = "id") @NotNull Long id,
-            @RequestBody(required = false) String comment) {
-
+            @RequestBody(required = false) String comment
+    ) {
         Order confirmedOrder = orderService.confirmOrder(id, comment);
         return ResponseEntity.ok(confirmedOrder);
     }
