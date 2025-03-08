@@ -3,7 +3,6 @@ package cz.syntaxbro.erpsystem.utils;
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.*;
 import cz.syntaxbro.erpsystem.repositories.*;
-import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.transaction.Transactional;
@@ -121,7 +120,7 @@ public class DataLoader implements CommandLineRunner {
         createSampleOrders();
 
         for (var i : orderService.getOrders()) {
-            ErpSystemApplication.getLogger().info("Order #" + i + "\n");
+            ErpSystemApplication.getLogger().info("Order #{}\n", i);
         }
     }
 
