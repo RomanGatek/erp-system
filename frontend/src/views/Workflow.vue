@@ -24,12 +24,15 @@
               {{ filter.label }}
             </button>
           </div>
-          <SearchBar v-model="searchQuery" @update:modelValue="filterOrders" />
+          <SearchBar 
+            v-model="searchQuery" 
+            @update:modelValue="(value) => workflowStore.setSearch(value)" 
+          />
         </div>
       </div>
 
       <!-- Empty state -->
-      <EmptyState v-if="!filteredOrders.length" message="No orders to display" />
+      <EmptyState v-if="!workflowStore.filtered.length" message="No orders to display" />
 
       <!-- Data table -->
       <template v-else>
@@ -45,7 +48,7 @@
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       :class="header.class"
                     >
-                      <div 
+                      <div
                         class="flex items-center cursor-pointer"
                         @click="header.sortable ? setSorting(header.field) : null"
                       >
@@ -62,7 +65,7 @@
                               stroke-linecap="round"
                               stroke-linejoin="round"
                               stroke-width="2"
-                              :d="sorting.field === header.field && sorting.direction === 'desc' 
+                              :d="sorting.field === header.field && sorting.direction === 'desc'
                                 ? 'M19 9l-7 7-7-7'
                                 : 'M5 15l7-7 7 7'"
                             />
@@ -73,8 +76,8 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <template v-for="item in filteredOrders" :key="item.id">
-                    <tr 
+                  <template v-for="item in workflowStore.paginatedOrders" :key="item.id">
+                    <tr
                       class="hover:bg-gray-50 cursor-pointer transition-colors"
                       :class="{'bg-blue-50': expandedRows.has(item.id)}"
                       @click="toggleRow(item.id)"
@@ -224,11 +227,18 @@
             </div>
           </div>
         </div>
+
+        <Pagination :store="useWorkflowStore" />
+
       </template>
     </div>
 
     <!-- Order Details Modal -->
-    <Modal :show="isDetailModalOpen" @close="closeOrderDetail">
+    <Modal 
+      :show="isDetailModalOpen" 
+      @close="closeOrderDetail"
+      title="Order Details"
+    >
       <div v-if="selectedOrder" class="space-y-4">
         <!-- Header with close button -->
         <div class="flex items-center justify-between pb-2 border-b border-gray-200">
@@ -270,7 +280,7 @@
               </span>
             </div>
           </div>
-          
+
           <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
             <div class="space-y-1">
               <p class="text-sm font-medium text-gray-500">Order ID</p>
@@ -296,7 +306,7 @@
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Decision</h3>
           </div>
-          
+
           <div class="bg-white rounded-xl border border-gray-200">
             <div class="p-4">
               <BaseInput
@@ -307,7 +317,7 @@
                 rows="3"
               />
             </div>
-            
+
             <div class="flex justify-end gap-2 px-4 py-3 bg-gray-50 rounded-b-xl">
               <button
                 @click="rejectOrder"
@@ -332,7 +342,7 @@
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Approval History</h3>
           </div>
-          
+
           <div class="bg-gray-50 rounded-xl divide-y divide-gray-200">
             <div class="p-4 space-y-3">
               <div class="flex justify-between items-center">
@@ -347,12 +357,12 @@
                   {{ getStatusText(selectedOrder.status) }}
                 </span>
               </div>
-              
+
               <div v-if="selectedOrder.decisionTime" class="flex justify-between items-center">
                 <span class="text-sm font-medium text-gray-500">Decision Time</span>
                 <span class="text-sm text-gray-900">{{ formatDate(selectedOrder.decisionTime) }}</span>
               </div>
-              
+
               <div v-if="selectedOrder.approvedBy" class="flex justify-between items-center">
                 <span class="text-sm font-medium text-gray-500">Processed By</span>
                 <span class="text-sm text-gray-900">
@@ -361,7 +371,7 @@
                 </span>
               </div>
             </div>
-            
+
             <div v-if="selectedOrder.comment" class="p-4 space-y-2">
               <span class="text-sm font-medium text-gray-500">Comment</span>
               <p class="mt-1 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
@@ -376,9 +386,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import {
-  DataTable,
   SearchBar,
   Modal,
   StatusBar,
@@ -388,6 +397,7 @@ import {
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { useWorkflowStore } from '@/stores/workflow.store.js'
+import {Pagination} from "@/components/common/index.js";
 
 defineOptions({
   name: 'WorkflowView',
@@ -398,12 +408,20 @@ const errorStore = useErrorStore()
 const $notifier = useNotifier()
 const workflowStore = useWorkflowStore()
 
+// Computed
+const selectedOrder = computed(() => workflowStore.selectedOrder)
+
 // State
 const searchQuery = ref('')
 const currentFilter = ref('all')
 const isDetailModalOpen = ref(false)
 const approvalComment = ref('')
 const expandedRows = ref(new Set())
+
+// Watch search query
+watch(searchQuery, (newValue) => {
+  workflowStore.setSearch(newValue)
+})
 
 // Table headers in English
 const tableHeaders = [
@@ -439,36 +457,6 @@ onMounted(async () => {
   }
 })
 
-// Computed selected order from store
-const selectedOrder = computed(() => workflowStore.selectedOrder)
-
-// Filtrované objednávky podle vyhledávání a filtru
-const filteredOrders = computed(() => {
-  // Ensure we have an array, not HTML content
-  if (!Array.isArray(workflowStore.items)) {
-    console.error('Orders is not an array:', workflowStore.items);
-    return [];
-  }
-
-  return workflowStore.filteredOrders(
-    currentFilter.value === 'all' ? 'all' : currentFilter.value,
-    searchQuery.value
-  );
-})
-
-// Metody pro práci s tabulkou
-const setSorting = (field) => {
-  if (sorting.value.field === field) {
-    sorting.value.direction = sorting.value.direction === 'asc' ? 'desc' : 'asc'
-  } else {
-    sorting.value.field = field
-    sorting.value.direction = 'asc'
-  }
-}
-
-const filterOrders = () => {
-  // Filtrování se provádí automaticky díky computed property
-}
 
 // Formátování data
 const formatDate = (dateString) => {

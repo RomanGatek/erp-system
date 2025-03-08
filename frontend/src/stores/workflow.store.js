@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useNotifier } from './notifier';
 import { api } from '@/services/api';
-import { setupSort } from '@/utils/table-utils.js';
+import {filter, setupSort} from '@/utils/table-utils.js';
 import { __paginate } from '@/utils/pagination.js';
 import { useInventoryStore } from './storage.store.js';
 
@@ -13,34 +13,23 @@ export const useWorkflowStore = defineStore('workflow', {
     selectedOrder: null,
     searchQuery: '',
     sorting: setupSort('orderTime', 'desc'),
-    pagination: { currentPage: 1, perPage: 10 }
+    pagination: { currentPage: 1, perPage: 10 },
   }),
 
   getters: {
     pendingOrders: (state) => state.items.filter(order => order.status === 'PENDING'),
     confirmedOrders: (state) => state.items.filter(order => order.status === 'CONFIRMED'),
     canceledOrders: (state) => state.items.filter(order => order.status === 'CANCELED'),
-
-    filteredOrders: (state) => (filter, searchQuery) => {
-      if (!Array.isArray(state.items)) {
-        return [];
-      }
-
-      let filtered = filter === 'all'
-        ? state.items
-        : state.items.filter(order => order.status.toLowerCase() === filter);
-
-      if (searchQuery?.trim()) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(order =>
-          order.id.toString().includes(query) ||
-          (order.product?.name?.toLowerCase().includes(query))
+    filtered: (state) => filter(state, (order) => {
+      const search = state.searchQuery.toLocaleLowerCase();
+      /** @type {{id: number, inventoryItemId: number, productId: number, stockedQuantity: number, needQuantity: number, name: string, buyoutPrice: number, purchasePrice: number, description: string}[]} */
+      const orderItems = order.orderItems;
+      return order.approvedBy.username.includes(search) ||
+        orderItems.some(orderItem =>
+          orderItem.name.includes(search)
+          || orderItem.description.includes(search)
         );
-      }
-
-      return filtered;
-    },
-
+    }),
     paginatedOrders: (state) => __paginate(state)
   },
 
