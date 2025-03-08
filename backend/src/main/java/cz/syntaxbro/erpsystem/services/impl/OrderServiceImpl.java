@@ -4,16 +4,23 @@ import cz.syntaxbro.erpsystem.exceptions.ResourceNotFoundException;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
+import cz.syntaxbro.erpsystem.responses.OrderResponse;
+import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import cz.syntaxbro.erpsystem.services.ProductService;
+import cz.syntaxbro.erpsystem.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,21 +28,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final ProductService productService;
     private final InventoryService inventoryService;
 
 
     @Autowired
-    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, ProductService productService, InventoryService inventoryService) {
+    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, InventoryService inventoryService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
-        this.productService = productService;
         this.inventoryService = inventoryService;
     }
 
@@ -46,27 +53,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getOrders() {
-        return orderRepository.findAll();
-    }
-
-    @Override
-    public List<Order> getOrdersByCostBetween(
-            double start,
-            double end) {
-        if (start > end) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost must be grater or equal with 0");
-        }
-        return orderRepository.findByCostBetween(start, end);
-    }
-
-    @Override
-    public List<Order> getOrdersByDateBetween(LocalDateTime start,
-                                              LocalDateTime end) {
-        if (end.isBefore(start)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End must be greater or equal than start");
-        }
-        return orderRepository.findByOrderTimeBetween(start, end);
+    public List<OrderResponse> getOrders() {
+        return orderRepository.findAll().stream().map(order -> {
+            var orderResponse = new OrderResponse();
+            orderResponse.map(order);
+            orderResponse.setOrderItems(order.getOrderItems().stream().map(OrderItemReponse::new).toList());
+            return orderResponse;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -77,49 +70,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createdOrder(Long itemId, int quantity) {
-        Product product = productRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + itemId + " not found"));
-
-        Order order = Order.builder()
-                .product(product)
-                .amount(quantity)
-                .cost(product.getPrice() * quantity)
-                .status(Order.Status.PENDING)
-                .orderTime(LocalDateTime.now())
-                .build();
-
+    public Order createdOrder(Order order) {
         return orderRepository.save(order);
     }
 
     @Override
-    public void cancelOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getStatus() == Order.Status.PENDING) {
-            Long itemId = inventoryService.findItemByProduct(order.getProduct()).getId();
-            inventoryService.releaseStock(itemId, order.getAmount());
-            order.setStatus(Order.Status.CANCELED);
-        }
-    }
-
-
-    @Override
-    public void updateOrder(Long id, OrderRequest orderDto) {
-        Order order = getOrderById(id);
-        Product product = productRepository.findById(orderDto.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + orderDto.getProductId() + " not found"));
-
-        order.setProduct(product);
-        order.setAmount(orderDto.getAmount());
-        order.setCost(orderDto.getCost());
-        order.setStatus(orderDto.getStatus());
-        order.setOrderTime(orderDto.getOrderTime());
-        order.setComment(orderDto.getComment());
-        order.setApprovedBy(orderDto.getApprovedBy());
-        order.setDecisionTime(orderDto.getDecisionTime());
-
+    public void updateOrder(Long orderId, OrderRequest orderDto) {
+        Order order = getOrderById(orderId);
+        order.map(orderDto);
         orderRepository.save(order);
     }
 
@@ -130,30 +88,28 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void deleteOrderByProductId(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + productId + " not found"));
-        orderRepository.deleteByProduct(product);
-    }
-
-    @Override
     public Order confirmOrder(Long id, String comment) {
         Order order = getOrderById(id);
         
         // Only pending orders can be confirmed
-        if (order.getStatus() != Order.Status.PENDING) {
+        if (!order.getStatus().equals(Order.Status.PENDING)) {
             throw new IllegalStateException("Only pending orders can be confirmed");
         }
         
         // Get current user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        User user = userDetails.getUser();
+
+        for (var item : order.getOrderItems()) {
+            if (item != null) inventoryService.releaseStock(item.getId(), item.getQuantity());
+        }
         order.setStatus(Order.Status.CONFIRMED);
         order.setComment(comment);
-        order.setApprovedBy(username);
         order.setDecisionTime(LocalDateTime.now());
-        
+        order.setApprovedBy(user);
+        orderRepository.save(order);
+
         return orderRepository.save(order);
     }
 
@@ -162,19 +118,24 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrderById(id);
         
         // Only pending orders can be canceled
-        if (order.getStatus() != Order.Status.PENDING) {
+        if (!order.getStatus().equals(Order.Status.PENDING)) {
             throw new IllegalStateException("Only pending orders can be canceled");
         }
-        
+
         // Get current user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        
-        order.setStatus(Order.Status.CANCELED);
-        order.setComment(comment);
-        order.setApprovedBy(username);
-        order.setDecisionTime(LocalDateTime.now());
-        
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        User user = userDetails.getUser();
+
+            for (var item : order.getOrderItems()) {
+                if (item != null) inventoryService.receiveStock(item.getId(), item.getQuantity());
+            }
+            order.setStatus(Order.Status.CANCELED);
+            order.setComment(comment);
+            order.setDecisionTime(LocalDateTime.now());
+            order.setApprovedBy(user);
+            orderRepository.save(order);
+
         return orderRepository.save(order);
     }
 
@@ -190,107 +151,15 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findByStatus(status);
     }
 
-    // Converts OrderDto to Order with exceptions.
-    private Order mapToEntity(OrderRequest orderDto, Order order) {
-        order.setAmount(orderDto.getAmount());
-        setProduct(orderDto, order);
-        order.setCost(orderDto.getCost());
-        setStatus(orderDto, order);
-        setOrderTime(orderDto, order);
-        return order;
-    }
-
-    //Validate Status
-    private void setStatus(OrderRequest orderDto, Order order){
-        List<String> list = Arrays.stream(Order.Status.values())
-                .map(Enum::name)
-                .toList();
-        if (!list.contains(orderDto.getStatus().toString())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is not valid");
-        }
-        order.setStatus(orderDto.getStatus());
-    }
-
-    //Validate OrderTime
-    private void setOrderTime(OrderRequest orderDto, Order order){
-        if (orderDto.getOrderTime().isBefore(LocalDate.now().atStartOfDay())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OrderTime cannot be day older than today");
-        }
-        order.setOrderTime(orderDto.getOrderTime());
-
-    }
-
-    //Validate Product
-    private void setProduct(OrderRequest orderDto, Order order){
-        Product product = createdById(orderDto.getProductId());
-        order.setProduct(product);
-    }
-
-    //Product created by id exception
-    private Product createdById(Long id) {
-        if (!productService.isExistById(id)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product does not exist");
-        }
-        return productService.getProductById(id);
-    }
-
-    //Update order status
-    public void updateOrderStatus(Long orderId, Order.Status status){
+    @Override
+    public ResponseEntity<?> updateOrderStatus(Long orderId, Order.Status status){
         Order order = getOrderById(orderId);
-        Order.Status oldStatus = order.getStatus();
-        InventoryItem item = inventoryService.findItemByProduct(order.getProduct());
-        if(isChangeStatusFromCANCELEDtoPENDINGorCONFIRMED(order, item, status)){
-            if(status == Order.Status.PENDING){
-                throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s", oldStatus, status));
-            }
-            if(status == Order.Status.CONFIRMED){
-                throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s and locked", oldStatus, status));
-            }
-        }
-        if(isChangeStatusFromPENDINGtoCANCELED(order, item, status)){
-            throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s", oldStatus, status));
-        }
-        if(isChangeStatusFromCONFIRMEDtoDifferentStatus(order)){
-            throw  new ResponseStatusException(HttpStatus.OK, String.format("Order status is already %s you can't change status", order.getStatus()));
-        }
-        if(isChangeStatusFromPENDINGtoCONFIRMED(order, item, status)){
-            throw new ResponseStatusException(HttpStatus.OK, String.format("Order status changed from %s to %s and locked", oldStatus, status));
-        }
-    }
 
-    //if change status from PENDING to CANCELED the amount of order come back to inventory item Quantity
-    private boolean isChangeStatusFromPENDINGtoCANCELED(Order order, InventoryItem item, Order.Status status) {
-        if(order.getStatus() == Order.Status.PENDING && status == Order.Status.CANCELED){
-            order.setStatus(status);
-            inventoryService.receiveStock(item.getId(), order.getAmount());
-            orderRepository.save(order);
-            return true;
-        }return false;
-    }
+        /*
+        TODO... events/subcriber/observer
+        když uživatel bude mít daný sub na dané objednávce, tak v rámci observeru dostane informaci o tom že status objednávky bude změnen.
+         */
 
-    //if change status from CANCELED to PENDING or CONFIRMED the amount of order get from inventory quantity
-    private boolean isChangeStatusFromCANCELEDtoPENDINGorCONFIRMED(Order order, InventoryItem item, Order.Status status){
-        if(order.getStatus() == Order.Status.CANCELED && status != Order.Status.CANCELED){
-            order.setStatus(status);
-            inventoryService.releaseStock(item.getId(), order.getAmount());
-            orderRepository.save(order);
-            return true;
-        }return false;
-    }
-
-    //if order status is CONFIRMED you can not change status
-    private boolean isChangeStatusFromCONFIRMEDtoDifferentStatus(Order order){
-        if(order.getStatus() == Order.Status.CONFIRMED){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is confirmed you cannot change status");
-        }return false;
-    }
-
-    //if order status set to CONFIRMED save and lock
-    private boolean isChangeStatusFromPENDINGtoCONFIRMED(Order order, InventoryItem item, Order.Status status){
-        if(order.getStatus() == Order.Status.PENDING && status == Order.Status.CONFIRMED){
-            order.setStatus(status);
-            orderRepository.save(order);
-            return true;
-        }return false;
+        return ResponseEntity.status(HttpStatus.OK).body("Order with id " + orderId + " has been updated to " + status);
     }
 }

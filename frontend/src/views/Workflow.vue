@@ -12,13 +12,13 @@
         <h2 class="text-2xl font-bold text-gray-800">Approval Workflow</h2>
         <div class="flex items-center space-x-4">
           <div class="flex space-x-2">
-            <button 
-              v-for="filter in filters" 
-              :key="filter.value" 
+            <button
+              v-for="filter in filters"
+              :key="filter.value"
               @click="currentFilter = filter.value"
               class="px-3 py-1.5 text-sm rounded-lg transition"
-              :class="currentFilter === filter.value 
-                ? 'bg-blue-500 text-white' 
+              :class="currentFilter === filter.value
+                ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
             >
               {{ filter.label }}
@@ -33,202 +33,292 @@
 
       <!-- Data table -->
       <template v-else>
-        <div>
-          <DataTable
-            :headers="tableHeaders"
-            :items="filteredOrders"
-            :sort-by="setSorting"
-            :sorting="sorting"
-            :on-edit="openOrderDetail"
-            :on-delete="() => {}"
-          >
-            <template #row="{ item }">
-              <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                {{ item.id }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ item.product ? item.product.name : 'N/A' }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ formatDate(item.orderTime) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ formatPrice(item.cost) }} Kč
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="px-2 py-1 text-xs font-medium rounded-full"
-                  :class="{
-                    'bg-yellow-100 text-yellow-800': item.status === 'PENDING',
-                    'bg-green-100 text-green-800': item.status === 'CONFIRMED',
-                    'bg-red-100 text-red-800': item.status === 'CANCELED'
-                  }"
-                >
-                  {{ getStatusText(item.status) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="item.type === 'STOCK'" 
-                  class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100"
-                  title="Stock Order"
-                >
-                  <svg
-                    class="w-5 h-5 text-green-600 transform -translate-x-px"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2.5"
-                      d="M20 12H4m0 0l6-6m-6 6l6 6"
-                    />
-                  </svg>
-                </div>
-                <div v-else 
-                  class="flex items-center justify-center w-8 h-8 rounded-full bg-red-100"
-                  title="Customer Order"
-                >
-                  <svg
-                    class="w-5 h-5 text-red-600 transform translate-x-px"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2.5"
-                      d="M4 12h16m0 0l-6-6m6 6l-6 6"
-                    />
-                  </svg>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button
-                  @click="openOrderDetail(item)"
-                  class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 cursor-pointer"
-                  title="View Details"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-                <button
-                  @click="confirmDelete(item)"
-                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
-                  title="Delete Order"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </td>
-            </template>
-          </DataTable>
+        <div class="overflow-hidden border border-gray-200 rounded-lg">
+          <div class="overflow-x-auto">
+            <div class="overflow-y-auto max-h-[calc(100vh-24rem)]">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      v-for="header in tableHeaders"
+                      :key="header.field"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      :class="header.class"
+                    >
+                      <div 
+                        class="flex items-center cursor-pointer"
+                        @click="header.sortable ? setSorting(header.field) : null"
+                      >
+                        {{ header.label }}
+                        <template v-if="header.sortable">
+                          <svg
+                            class="ml-1 w-3 h-3"
+                            :class="{'text-blue-500': sorting.field === header.field}"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              :d="sorting.field === header.field && sorting.direction === 'desc' 
+                                ? 'M19 9l-7 7-7-7'
+                                : 'M5 15l7-7 7 7'"
+                            />
+                          </svg>
+                        </template>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <template v-for="item in filteredOrders" :key="item.id">
+                    <tr 
+                      class="hover:bg-gray-50 cursor-pointer transition-colors"
+                      :class="{'bg-blue-50': expandedRow === item.id}"
+                      @click="toggleRow(item.id)"
+                    >
+                      <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+                        {{ item.id }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                        {{ item.orderItems?.length || 0 }} items
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                        {{ formatDate(item.orderTime) }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                        {{ formatPrice(item.cost) }} Kč
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          class="px-2 py-1 text-xs font-medium rounded-full"
+                          :class="{
+                            'bg-green-100 text-green-800': item.orderType === 'SELL',
+                            'bg-red-100 text-red-800': item.orderType === 'PURCHASE'
+                          }"
+                        >
+                          {{ item.orderType }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          class="px-2 py-1 text-xs font-medium rounded-full"
+                          :class="{
+                            'bg-yellow-100 text-yellow-800': item.status === 'PENDING',
+                            'bg-green-100 text-green-800': item.status === 'CONFIRMED',
+                            'bg-red-100 text-red-800': item.status === 'CANCELED'
+                          }"
+                        >
+                          {{ getStatusText(item.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button
+                          @click.stop="openOrderDetail(item)"
+                          class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          title="View Details"
+                        >
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        <button
+                          @click.stop="confirmDelete(item)"
+                          class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                          title="Delete Order"
+                        >
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                    <!-- Expanded Row Content -->
+                    <tr v-if="expandedRow === item.id">
+                      <td colspan="7" class="px-6 py-4 bg-gray-50">
+                        <div class="animate-expand-content">
+                          <h4 class="text-sm font-medium text-gray-700 mb-3">Order Items</h4>
+                          <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="overflow-x-auto">
+                              <div class="overflow-y-auto max-h-[16rem]">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                  <thead class="bg-gray-50">
+                                    <tr>
+                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
+                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Quantity</th>
+                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Price</th>
+                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="divide-y divide-gray-200">
+                                    <tr v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-sm">
+                                      <td class="px-4 py-2 text-gray-900">
+                                        {{ orderItem.name }}
+                                        <p class="text-xs text-gray-500">{{ orderItem.description }}</p>
+                                      </td>
+                                      <td class="px-4 py-2 text-gray-600">{{ orderItem.needQuantity }}</td>
+                                      <td class="px-4 py-2 text-gray-600">
+                                        {{ formatPrice(orderItem.buyoutPrice) }} Kč
+                                      </td>
+                                      <td class="px-4 py-2 text-gray-600">
+                                        {{ formatPrice(orderItem.buyoutPrice * orderItem.needQuantity) }} Kč
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                  <tfoot class="bg-gray-50">
+                                    <tr>
+                                      <td colspan="3" class="px-4 py-2 text-sm font-medium text-gray-700 text-right">
+                                        Total:
+                                      </td>
+                                      <td class="px-4 py-2 text-sm font-medium text-gray-900">
+                                        {{ formatPrice(item.cost) }} Kč
+                                      </td>
+                                    </tr>
+                                  </tfoot>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </template>
     </div>
 
     <!-- Order Details Modal -->
     <Modal :show="isDetailModalOpen" title="Order Details" @close="closeOrderDetail">
-      <div v-if="selectedOrder" class="space-y-6">
+      <div v-if="selectedOrder" class="space-y-8">
         <!-- Basic Information -->
-        <div class="space-y-3 pb-4 border-b border-gray-200">
-          <div class="flex justify-between">
-            <h3 class="text-lg font-medium text-gray-800">Basic Information</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-900">Basic Information</h3>
             <span
-              class="px-2 py-1 text-xs font-medium rounded-full"
+              class="px-3 py-1.5 text-sm font-medium rounded-full shadow-sm transition-colors"
               :class="{
-                'bg-yellow-100 text-yellow-800': selectedOrder.status === 'PENDING',
-                'bg-green-100 text-green-800': selectedOrder.status === 'CONFIRMED',
-                'bg-red-100 text-red-800': selectedOrder.status === 'CANCELED'
+                'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20': selectedOrder.status === 'PENDING',
+                'bg-green-50 text-green-700 ring-1 ring-green-600/20': selectedOrder.status === 'CONFIRMED',
+                'bg-red-50 text-red-700 ring-1 ring-red-600/20': selectedOrder.status === 'CANCELED'
               }"
             >
               {{ getStatusText(selectedOrder.status) }}
             </span>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm text-gray-500">Order ID</p>
-              <p class="font-medium">{{ selectedOrder.id }}</p>
+          
+          <div class="grid grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl">
+            <div class="space-y-1">
+              <p class="text-sm font-medium text-gray-500">Order ID</p>
+              <p class="text-base font-semibold text-gray-900">{{ selectedOrder.id }}</p>
             </div>
-            <div>
-              <p class="text-sm text-gray-500">Date</p>
-              <p class="font-medium">{{ formatDate(selectedOrder.orderTime) }}</p>
+            <div class="space-y-1">
+              <p class="text-sm font-medium text-gray-500">Date</p>
+              <p class="text-base font-semibold text-gray-900">{{ formatDate(selectedOrder.orderTime) }}</p>
             </div>
-            <div>
-              <p class="text-sm text-gray-500">Product</p>
-              <p class="font-medium">{{ selectedOrder.product ? selectedOrder.product.name : 'N/A' }}</p>
+            <div class="space-y-1">
+              <p class="text-sm font-medium text-gray-500">Product</p>
+              <p class="text-base font-semibold text-gray-900">{{ selectedOrder.product ? selectedOrder.product.name : 'N/A' }}</p>
             </div>
-            <div>
-              <p class="text-sm text-gray-500">Quantity</p>
-              <p class="font-medium">{{ selectedOrder.amount }}</p>
+            <div class="space-y-1">
+              <p class="text-sm font-medium text-gray-500">Quantity</p>
+              <p class="text-base font-semibold text-gray-900">{{ selectedOrder.amount }}</p>
             </div>
-            <div>
-              <p class="text-sm text-gray-500">Total Amount</p>
-              <p class="font-medium">{{ formatPrice(selectedOrder.cost) }} Kč</p>
+            <div class="col-span-2 pt-2 border-t border-gray-200">
+              <p class="text-sm font-medium text-gray-500">Total Amount</p>
+              <p class="text-lg font-bold text-gray-900">
+                {{ formatPrice(selectedOrder.cost) }} Kč
+              </p>
             </div>
           </div>
         </div>
 
         <!-- Approval/Rejection Section -->
-        <div v-if="selectedOrder.status === 'PENDING'" class="space-y-3 pt-4 border-t border-gray-200">
-          <h3 class="text-lg font-medium text-gray-800">Decision</h3>
-          <div>
-            <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">
-              Comment
-            </label>
-            <textarea
-              id="comment"
-              v-model="approvalComment"
-              rows="3"
-              class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="Enter your decision comment..."
-            ></textarea>
+        <div v-if="selectedOrder.status === 'PENDING'" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-900">Decision</h3>
           </div>
-          <div class="flex justify-end space-x-3 pt-2">
-            <button
-              @click="rejectOrder"
-              class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
-              :disabled="workflowStore.loading"
-            >
-              Reject
-            </button>
-            <button
-              @click="approveOrder"
-              class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-              :disabled="workflowStore.loading"
-            >
-              Approve
-            </button>
+          
+          <div class="bg-white rounded-xl">
+            <div class="p-4 space-y-3">
+              <label for="comment" class="block text-sm font-medium text-gray-700">
+                Comment
+              </label>
+              <textarea
+                id="comment"
+                v-model="approvalComment"
+                rows="3"
+                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-shadow resize-none"
+                placeholder="Enter your decision comment..."
+              ></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-3 px-4 py-3 bg-gray-50 rounded-b-xl">
+              <button
+                @click="rejectOrder"
+                class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all disabled:opacity-50"
+                :disabled="workflowStore.loading"
+              >
+                Reject Order
+              </button>
+              <button
+                @click="approveOrder"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
+                :disabled="workflowStore.loading"
+              >
+                Approve Order
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Approval History -->
-        <div v-if="selectedOrder.status !== 'PENDING'" class="space-y-3 pt-4 border-t border-gray-200">
-          <h3 class="text-lg font-medium text-gray-800">Approval History</h3>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="text-sm text-gray-700">
-              <span class="font-medium">Status:</span> {{ getStatusText(selectedOrder.status) }}
-            </p>
-            <p class="text-sm text-gray-700" v-if="selectedOrder.decisionTime">
-              <span class="font-medium">Approved/Rejected:</span> {{ formatDate(selectedOrder.decisionTime) }}
-            </p>
-            <p class="text-sm text-gray-700" v-if="selectedOrder.approvedBy">
-              <span class="font-medium">User:</span> {{ selectedOrder.approvedBy }}
-            </p>
-            <p class="text-sm text-gray-700 mt-2" v-if="selectedOrder.comment">
-              <span class="font-medium">Comment:</span>
-            </p>
-            <p class="text-sm text-gray-700 mt-1 p-2 bg-white rounded border border-gray-200" v-if="selectedOrder.comment">
-              {{ selectedOrder.comment }}
-            </p>
+        <div v-if="selectedOrder.status !== 'PENDING'" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-900">Approval History</h3>
+          </div>
+          
+          <div class="bg-gray-50 rounded-xl divide-y divide-gray-200">
+            <div class="p-4 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-500">Status</span>
+                <span
+                  class="px-2.5 py-1 text-sm font-medium rounded-full"
+                  :class="{
+                    'bg-green-50 text-green-700 ring-1 ring-green-600/20': selectedOrder.status === 'CONFIRMED',
+                    'bg-red-50 text-red-700 ring-1 ring-red-600/20': selectedOrder.status === 'CANCELED'
+                  }"
+                >
+                  {{ getStatusText(selectedOrder.status) }}
+                </span>
+              </div>
+              
+              <div v-if="selectedOrder.decisionTime" class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-500">Decision Time</span>
+                <span class="text-sm text-gray-900">{{ formatDate(selectedOrder.decisionTime) }}</span>
+              </div>
+              
+              <div v-if="selectedOrder.approvedBy" class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-500">Processed By</span>
+                <span class="text-sm text-gray-900">{{ selectedOrder.approvedBy }}</span>
+              </div>
+            </div>
+            
+            <div v-if="selectedOrder.comment" class="p-4 space-y-2">
+              <span class="text-sm font-medium text-gray-500">Comment</span>
+              <p class="mt-1 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
+                {{ selectedOrder.comment }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -238,12 +328,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { 
-  DataTable, 
-  SearchBar, 
-  Modal, 
-  StatusBar, 
-  EmptyState 
+import {
+  DataTable,
+  SearchBar,
+  Modal,
+  StatusBar,
+  EmptyState
 } from '@/components/common'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
@@ -263,15 +353,16 @@ const searchQuery = ref('')
 const currentFilter = ref('all')
 const isDetailModalOpen = ref(false)
 const approvalComment = ref('')
+const expandedRow = ref(null)
 
 // Table headers in English
 const tableHeaders = [
   { field: 'id', label: 'ID', sortable: true },
-  { field: 'product.name', label: 'Product', sortable: true },
+  { field: 'orderItems', label: 'Items Count', sortable: true },
   { field: 'orderTime', label: 'Date', sortable: true },
   { field: 'cost', label: 'Amount', sortable: true },
+  { field: 'orderType', label: 'Type', sortable: true },
   { field: 'status', label: 'Status', sortable: true },
-  { field: 'type', label: 'Type', sortable: false },
   { field: 'actions', label: '', sortable: false, class: 'text-right' },
 ]
 
@@ -308,9 +399,9 @@ const filteredOrders = computed(() => {
     console.error('Orders is not an array:', workflowStore.items);
     return [];
   }
-  
+
   return workflowStore.filteredOrders(
-    currentFilter.value === 'all' ? 'all' : currentFilter.value, 
+    currentFilter.value === 'all' ? 'all' : currentFilter.value,
     searchQuery.value
   );
 })
@@ -389,7 +480,7 @@ const confirmDelete = async (order) => {
 // Update success messages
 const approveOrder = async () => {
   if (!selectedOrder.value) return
-  
+
   try {
     const success = await workflowStore.approveOrder(selectedOrder.value.id, approvalComment.value);
     if (success) {
@@ -404,7 +495,7 @@ const approveOrder = async () => {
 
 const rejectOrder = async () => {
   if (!selectedOrder.value) return
-  
+
   try {
     const success = await workflowStore.rejectOrder(selectedOrder.value.id, approvalComment.value);
     if (success) {
@@ -416,32 +507,131 @@ const rejectOrder = async () => {
     errorStore.handle(err);
   }
 }
+
+const toggleRow = (id) => {
+  expandedRow.value = expandedRow.value === id ? null : id
+}
 </script>
 
 <style scoped>
-/* Přidáme hezké přechody */
+/* Base transitions */
 .transition {
   transition: all 0.2s ease;
 }
 
-/* Oživení tlačítek při najetí */
+/* Button hover effect */
 button:hover {
   transform: translateY(-1px);
 }
 
-/* Vylepšený styl pro tabulku */
+/* Table styles */
 .orders-table {
   border-radius: 8px;
   overflow: hidden;
 }
 
-/* Drobné zvýraznění pro status tagy */
+/* Status tag enhancement */
 span[class*="bg-"] {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Vylepšení modálního okna */
+/* Modal enhancement */
 :deep(.modal-content) {
   max-width: 700px;
 }
-</style> 
+
+/* Modern expand animation */
+.animate-expand-content {
+  animation: expandContent 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+  will-change: transform, opacity;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes expandContent {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.95) translateY(-10px);
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+/* Table row hover and transitions */
+tr {
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+tr:hover td {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Expanded row specific styles */
+tr[class*="bg-blue-50"] td {
+  position: relative;
+}
+
+tr[class*="bg-blue-50"] td::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: rgb(59, 130, 246);
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+tr[class*="bg-blue-50"]:hover td::after {
+  transform: scaleX(1);
+}
+
+/* Scrollbar styling */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Sticky header */
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgb(249, 250, 251);
+  backdrop-filter: blur(8px);
+}
+
+thead::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid rgb(229, 231, 235);
+}
+</style>

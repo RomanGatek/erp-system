@@ -14,6 +14,11 @@ public class ProductRequest {
 
     @NotNull(message = "Product price must not be null")
     @Positive(message = "Product price must be greater than zero")
-    private Double price;
+    private double buyoutPrice;
+
+    @NotNull(message = "Product price must not be null")
+    @Positive(message = "Product price must be greater than zero")
+    private double purchasePrice;
+
     private String description;
 }

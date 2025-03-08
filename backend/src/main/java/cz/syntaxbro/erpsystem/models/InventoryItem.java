@@ -25,5 +25,6 @@ public class InventoryItem {
     private Product product;
 
     @PositiveOrZero(message = "Item quantity must be zero or positive")
-    private int quantity;
+    @Column(name = "stocked_amount")
+    private int stockedAmount;
 }

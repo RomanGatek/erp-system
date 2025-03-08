@@ -13,8 +13,6 @@ public class ErpSystemApplication {
     public static void main(String[] args) {
         SpringApplication.run(ErpSystemApplication.class, args);
     }
-
-
     @Getter
     static Logger logger = LoggerFactory.getLogger(ErpSystemApplication.class.getName());
 

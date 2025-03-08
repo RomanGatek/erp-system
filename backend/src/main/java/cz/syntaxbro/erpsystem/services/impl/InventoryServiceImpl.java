@@ -36,7 +36,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public void reserveStock(Long itemId, int quantity) {
         InventoryItem item = this.getItem(itemId);
-        int newQuantity = item.getQuantity() - quantity;
+        int newQuantity = item.getStockedAmount() - quantity;
 
         if (newQuantity < 0) {
             throw new IllegalArgumentException("We do not have enough quantity of this item.");
@@ -68,7 +68,7 @@ public class InventoryServiceImpl implements InventoryService {
     public void receiveStock(Long itemId, int quantity) {
         InventoryItem inventoryItem = getItem(itemId);
         if (inventoryItem != null) {
-            inventoryItem.setQuantity(inventoryItem.getQuantity() + quantity);
+            inventoryItem.setStockedAmount(inventoryItem.getStockedAmount() + quantity);
             inventoryRepository.save(inventoryItem);
         }
     }
@@ -77,12 +77,12 @@ public class InventoryServiceImpl implements InventoryService {
     public void releaseStock(Long itemId, int quantity) {
         InventoryItem inventoryItem = getItem(itemId);
         if (inventoryItem != null) {
-            if (inventoryItem.getQuantity() < quantity) {
+            if (inventoryItem.getStockedAmount() < quantity) {
                 throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "not enough quantity of product");
             }
-            inventoryItem.setQuantity(inventoryItem.getQuantity() - quantity);
+            inventoryItem.setStockedAmount(inventoryItem.getStockedAmount() - quantity);
 
-            if (inventoryItem.getQuantity() < quantityWarning()) {
+            if (inventoryItem.getStockedAmount() < quantityWarning()) {
                 inventoryRepository.save(inventoryItem);
                 System.out.println(inventoryItem);
                 throw new ResponseStatusException(HttpStatus.OK, "last pieces in stock");
@@ -95,7 +95,7 @@ public class InventoryServiceImpl implements InventoryService {
     public boolean isStockAvailable(Long itemId, int quantity) {
         InventoryItem item = this.getItem(itemId);
 
-        return item.getQuantity() >= quantity;
+        return item.getStockedAmount() >= quantity;
     }
 
     @Override

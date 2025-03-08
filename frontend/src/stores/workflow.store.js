@@ -15,40 +15,39 @@ export const useWorkflowStore = defineStore('workflow', {
     sorting: setupSort('orderTime', 'desc'),
     pagination: { currentPage: 1, perPage: 10 }
   }),
-  
+
   getters: {
     pendingOrders: (state) => state.items.filter(order => order.status === 'PENDING'),
     confirmedOrders: (state) => state.items.filter(order => order.status === 'CONFIRMED'),
     canceledOrders: (state) => state.items.filter(order => order.status === 'CANCELED'),
-    
+
     filteredOrders: (state) => (filter, searchQuery) => {
       if (!Array.isArray(state.items)) {
         return [];
       }
-      
-      let filtered = filter === 'all' 
+
+      let filtered = filter === 'all'
         ? state.items
         : state.items.filter(order => order.status.toLowerCase() === filter);
-      
+
       if (searchQuery?.trim()) {
         const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(order => 
+        filtered = filtered.filter(order =>
           order.id.toString().includes(query) ||
           (order.product?.name?.toLowerCase().includes(query))
         );
       }
-      
+
       return filtered;
     },
-    
+
     paginatedOrders: (state) => __paginate(state)
   },
-  
+
   actions: {
     async fetchOrders() {
       this.loading = true;
       this.error = null;
-      
       try {
         const response = await api.get('/orders');
         if (Array.isArray(response.data)) {
@@ -64,13 +63,14 @@ export const useWorkflowStore = defineStore('workflow', {
         throw err;
       } finally {
         this.loading = false;
+        console.log({...this.items[0]})
       }
     },
-    
+
     async getOrderById(id) {
       this.loading = true;
       this.error = null;
-      
+
       try {
         const response = await api.get(`/orders/${id}`);
         if (response.data?.id) {
@@ -85,41 +85,45 @@ export const useWorkflowStore = defineStore('workflow', {
         this.loading = false;
       }
     },
-    
+
     async approveOrder(orderId, comment) {
       this.loading = true;
       this.error = null;
       const notifier = useNotifier();
       const inventoryStore = useInventoryStore();
-      
+
       try {
-        // Nejdřív zkontrolujeme dostupnost na skladě
+        // Get the order with its items
         const order = this.items.find(o => o.id === orderId);
-        if (!order?.product?.id) {
-          throw new Error('Order or product not found');
+        if (!order?.orderItems?.length) {
+          throw new Error('Order or order items not found');
         }
-        
-        // Načteme aktuální stav skladu
+
+        // Check inventory for each item
         await inventoryStore.fetchItems();
-        const inventoryItem = inventoryStore.items.find(
-          item => item.product.id === order.product.id
-        );
-        
-        if (!inventoryItem || inventoryItem.quantity < order.amount) {
-          notifier.error('Nedostatek zboží na skladě pro schválení objednávky');
-          return false;
+        for (const orderItem of order.orderItems) {
+          const inventoryItem = inventoryStore.items.find(
+            item => item.id === orderItem.inventoryItemId
+          );
+
+          if (!inventoryItem || inventoryItem.quantity < orderItem.needQuantity) {
+            notifier.error(`Insufficient stock for item: ${orderItem.name}`);
+            return false;
+          }
         }
-        
-        // Schválíme objednávku
+
+        // Approve the order
         const response = await api.put(`/orders/${orderId}/confirm`, comment);
-        
+
         if (response.data) {
-          // Aktualizujeme stav skladu
-          await api.put(`/inventory/${inventoryItem.id}/release`, {
-            params: { quantity: order.amount }
-          });
-          
-          // Aktualizujeme lokální stav
+          // Update inventory for each item
+          for (const orderItem of order.orderItems) {
+            await api.put(`/inventory/${orderItem.inventoryItemId}/release`, {
+              params: { quantity: orderItem.needQuantity }
+            });
+          }
+
+          // Update local state
           const index = this.items.findIndex(o => o.id === orderId);
           if (index !== -1) {
             this.items[index] = {
@@ -130,7 +134,7 @@ export const useWorkflowStore = defineStore('workflow', {
               decisionTime: new Date().toISOString()
             };
           }
-          
+
           if (this.selectedOrder?.id === orderId) {
             this.selectedOrder = {
               ...this.selectedOrder,
@@ -140,8 +144,8 @@ export const useWorkflowStore = defineStore('workflow', {
               decisionTime: new Date().toISOString()
             };
           }
-          
-          await inventoryStore.fetchItems(); // Obnovíme stav skladu
+
+          await inventoryStore.fetchItems(); // Refresh inventory state
           return true;
         }
         return false;
@@ -152,14 +156,14 @@ export const useWorkflowStore = defineStore('workflow', {
         this.loading = false;
       }
     },
-    
+
     async rejectOrder(orderId, comment) {
       this.loading = true;
       this.error = null;
 
       try {
         const response = await api.put(`/orders/${orderId}/cancel`, comment);
-        
+
         if (response.status >= 200 && response.status < 300) {
           const index = this.items.findIndex(o => o.id === orderId);
           if (index !== -1) {
@@ -171,7 +175,7 @@ export const useWorkflowStore = defineStore('workflow', {
               decisionTime: new Date().toISOString()
             };
           }
-          
+
           if (this.selectedOrder?.id === orderId) {
             this.selectedOrder = {
               ...this.selectedOrder,
@@ -191,15 +195,15 @@ export const useWorkflowStore = defineStore('workflow', {
         this.loading = false;
       }
     },
-    
+
     async deleteOrder(orderId) {
       this.loading = true;
       this.error = null;
-      
+
       try {
         await api.delete(`/orders/${orderId}`);
         this.items = this.items.filter(o => o.id !== orderId);
-        
+
         if (this.selectedOrder?.id === orderId) {
           this.selectedOrder = null;
         }
@@ -211,12 +215,12 @@ export const useWorkflowStore = defineStore('workflow', {
         this.loading = false;
       }
     },
-    
+
     setSearch(query) {
       this.searchQuery = query;
       this.pagination.currentPage = 1;
     },
-    
+
     setSorting(field) {
       if (this.sorting.field === field) {
         this.sorting.direction = this.sorting.direction === 'asc' ? 'desc' : 'asc';
@@ -225,13 +229,13 @@ export const useWorkflowStore = defineStore('workflow', {
         this.sorting.direction = 'asc';
       }
     },
-    
+
     setPage(page) {
       this.pagination.currentPage = page;
     },
-    
+
     clearError() {
       this.error = null;
     }
   }
-}); 
+});

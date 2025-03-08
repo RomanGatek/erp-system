@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.models;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -21,17 +22,16 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    @JsonManagedReference
-    private Product product;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch=FetchType.EAGER)
+    private List<OrderItem> orderItems;
 
-    private int amount;
     private double cost;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
     private Status status;
+
+    @Enumerated(EnumType.STRING)
+    private OrderType orderType;
 
     @Column(name = "order_time")
     private LocalDateTime orderTime;
@@ -39,13 +39,29 @@ public class Order {
     @Column(name = "comment", length = 500)
     private String comment;
     
-    @Column(name = "approved_by")
-    private String approvedBy;
+    @ManyToOne
+    @JoinColumn(name = "approved_by", nullable = false)
+    private User approvedBy;
     
     @Column(name = "decision_time")
     private LocalDateTime decisionTime;
 
     public enum Status {
-        PENDING, CONFIRMED, CANCELED
+        PENDING, CONFIRMED, CANCELED, IN_TRANSMIT
+    }
+
+    public enum OrderType {
+        SELL, PURCHASE
+    }
+
+    public void map(OrderRequest orderDto) {
+        this.cost = orderDto.getCost() == null ? this.cost : orderDto.getCost();
+        this.approvedBy = orderDto.getApprovedBy() == null ? this.approvedBy : orderDto.getApprovedBy();
+        this.decisionTime = orderDto.getDecisionTime() == null ? this.decisionTime : orderDto.getDecisionTime();
+        this.status = orderDto.getStatus() == null ? this.status : orderDto.getStatus();
+        this.orderItems = (orderDto.getOrderItems() == null || orderDto.getOrderItems().isEmpty())
+                ? this.orderItems
+                : orderDto.getOrderItems();
+        this.comment = orderDto.getComment() == null ? this.comment : orderDto.getComment();
     }
 }

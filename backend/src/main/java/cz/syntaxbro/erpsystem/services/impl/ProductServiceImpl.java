@@ -37,6 +37,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product updateProduct(Long id, Product product) {
+        return null;
+    }
+
+/*@Override
+    public Product updateProduct(Long id, Product product) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
                     existingProduct.setName(product.getName());
@@ -45,7 +50,7 @@ public class ProductServiceImpl implements ProductService {
                     return productRepository.save(existingProduct);
                 })
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
-    }
+    }*/
 
     @Override
     public void deleteProductById(Long id) {

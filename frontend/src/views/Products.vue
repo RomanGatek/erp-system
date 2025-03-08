@@ -45,7 +45,10 @@
                 {{ item.name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ formatPrice(item.price) }}
+                {{ formatPrice(item.buyoutPrice) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                {{ formatPrice(item.purchasePrice) }}
               </td>
               <td class="px-6 py-4 whitespace-normal text-gray-600 line-clamp-2">
                 {{ item.description }}
@@ -156,7 +159,8 @@ const reactiveProduct = $reactive({
 
 const tableHeaders = [
   { field: 'name', label: 'Name', sortable: true },
-  { field: 'price', label: 'Price', sortable: true },
+  { field: 'buyoutPrice', label: 'Buyout', sortable: true },
+  { field: 'purchasePrice', label: 'Purchase', sortable: true },
   { field: 'description', label: 'Description', sortable: false },
   { field: 'actions', label: '', sortable: false, class: 'text-right' },
 ]

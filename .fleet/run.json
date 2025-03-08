@@ -5,7 +5,8 @@
             "name": "Gradle Run SpringBoot",
             "tasks": [
                 "clean",
-                "bootRun"
+                "bootRun",
+                "--t"
             ],
             "environment": {
                 "DB_NAME": "erp_system_db",

@@ -36,7 +36,8 @@ public class ProductController {
         Product createdProduct = productService.createProduct(
                 Product.builder()
                         .name(productRequest.getName())
-                        .price(productRequest.getPrice())
+                        .buyoutPrice(productRequest.getBuyoutPrice())
+                        .purchasePrice(productRequest.getPurchasePrice())
                         .description(productRequest.getDescription())
                         .build()
         );

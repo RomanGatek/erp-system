@@ -25,7 +25,6 @@ export const useProductsStore = defineStore('products', {
     },
     actions: {
         async fetchProducts() {
-            console.log('fetchin intems')
             this.loading = true;
             try {
                 const response = await api.get('/products');

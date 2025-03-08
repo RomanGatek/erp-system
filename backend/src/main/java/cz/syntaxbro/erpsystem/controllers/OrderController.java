@@ -2,20 +2,18 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
+import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -41,41 +39,8 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
+    public ResponseEntity<List<OrderResponse>> getAllOrders() {
         return ResponseEntity.ok(orderService.getOrders());
-    }
-
-    @GetMapping("/cost-between")
-    public ResponseEntity<List<Order>> getOrdersByCost(
-            @RequestParam(value = "start", defaultValue = "0")
-            @NotNull
-            @Min(value = 0, message = "Cost must be grater or equal with 0")
-            double start,
-            @RequestParam(value = "end", defaultValue = "0")
-            @NotNull
-            @Min(value = 0, message = "Cost must be grater or equal with 0")
-            double end) {
-            List<Order> orders = orderService.getOrdersByCostBetween(start, end);
-            return ResponseEntity.ok(orders);
-    }
-
-    @GetMapping("/date-between")
-    public ResponseEntity<List<Order>> getOrdersByDateBetween(
-            @RequestParam(name = "start", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-
-            @RequestParam(name = "end", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end) {
-        if (start == null) {
-            start = LocalDateTime.now().toLocalDate().atStartOfDay();
-        }
-        if (end == null) {
-            end = LocalDateTime.now().with(LocalTime.MAX);
-        }
-        List<Order> orders = orderService.getOrdersByDateBetween(start, end);
-        return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/by-product")
@@ -88,10 +53,8 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(
-            @RequestParam @Min(value = 1, message = "Must be a number") Long itemId,
-            @RequestParam @Min(value = 1, message = "Must be positive number") int quantity) {
-        Order createdOrder = orderService.createdOrder(itemId, quantity);
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody Order order) {
+        Order createdOrder = orderService.createdOrder(order);
         return ResponseEntity.ok(createdOrder);
     }
 
@@ -140,36 +103,9 @@ public class OrderController {
         return ResponseEntity.ok(String.format("Order with id %s is deleted", id));
     }
 
-    @DeleteMapping("/delete-orders-with-product/{id}")
-    public ResponseEntity<String> deleteOrdersWithProductId(
-            @PathVariable(name = "id")
-            @NotNull
-            Long id) {
-            orderService.deleteOrderByProductId(id);
-            return ResponseEntity.ok("Orders with product id " + id + " are deleted");
-    }
-
-    @GetMapping("/pending")
-    public ResponseEntity<List<Order>> getPendingOrders() {
-        List<Order> pendingOrders = orderService.getOrdersByStatus(Order.Status.PENDING);
-        return ResponseEntity.ok(pendingOrders);
-    }
-
-    @GetMapping("/confirmed")
-    public ResponseEntity<List<Order>> getConfirmedOrders() {
-        List<Order> confirmedOrders = orderService.getOrdersByStatus(Order.Status.CONFIRMED);
-        return ResponseEntity.ok(confirmedOrders);
-    }
-
-    @GetMapping("/canceled")
-    public ResponseEntity<List<Order>> getCanceledOrders() {
-        List<Order> canceledOrders = orderService.getOrdersByStatus(Order.Status.CANCELED);
-        return ResponseEntity.ok(canceledOrders);
-    }
 
     @PutMapping("/{orderId}/change-status")
-    public ResponseEntity<Order> updateOrderStatus(@PathVariable ("orderId") long orderId,
-                                                   @RequestParam Order.Status status) {
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable ("orderId") long orderId, @RequestParam Order.Status status) {
         orderService.updateOrderStatus(orderId, status);
         Order order = orderService.getOrderById(orderId);
         return ResponseEntity.ok(order);

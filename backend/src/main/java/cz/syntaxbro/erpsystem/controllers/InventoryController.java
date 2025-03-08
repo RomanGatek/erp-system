@@ -1,6 +1,5 @@
 package cz.syntaxbro.erpsystem.controllers;
 
-import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
@@ -19,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/inventory")
 @Validated
+@PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
 @EnableMethodSecurity()
 public class InventoryController {
 
@@ -32,20 +32,22 @@ public class InventoryController {
     }
 
     @GetMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<InventoryItem> getItem(@PathVariable @Min(1) Long itemId) {
         return ResponseEntity.ok(inventoryService.getItem(itemId));
     }
 
+    @GetMapping
+    public ResponseEntity<List<InventoryItem>> getAllItems() {
+        return ResponseEntity.ok(inventoryService.getAll());
+    }
+
     @PostMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<InventoryItem> addItem(@Valid @RequestBody InventoryItem item) {
         InventoryItem savedItem = inventoryService.addItem(item);
         return ResponseEntity.ok(savedItem);
     }
 
     @PutMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<InventoryItem> updateItem(
             @PathVariable @Min(value = 1, message = "Must be positive number") Long itemId,
             @Valid @RequestBody InventoryItem item
@@ -54,24 +56,17 @@ public class InventoryController {
         if (savedItem.isPresent()) {
             var item_ = savedItem.get();
             if (item.getProduct() != null) item_.setProduct(item.getProduct());
-            item_.setQuantity(item.getQuantity());
+            item_.setStockedAmount(item.getStockedAmount());
             item_ = inventoryRepository.save(item_);
             return ResponseEntity.status(HttpStatus.OK).body(item_);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<List<InventoryItem>> getAllItems() {
-        ErpSystemApplication.getLogger().info("Trying to get all items");
-        return ResponseEntity.ok(inventoryRepository.findAll());
-    }
 
     @DeleteMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<?> removeItem(
-            @PathVariable @Min(value = 1, message = "Must be positive number") Long itemId
+        @PathVariable @Min(value = 1, message = "Must be positive number") Long itemId
     ) {
         var savedItem = inventoryRepository.findById(itemId);
         if (savedItem.isPresent()) {
@@ -80,27 +75,5 @@ public class InventoryController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-    }
-
-    @PutMapping("/{itemId}/receive")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<InventoryItem> receiveItem(
-            @PathVariable
-            @Min(value = 1, message = "Must be positive number") long itemId,
-            @RequestParam
-            @Min(value = 0, message = "Must be positive number or zero") int quantity){
-        inventoryService.receiveStock(itemId, quantity);
-        return ResponseEntity.ok(inventoryService.getItem(itemId));
-    }
-
-    @PutMapping("/{itemId}/release")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<InventoryItem> releaseItem(
-            @PathVariable
-            @Min(value = 1, message = "Must be positive number") long itemId,
-            @RequestParam
-            @Min(value = 0, message = "Must be positive number or zero") int quantity){
-        inventoryService.releaseStock(itemId, quantity);
-        return ResponseEntity.ok(inventoryService.getItem(itemId));
     }
 }
