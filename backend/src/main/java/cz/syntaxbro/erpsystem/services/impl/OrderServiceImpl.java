@@ -6,6 +6,7 @@ import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.requests.OrderUpdateRequest;
 import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
@@ -115,15 +116,54 @@ public class OrderServiceImpl implements OrderService {
 
         order.setCost(totalCost);
         order.setOrderItems(orderItems);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
 
         return orderRepository.save(order);
     }
 
     @Override
-    public void updateOrder(Long orderId, OrderRequest orderDto) {
+    public Order updateOrder(Long orderId, OrderUpdateRequest orderRequest) {
         Order order = getOrderById(orderId);
-        order.map(orderDto);
-        orderRepository.save(order);
+        if (orderRequest.getOrderType() != null) {
+            order.setOrderType(orderRequest.getOrderType());
+        }
+
+        if (orderRequest.getComment() != null) {
+            order.setComment(orderRequest.getComment());
+        }
+
+        order.setUpdatedAt(LocalDateTime.now());
+
+        order.setOrderItems(orderRequest.getProducts()
+                .stream().map(product -> {
+                            Product productFromDb = productRepository.findById(product.getId())
+                                    .orElseThrow(() -> new ResourceNotFoundException("Product with id " + product.getId() + " not found"));
+
+                            var optionalInventoryItem = inventoryService.findItemByProductForOrder(productFromDb);
+
+                            InventoryItem inventoryItem;
+
+                            if (optionalInventoryItem.isEmpty()) {
+                                inventoryService.addItem(InventoryItem.builder()
+                                        .stockedAmount(0)
+                                        .product(productFromDb)
+                                        .build());
+
+                                inventoryItem = inventoryService.findItemByProduct(productFromDb);
+                            } else {
+                                inventoryItem = optionalInventoryItem.get();
+                            }
+
+                            return OrderItem.builder()
+                                    .order(order)
+                                    .inventoryItem(inventoryItem)
+                                    .quantity(product.getQuantity())
+                                    .build();
+                        }).toList()
+        );
+
+        return orderRepository.save(order);
     }
 
     @Override
@@ -135,7 +175,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order confirmOrder(Long id, String comment) {
         Order order = getOrderById(id);
-        
+
         // Only pending orders can be confirmed
         if (!order.getStatus().equals(Order.Status.PENDING)) {
             throw new IllegalStateException("Only pending orders can be confirmed");
@@ -144,7 +184,13 @@ public class OrderServiceImpl implements OrderService {
         User user = getCurrentUser();
 
         for (var item : order.getOrderItems()) {
-            if (item != null) inventoryService.releaseStock(item.getInventoryItem().getId(), item.getQuantity());
+            if (item != null) {
+                if (order.getOrderType() == Order.OrderType.SELL) {
+                    inventoryService.releaseStock(item.getInventoryItem().getId(), item.getQuantity());
+                } else if (order.getOrderType() == Order.OrderType.PURCHASE) {
+                    inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
+                }
+            };
         }
         order.setStatus(Order.Status.CONFIRMED);
         order.setComment(comment);
@@ -158,7 +204,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order cancelOrder(Long id, String comment) {
         Order order = getOrderById(id);
-        
+
         // Only pending orders can be canceled
         if (!order.getStatus().equals(Order.Status.PENDING)) {
             throw new IllegalStateException("Only pending orders can be canceled");
@@ -169,14 +215,14 @@ public class OrderServiceImpl implements OrderService {
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         User user = userDetails.getUser();
 
-            for (var item : order.getOrderItems()) {
-                if (item != null) inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
-            }
-            order.setStatus(Order.Status.CANCELED);
-            order.setComment(comment);
-            order.setDecisionTime(LocalDateTime.now());
-            order.setApprovedBy(user);
-            orderRepository.save(order);
+        for (var item : order.getOrderItems()) {
+            if (item != null) inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
+        }
+        order.setStatus(Order.Status.CANCELED);
+        order.setComment(comment);
+        order.setDecisionTime(LocalDateTime.now());
+        order.setApprovedBy(user);
+        orderRepository.save(order);
 
         return orderRepository.save(order);
     }
@@ -194,7 +240,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ResponseEntity<?> updateOrderStatus(Long orderId, Order.Status status){
+    public ResponseEntity<?> updateOrderStatus(Long orderId, Order.Status status) {
         Order order = getOrderById(orderId);
 
         /*

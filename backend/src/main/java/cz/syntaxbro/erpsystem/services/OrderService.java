@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.services;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
+import cz.syntaxbro.erpsystem.requests.OrderUpdateRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -18,7 +19,7 @@ public interface OrderService {
 
     Order createdOrder(OrderCreateRequest orderRequest);
 
-    void updateOrder(Long orderId, OrderRequest orderDto);
+    Order updateOrder(Long orderId, OrderUpdateRequest orderRequest);
 
     void deleteOrder(Long id);
 

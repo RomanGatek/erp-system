@@ -6,19 +6,16 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
-public class OrderCreateRequest {
+public class OrderUpdateRequest {
 
-    @NotNull(message = "Order Type cannot be null")
     private Order.OrderType orderType;
-
-    @NotNull(message = "Order Type cannot be null")
     private String comment;
-
-    List<ProductRequest> products;
+    private List<ProductRequest> products;
 
     @Data
     public static class ProductRequest {

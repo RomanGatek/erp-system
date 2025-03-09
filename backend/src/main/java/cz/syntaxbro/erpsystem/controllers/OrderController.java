@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.controllers;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
+import cz.syntaxbro.erpsystem.requests.OrderUpdateRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.validation.Valid;
@@ -60,6 +61,16 @@ public class OrderController {
         return ResponseEntity.ok(createdOrder);
     }
 
+    @PutMapping("/{orderId}")
+    public ResponseEntity<Order> updateOrder(
+            @PathVariable @Min(value = 1, message = "Must be a number") Long orderId,
+            @RequestBody OrderUpdateRequest orderRequest) {
+
+        Order updatedOrder = orderService.updateOrder(orderId, orderRequest);
+
+        return ResponseEntity.ok(updatedOrder);
+    }
+
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<Order> cancelOrder(
             @PathVariable @Min(value = 1, message = "Must be a number") Long orderId,
@@ -84,18 +95,6 @@ public class OrderController {
 
         Order updatedOrder = orderService.addWorkflowComment(id, comment);
         return ResponseEntity.ok(updatedOrder);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updateOrder(
-            @PathVariable(name = "id")
-            @NotNull
-            Long id,
-            @RequestBody
-            @Valid
-            OrderRequest orderDto) {
-        orderService.updateOrder(id, orderDto);
-        return ResponseEntity.ok("Order with id " + id + " is updated");
     }
 
     @DeleteMapping("/{id}")
