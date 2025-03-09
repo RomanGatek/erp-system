@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "inventory_items")
 @Data
@@ -29,4 +31,6 @@ public class InventoryItem {
     @PositiveOrZero(message = "Item quantity must be zero or positive")
     @Column(name = "stocked_amount")
     private int stockedAmount;
+
+    private LocalDateTime createdAt;
 }

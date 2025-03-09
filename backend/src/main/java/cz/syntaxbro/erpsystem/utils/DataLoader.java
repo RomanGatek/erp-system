@@ -112,16 +112,19 @@ public class DataLoader implements CommandLineRunner {
                 .orElseThrow(() -> new RuntimeException("Black Tea not found"));
         Product milkProduct = productRepository.findByName("Semi-skimmed Milk")
                 .orElseThrow(() -> new RuntimeException("Semi-skimmed Milk not found"));
+        Product onionsProduct = productRepository.findByName("Onions 1kg")
+                .orElseThrow(() -> new RuntimeException("Onions 1kg not found"));
+        Product toiledPaperProduct = productRepository.findByName("Toilet Paper 8pcs")
+                .orElseThrow(() -> new RuntimeException("Toileet Paper 8pcs not found"));
+
 
         createInventoryItemIfNotExists(milkaProduct, 50);
         createInventoryItemIfNotExists(teaProduct, 120);
         createInventoryItemIfNotExists(milkProduct, 200);
+        createInventoryItemIfNotExists(onionsProduct, 400);
+        createInventoryItemIfNotExists(toiledPaperProduct, 500);
 
         createSampleOrders();
-
-        for (var i : orderService.getOrders()) {
-            ErpSystemApplication.getLogger().info("Order #{}\n", i);
-        }
     }
 
     /**
@@ -246,6 +249,7 @@ public class DataLoader implements CommandLineRunner {
             InventoryItem inventoryItem = InventoryItem.builder()
                     .product(product)
                     .stockedAmount(quantity)
+                    .createdAt(LocalDateTime.now())
                     .build();
             inventoryRepository.save(inventoryItem);
         }
