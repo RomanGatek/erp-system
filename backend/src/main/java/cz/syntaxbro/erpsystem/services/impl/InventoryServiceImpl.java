@@ -102,18 +102,6 @@ public class InventoryServiceImpl implements InventoryService {
         );
     }
 
-    private int supplierDeliveryDelay() {
-        return 7;
-    }
-
-    private int averageDailySail() {
-        return 50;
-    }
-
-    private int quantityWarning() {
-        return averageDailySail() * supplierDeliveryDelay();
-    }
-
 
     public InventoryItem getItem(Long itemId) {
         return inventoryRepository.findById(itemId)
