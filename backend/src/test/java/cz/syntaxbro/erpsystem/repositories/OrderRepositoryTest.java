@@ -55,8 +55,18 @@ class OrderRepositoryTest {
         assertNotNull(testUser.getId(), "User ID should be generated");
 
         // Creating products
-        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne");
-        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo");
+        ProductCategory productCategoryOne = ProductCategory.builder()
+                .name("firstCategory")
+                .description("test products")
+                .build();
+
+        ProductCategory productCategoryTwo = ProductCategory.builder()
+                .name("secondCategory")
+                .description("test products")
+                .build();
+
+        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne);
+        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo);
         productOne = productRepository.save(productOne);
         productTwo = productRepository.save(productTwo);
 

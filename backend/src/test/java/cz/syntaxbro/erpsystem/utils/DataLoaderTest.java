@@ -50,6 +50,7 @@ class DataLoaderTest {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+    private final ProductCategoryRepository productCategoryRepository;
 
     /**
      * Constructor to manually inject required repositories.
@@ -61,7 +62,8 @@ class DataLoaderTest {
                    @Autowired InventoryRepository inventoryRepository,
                    @Autowired ProductRepository productRepository,
                    @Autowired OrderRepository orderRepository,
-                   @Autowired OrderItemRepository orderItemRepository
+                   @Autowired OrderItemRepository orderItemRepository,
+                   @Autowired ProductCategoryRepository productCategoryRepository
     ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
@@ -70,6 +72,7 @@ class DataLoaderTest {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.productCategoryRepository = productCategoryRepository;
     }
 
     /**
@@ -82,7 +85,7 @@ class DataLoaderTest {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
         dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, 
-                                    productRepository, inventoryRepository, orderRepository, orderItemRepository, orderService);
+                                    productRepository, inventoryRepository, orderRepository, orderItemRepository, orderService, productCategoryRepository);
         dataLoader.run(); // Populates database with initial data.
     }
 

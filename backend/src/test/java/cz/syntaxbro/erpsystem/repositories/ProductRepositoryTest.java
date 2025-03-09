@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.repositories;
 
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.ProductCategory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,12 @@ class ProductRepositoryTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ProductCategoryRepository productCategoryRepository;
+
     private Product testProduct;
     private String uniqueName;
+    private ProductCategory productCategory;
 
     /**
      * Sets up test data before each test.
@@ -41,11 +46,18 @@ class ProductRepositoryTest {
         uniqueName = "Test Product " + UUID.randomUUID().toString().substring(0, 8);
         
         // Create product without specifying ID - let the database assign it
+        this.productCategory = ProductCategory.builder()
+                .name("Test")
+                .description("Test Product Description")
+                .build();
+        this.productCategory = productCategoryRepository.save(productCategory);
+
         this.testProduct = Product.builder()
                 .name(uniqueName)
                 .description("Test description")
                 .buyoutPrice(10.0)
                 .purchasePrice(20.0)
+                .productCategory(this.productCategory)
                 .build();
                 
         // Save the product
@@ -92,6 +104,7 @@ class ProductRepositoryTest {
                 .description("Another product with the same name.")
                 .buyoutPrice(40.00)
                 .purchasePrice(50.00)
+                .productCategory(this.productCategory)
                 .build();
 
         // Act & Assert: Expect a DataIntegrityViolationException due to unique constraint violation
