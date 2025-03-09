@@ -32,5 +32,5 @@ public class InventoryItem {
     @Column(name = "stocked_amount")
     private int stockedAmount;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 }
