@@ -85,15 +85,17 @@ public class OrderServiceImpl implements OrderService {
             Product product = productRepository.findById(orderItemRequest.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product with id " + orderItemRequest.getId() + " not found"));
 
-            InventoryItem inventoryItem = inventoryService.findItemByProduct(product);
+            var optionalInventoryItem = inventoryService.findItemByProductForOrder(product);
+            InventoryItem inventoryItem;
 
-            if (inventoryItem == null) {
+            if (optionalInventoryItem.isEmpty()) {
                 inventoryItem = InventoryItem.builder()
                         .product(product)
                         .stockedAmount(0)
                         .build();
-
                 inventoryService.addItem(inventoryItem);
+            } else {
+                inventoryItem = optionalInventoryItem.get();
             }
 
             double productPrice = orderRequest.getOrderType() == Order.OrderType.SELL

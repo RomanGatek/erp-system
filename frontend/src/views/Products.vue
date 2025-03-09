@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, watch} from 'vue'
 import { useProductsStore } from '@/stores/products'
 import { $reactive } from '@/utils/index.js'
 import { useNotifier } from '@/stores/notifier.js'
@@ -217,7 +217,8 @@ const deleteProduct = async (productId) => {
 const updateProduct = async () => {
   await productsStore.updateProduct(reactiveProduct.id, {
     name: reactiveProduct.name,
-    price: reactiveProduct.price,
+    buyoutPrice: reactiveProduct.buyoutPrice,
+    purchasePrice: reactiveProduct.purchasePrice,
     description: reactiveProduct.description
   })
   if (productsStore.error) {
@@ -249,10 +250,27 @@ const cancelAdd = () => {
   errorStore.clearServerErrors()
 }
 
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('cs-CZ', {
-    style: 'currency',
-    currency: 'CZK'
-  }).format(price)
-}
+watch(
+  [
+    () => reactiveProduct.name,
+    () => reactiveProduct.purchasePrice,
+    () => reactiveProduct.description,
+    () => reactiveProduct.buyoutPrice,
+  ],
+  ([newName, newPurchasePrice, newDescription, newBuyoutPrice],
+   [oldName, oldPurchasePrice, oldDescription, oldBuyoutPrice]) => {
+    if (newName !== oldName) {
+      errorStore.clear('name')
+    }
+    if (newPurchasePrice !== oldPurchasePrice) {
+      errorStore.clear('purchasePrice')
+    }
+    if (newDescription !== oldDescription) {
+      errorStore.clear('description')
+    }
+    if (newBuyoutPrice !== oldBuyoutPrice) {
+      errorStore.clear('buyoutPrice')
+    }
+  }
+)
 </script>

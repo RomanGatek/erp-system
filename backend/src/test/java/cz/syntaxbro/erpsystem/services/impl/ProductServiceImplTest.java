@@ -29,11 +29,12 @@ class ProductServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        testProduct = new Product();
-        testProduct.setId(1L);
-        testProduct.setName("Test Product");
-        testProduct.setPrice(99.99);
-        testProduct.setDescription("Test Description");
+        this.testProduct = Product.builder()
+                .id(1L)
+                .description("Sample product description")
+                .buyoutPrice(10)
+                .purchasePrice(20)
+                .build();
     }
 
     /**
@@ -89,7 +90,7 @@ class ProductServiceImplTest {
     void updateProduct_shouldReturnUpdatedProduct() {
         Product updatedProduct = new Product();
         updatedProduct.setName("Updated Product");
-        updatedProduct.setPrice(129.99);
+        updatedProduct.setPurchasePrice(129.99);
         updatedProduct.setDescription("Updated Description");
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
@@ -99,7 +100,7 @@ class ProductServiceImplTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("Updated Product");
-        assertThat(result.getPrice()).isEqualTo(129.99);
+        assertThat(result.getPurchasePrice()).isEqualTo(129.99);
         verify(productRepository, times(1)).findById(1L);
         verify(productRepository, times(1)).save(any(Product.class));
     }

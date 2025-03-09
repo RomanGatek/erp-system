@@ -30,11 +30,22 @@ public class InventoryServiceTest {
 
     private InventoryItem item1;
 
-    private final Product product = new Product(1L, "Test Product", 50.0, "Sample product description");
+    private Product product;
 
     @BeforeEach
     void setUp() {
-        item1 = new InventoryItem(1L, product, 10);
+        this.product = Product.builder()
+                .id(1L)
+                .description("Sample product description")
+                .buyoutPrice(10)
+                .purchasePrice(20)
+                .build();
+
+        this.item1 = InventoryItem.builder()
+                .id(1L)
+                .product(this.product)
+                .stockedAmount(10)
+                .build();
     }
 
     @Test
@@ -74,34 +85,5 @@ public class InventoryServiceTest {
         assertEquals("Item with id 1 not found", exception.getMessage());
 
         verify(inventoryRepository, times(1)).updateQuantity(itemId, newQuantity);
-    }
-
-
-    @Test
-    void receiveStock_successfully() {
-        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
-        inventoryService.receiveStock(1L, 100);
-        assertEquals(110, item1.getQuantity());
-        verify(inventoryRepository, times(1)).findById(1L);
-    }
-
-    @Test
-    void releaseStock_successfully() {
-        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
-        inventoryService.receiveStock(1L, 400);
-        inventoryService.releaseStock(1L, 1);
-        assertEquals(409, item1.getQuantity());
-        verify(inventoryRepository, times(2)).findById(1L);
-    }
-
-    @Test void releaseStock_config_noEnoughQuantity() {
-        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(item1));
-
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> inventoryService.releaseStock(1L, 300)
-        );
-        assertEquals(HttpStatus.NOT_ACCEPTABLE, exception.getStatusCode());
-        assertEquals("not enough quantity of product", exception.getReason());
     }
 }

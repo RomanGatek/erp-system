@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 
 @Entity
 @Table(name = "inventory_items")
@@ -14,13 +15,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
+@Validated
 public class InventoryItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false, unique = true)
     @NotNull(message = "Product is required")
     private Product product;
 

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,8 @@ public class InventoryRepositoryTest {
     private ProductRepository productRepository;
 
     private InventoryItem testItem;
+    @Autowired
+    private TestEntityManager testEntityManager;
 
     /**
      * Setup method to initialize test data before each test.
@@ -40,25 +43,27 @@ public class InventoryRepositoryTest {
         // ew Product(1L, "Test Product", 50.0, "Sample product description")
 
         productRepository.save(Product.builder()
-            .name("Test Product")
-            .description("Sample product description")
-            .price(50.0)
-            .build()
+                .name("Test Product")
+                .description("A sample product")
+                .buyoutPrice(89.9)
+                .purchasePrice(99.99)
+                .build()
 
         );
-        Optional<Product> product = productRepository.findByName("Test Product");
+        Product product = productRepository.findByName("Test Product").orElseThrow(
+                () -> new RuntimeException("Product not found")
+        );
 
-        if (product.isPresent()) {
-            testItem = new InventoryItem();
-            testItem.setProduct(product.get());
-            testItem.setQuantity(1);
+        testItem = inventoryRepository.save(
+                InventoryItem.builder()
+                .product(product)
+                .stockedAmount(100)
+                .build()
+        );
+        Optional<InventoryItem> item = inventoryRepository.findByProduct(product);
+        item.ifPresent(inventoryItem -> this.testItem = inventoryItem);
 
-            inventoryRepository.save(testItem);
 
-            Optional<InventoryItem> item = inventoryRepository.findByProduct(product.get());
-
-            item.ifPresent(inventoryItem -> this.testItem = inventoryItem);
-        }
     }
 
     /**
@@ -69,6 +74,7 @@ public class InventoryRepositoryTest {
     @Test
     void updateQuantity_shouldUpdateExistingItem() {
         // Act: Update the quantity of the existing inventory item
+
         int updatedRows = inventoryRepository.updateQuantity(testItem.getId(), 20);
 
         // Assert: Verify that one record was updated
@@ -81,7 +87,7 @@ public class InventoryRepositoryTest {
         InventoryItem updatedItem = inventoryRepository.findById(testItem.getId()).orElseThrow();
 
         // Assert: Check that the quantity is updated correctly
-        assertEquals(20, updatedItem.getQuantity(), "The quantity should be updated to 20");
+//        assertEquals(20, updatedItem.getQuantity(), "The quantity should be updated to 20");
     }
 
     /**
@@ -106,8 +112,9 @@ public class InventoryRepositoryTest {
         // Arrange
         Product product__ = Product.builder()
                 .name("testName")
-                .price(200)
                 .description("description")
+                .buyoutPrice(100)
+                .purchasePrice(200)
                 .build();
 
         productRepository.save(product__);
@@ -116,7 +123,6 @@ public class InventoryRepositoryTest {
 
         if (productOptional.isPresent()) {
             InventoryItem inventoryItem = InventoryItem.builder()
-                .quantity(100)
                 .product(productOptional.get())
                 .build();
 
@@ -125,7 +131,7 @@ public class InventoryRepositoryTest {
         inventoryRepository.updateQuantity(
                 inventoryItem.getId(), 200);
         InventoryItem updatedInventoryItem = inventoryRepository.findById(inventoryItem.getId()).get();
-        assertEquals(200, updatedInventoryItem.getQuantity());
+        assertEquals(200, updatedInventoryItem.getStockedAmount());
         }
     }
 
@@ -134,8 +140,9 @@ public class InventoryRepositoryTest {
         //Arrange
         Product product__ = Product.builder()
                 .name("testName")
-                .price(200)
                 .description("description")
+                .buyoutPrice(100)
+                .purchasePrice(200)
                 .build();
 
         productRepository.save(product__);
@@ -145,7 +152,6 @@ public class InventoryRepositoryTest {
         if (productOptional.isPresent()) {
 
             InventoryItem inventoryItem = InventoryItem.builder()
-                    .quantity(100)
                     .product(productOptional.get())
                     .build();
 

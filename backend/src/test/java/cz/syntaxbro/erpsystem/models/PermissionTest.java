@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 class PermissionTest {
 
     @Autowired
@@ -29,7 +31,7 @@ class PermissionTest {
     @Test
     void saveAndRetrievePermission_ShouldPersistCorrectly() {
         // Arrange: Create and save a new permission
-        Permission permission = new Permission("READ_PRIVILEGES");
+        Permission permission = new Permission("APPROVE_BUDGETS");
         Permission savedPermission = permissionRepository.save(permission);
         entityManager.flush();
 
@@ -39,7 +41,7 @@ class PermissionTest {
         // Assert: Verify the permission was correctly saved and retrieved
         assertThat(foundPermission).isNotNull();
         assertThat(foundPermission.getId()).isEqualTo(savedPermission.getId());
-        assertThat(foundPermission.getName()).isEqualTo("READ_PRIVILEGES");
+        assertThat(foundPermission.getName()).isEqualTo("APPROVE_BUDGETS");
     }
 
     /**

@@ -35,16 +35,22 @@ class InventoryControllerTest {
 
     private InventoryItem sampleItem;
 
+    private Product sampleProduct;
+
     @BeforeEach
     void setUp() {
-        sampleItem = new InventoryItem();
-        sampleItem.setId(1L);
+        this.sampleProduct = Product.builder()
+                .purchasePrice(10)
+                .buyoutPrice(10)
+                .description("test description")
+                .name("testName")
+                .build();
 
-        Product testProduct = new Product();
-        testProduct.setName("Test Product");
-
-        sampleItem.setProduct(testProduct);
-        sampleItem.setQuantity(10);
+        this.sampleItem = InventoryItem.builder()
+                .id(1L)
+                .stockedAmount(10)
+                .product(this.sampleProduct)
+                .build();
     }
 
     /**
@@ -123,33 +129,5 @@ class InventoryControllerTest {
 
         ResponseEntity<?> response = inventoryController.removeItem(1L);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-    /**
-     * Test: Fetching a single inventory item
-     * Expected result: 200 OK + item details
-     */
-    @Test
-    void testReceiveItem() {
-        doNothing().when(inventoryService).receiveStock(anyLong(), anyInt());
-        when(inventoryService.getItem(anyLong())).thenReturn(sampleItem);
-
-        ResponseEntity<InventoryItem> response = inventoryController.receiveItem(1L, 5);
-        assertNotNull(response.getBody());
-        assertEquals(1L, response.getBody().getId());
-    }
-
-    /**
-     * Test: Fetching a single inventory item
-     * Expected result: 200 OK + item details
-     */
-    @Test
-    void testReleaseItem() {
-        doNothing().when(inventoryService).releaseStock(anyLong(), anyInt());
-        when(inventoryService.getItem(anyLong())).thenReturn(sampleItem);
-
-        ResponseEntity<InventoryItem> response = inventoryController.releaseItem(1L, 3);
-        assertNotNull(response.getBody());
-        assertEquals(1L, response.getBody().getId());
     }
 }

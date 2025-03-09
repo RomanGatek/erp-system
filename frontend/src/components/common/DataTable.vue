@@ -47,13 +47,14 @@ defineProps({
             :key="header.field"
             :class="[
               'px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50',
-              header.field === 'actions' ? 'text-right' : 'text-left',
+              header.field === 'actions' ? 'text-right' : (header.align || 'text-left'),
               header.sortable ? 'cursor-pointer hover:bg-gray-100' : '',
               header.class || ''
             ]"
+            :data-field="header.field"
             @click="header.sortable && sortBy(header.field)"
           >
-            <div class="flex items-center" :class="header.field === 'actions' ? 'justify-end' : 'space-x-1'">
+            <div class="flex items-center" :class="header.field === 'actions' ? 'justify-end' : (header.align === 'text-center' ? 'justify-center' : header.align === 'text-right' ? 'justify-end' : 'justify-start')">
               <span>{{ header.label }}</span>
               <svg
                 v-if="header.sortable && sorting.field === header.field"
@@ -90,8 +91,11 @@ defineProps({
               <td
                 v-for="header in headers"
                 :key="header.field"
-                class="px-6 py-4 whitespace-nowrap"
-                :class="header.field === 'actions' ? 'text-right' : 'text-gray-600'"
+                :data-field="header.field"
+                :class="[
+                  'px-6 py-4 whitespace-nowrap text-gray-600',
+                  header.field === 'actions' ? 'text-right' : (header.align || 'text-left')
+                ]"
               >
                 <template v-if="header.field === 'actions' && (onEdit || onDelete)">
                   <div class="flex justify-end space-x-2">
@@ -121,9 +125,18 @@ defineProps({
                     v-if="item[header.field]"
                     :src="item[header.field]"
                     :alt="item[header.field]"
-                    class="w-8 h-8 object-cover rounded"
+                    :class="[
+                      'w-8 h-8 object-cover rounded',
+                      header.align === 'text-center' ? 'mx-auto' : header.align === 'text-right' ? 'ml-auto' : ''
+                    ]"
                   />
-                  <div v-else class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                  <div 
+                    v-else 
+                    :class="[
+                      'w-8 h-8 bg-gray-100 rounded flex items-center justify-center',
+                      header.align === 'text-center' ? 'mx-auto' : header.align === 'text-right' ? 'ml-auto' : ''
+                    ]"
+                  >
                     <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -263,5 +276,25 @@ tr[class*="bg-blue-50"] td::after {
 
 tr[class*="bg-blue-50"]:hover td::after {
   transform: scaleX(1);
+}
+
+/* Ensure text alignment in cells matches the headers */
+[data-field]:not([data-field="actions"]) {
+  text-align: inherit;
+}
+
+th.text-center, 
+td.text-center {
+  text-align: center !important;
+}
+
+th.text-right, 
+td.text-right {
+  text-align: right !important;
+}
+
+th.text-left, 
+td.text-left {
+  text-align: left !important;
 }
 </style>

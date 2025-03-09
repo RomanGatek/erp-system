@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class InventoryServiceImpl implements InventoryService {
@@ -24,12 +26,8 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     public InventoryItem addItem(InventoryItem item) {
-        var dbItem = inventoryRepository.findByProduct(item.getProduct());
-        if (dbItem.isPresent()) {
-            throw new DataIntegrityViolationException(String.format("Duplicate entry '%s' for key 'xxxx.UKo61fmio5yukmmiqgnxf8pnavn'", item.getProduct().getName()));
-        } else {
-            return inventoryRepository.save(item);
-        }
+        ErpSystemApplication.getLogger().debug("\n\tInventory items > add: {}", item);
+        return inventoryRepository.save(item);
     }
 
     @Transactional
@@ -57,6 +55,20 @@ public class InventoryServiceImpl implements InventoryService {
         if (rows == 0) {
             throw new EntityNotFoundException(String.format("Item with id %d not found", itemId));
         }
+    }
+
+    @Override
+    public InventoryItem updateItem(Long id, InventoryItem item) {
+
+        ErpSystemApplication.getLogger().info("Updating item with id {}", id);
+        ErpSystemApplication.getLogger().info("Updating item with product {}", item.getProduct());
+
+        return inventoryRepository.findById(id)
+            .map(existingItem -> {
+                existingItem.setProduct(item.getProduct());
+                existingItem.setStockedAmount(item.getStockedAmount());
+                return inventoryRepository.save(existingItem);
+            }).orElseThrow(() -> new EntityNotFoundException("Inventory Item not found with id: " + id));
     }
 
     @Override
@@ -97,6 +109,10 @@ public class InventoryServiceImpl implements InventoryService {
         return inventoryRepository.findByProduct(product).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Inventory item for product '%s' not found", product.getName()))
         );
+    }
+
+    public Optional<InventoryItem> findItemByProductForOrder(Product product) {
+        return inventoryRepository.findByProduct(product);
     }
 
 

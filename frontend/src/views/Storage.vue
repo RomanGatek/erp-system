@@ -30,12 +30,15 @@ const errorStore = useErrorStore()
 const productStore = useProductsStore()
 
 const reactiveItem = $reactive({
+  id: null,
   product: {
+    id: null,
     name: '',
     description: '',
-    price: 0.0
+    purchasePrice: 0.0,
+    buyoutPrice: 0,
   },
-  quantity: 0
+  stockedAmount: null
 })
 
 const tableHeaders = [
@@ -79,8 +82,6 @@ onMounted(async() => {
     }
     await inventoryStore.fetchItems()
 
-    console.log(inventoryStore.items)
-
     if (inventoryStore.error) {
       errorStore.handle(inventoryStore.error)
     }
@@ -117,25 +118,32 @@ const addItem = async() => {
 }
 const updateItem = async() => {
   try {
-    await inventoryStore.updateItem(reactiveItem)
+    // Create a deep copy of the reactiveItem to ensure all data is captured
+    const itemToUpdate = JSON.parse(JSON.stringify(reactiveItem));
+
+    console.log("Updating item with data:", itemToUpdate);
+
+    await inventoryStore.updateItem(itemToUpdate);
     if (!inventoryStore.error) {
-      isAddModalOpen.value = false
-      $notifier.success("Item was updated successfully!")
-      reactiveItem.$clear()
+      isEditModalOpen.value = false;
+      $notifier.success("Item was updated successfully!");
+      reactiveItem.$clear();
     } else {
-      errorStore.handle(inventoryStore.error)
+      errorStore.handle(inventoryStore.error);
       if (errorStore.errors.general) {
-        isAddModalOpen.value = false
+        isEditModalOpen.value = false;
       }
     }
   } catch (err) {
-    errorStore.handle(err)
-    console.error(err)
-    reactiveItem.$clear()
-    isEditModalOpen.value = false
+    errorStore.handle(err);
+    console.error(err);
+    reactiveItem.$clear();
+    isEditModalOpen.value = false;
   }
-  isEditModalOpen.value = false
+  isEditModalOpen.value = false;
 }
+
+
 const deleteItem = async(itemId) => {
   if (confirm('Do you really want to delete this item?')) {
     try {
@@ -152,12 +160,27 @@ const deleteItem = async(itemId) => {
 const openEditModal = (item) => {
   errorStore.clearServerErrors();
   reactiveItem.$clear();
+
+  // Create a deep copy of the item to avoid reference issues
+  const itemCopy = JSON.parse(JSON.stringify(item));
+
+  console.log("Opening edit modal with item:", itemCopy);
+
+  // Explicitly set each property to ensure proper reactivity
+  reactiveItem.id = itemCopy.id;
+  reactiveItem.stockedAmount = itemCopy.stockedAmount;
+
+  // Ensure product is properly set with all its properties
+  if (itemCopy.product) {
+    reactiveItem.product = {
+      id: itemCopy.product.id,
+      name: itemCopy.product.name,
+      description: itemCopy.product.description,
+      purchasePrice: itemCopy.product.purchasePrice,
+      buyoutPrice: itemCopy.product.buyoutPrice,
+    };
+  }
   isEditModalOpen.value = true;
-
-  reactiveItem.$assign(item);
-  reactiveItem.product = item.product; // Set the selected product for the SearchSelect component
-
-  console.log(reactiveItem);
 };
 
 const cancelEdit = () => {
@@ -226,7 +249,7 @@ const cancelAdd = () => {
                 {{ item.product.description }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ item.stockedAmount }}
+                {{ item.stockedAmount.toString().length < 1 ? 0 : item.stockedAmount }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button @click="openEditModal(item)"
@@ -277,7 +300,7 @@ const cancelAdd = () => {
                       placeholder="Search product.."/>
         <BaseInput v-model="reactiveItem.stockedAmount" placeholder="10" label="Stocked amount"/>
         <div class="flex justify-between pt-2">
-          <button type="submit"
+          <button type="button" @click="updateItem"
                   class="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm transition">
             Update
           </button>

@@ -3,11 +3,13 @@ package cz.syntaxbro.erpsystem.requests;
 import cz.syntaxbro.erpsystem.models.Order;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
+@Builder
 public class OrderCreateRequest {
 
     @NotNull(message = "Order Type cannot be null")

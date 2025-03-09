@@ -40,6 +40,7 @@ export const useProductsStore = defineStore('products', {
             try {
                 await api.post('/products', product);
                 await this.fetchProducts();
+                this.error = null;
             } catch (err) {
                 this.error = err;
             }
@@ -55,6 +56,7 @@ export const useProductsStore = defineStore('products', {
                         id
                     };
                 }
+                this.error = null;
             } catch (err) {
                 this.error = err;
             }

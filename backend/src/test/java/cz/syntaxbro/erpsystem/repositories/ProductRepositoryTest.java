@@ -29,9 +29,11 @@ class ProductRepositoryTest {
     @BeforeEach
     void setUp() {
         Product testProduct = Product.builder()
+                .id(1L)
                 .name("Test Product")
-                .price(99.99)
                 .description("A sample product for testing.")
+                .buyoutPrice(89.9)
+                .purchasePrice(99.99)
                 .build();
         productRepository.save(testProduct);
     }
@@ -47,7 +49,8 @@ class ProductRepositoryTest {
         // Assert: Ensure the product is found and matches expected values
         assertThat(foundProduct).isPresent();
         assertThat(foundProduct.get().getName()).isEqualTo("Test Product");
-        assertThat(foundProduct.get().getPrice()).isEqualTo(99.99);
+        assertThat(foundProduct.get().getPurchasePrice()).isEqualTo(99.99);
+        assertThat(foundProduct.get().getBuyoutPrice()).isEqualTo(89.99);
         assertThat(foundProduct.get().getDescription()).isEqualTo("A sample product for testing.");
     }
 
@@ -69,10 +72,12 @@ class ProductRepositoryTest {
     @Test
     void save_ShouldThrowException_WhenProductNameIsNotUnique() {
         // Arrange: Create another product with the same name
+
         Product duplicateProduct = Product.builder()
-                .name("Test Product") // Duplicate name
-                .price(50.00)
+                .name("Test Product")
                 .description("Another product with the same name.")
+                .buyoutPrice(40.00)
+                .purchasePrice(50.00)
                 .build();
 
         // Act & Assert: Expect a DataIntegrityViolationException due to unique constraint violation

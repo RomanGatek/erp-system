@@ -2,12 +2,14 @@ package cz.syntaxbro.erpsystem.responses;
 
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.User;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
+@Builder
 public class OrderResponse {
 
     public void map(Order order) {

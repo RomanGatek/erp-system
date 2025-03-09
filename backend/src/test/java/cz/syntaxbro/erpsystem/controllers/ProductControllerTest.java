@@ -36,14 +36,23 @@ class ProductControllerTest {
     private ProductService productService;
 
     private Product testProduct;
+    private ProductRequest testProductRequest;
 
     @BeforeEach
     void setUp() {
-        testProduct = new Product();
-        testProduct.setName("testProduct");
-        testProduct.setPrice(10.0);
-        testProduct.setDescription("Sample Description");
-        testProduct = productService.createProduct(testProduct);
+       this.testProduct = Product.builder()
+               .description("sort description")
+               .name("testName")
+               .purchasePrice(20.0)
+               .buyoutPrice(10.0)
+               .build();
+
+       this.testProductRequest = ProductRequest.builder()
+               .description("sort description")
+               .name("testName")
+               .purchasePrice(20.0)
+               .buyoutPrice(10.0)
+               .build();
     }
 
     /**
@@ -53,10 +62,7 @@ class ProductControllerTest {
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void createProductOkTest() throws Exception {
-        ProductRequest productRequest = new ProductRequest();
-        productRequest.setName("New Product");
-        productRequest.setPrice(20.0);
-        productRequest.setDescription("New Description");
+        ProductRequest productRequest = this.testProductRequest;
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)

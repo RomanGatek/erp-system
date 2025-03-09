@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.controllers;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
 import cz.syntaxbro.erpsystem.services.InventoryService;
@@ -43,6 +44,9 @@ public class InventoryController {
 
     @PostMapping
     public ResponseEntity<InventoryItem> addItem(@Valid @RequestBody InventoryItem item) {
+
+        ErpSystemApplication.getLogger().debug("\n\tInventory item: {}", item);
+
         InventoryItem savedItem = inventoryService.addItem(item);
         return ResponseEntity.ok(savedItem);
     }
@@ -52,15 +56,8 @@ public class InventoryController {
             @PathVariable @Min(value = 1, message = "Must be positive number") Long itemId,
             @Valid @RequestBody InventoryItem item
     ) {
-        var savedItem = inventoryRepository.findById(itemId);
-        if (savedItem.isPresent()) {
-            var item_ = savedItem.get();
-            if (item.getProduct() != null) item_.setProduct(item.getProduct());
-            item_.setStockedAmount(item.getStockedAmount());
-            item_ = inventoryRepository.save(item_);
-            return ResponseEntity.status(HttpStatus.OK).body(item_);
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        var savedItem = inventoryService.updateItem(itemId, item);
+        return ResponseEntity.ok(savedItem);
     }
 
 

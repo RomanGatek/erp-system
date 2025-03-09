@@ -29,6 +29,7 @@ export const useInventoryStore = defineStore('inventory', {
       try {
         const response = await user.get('/inventory')
         this.items = response.data
+        this.error = null
       } catch (err) {
         this.error = err.message
       }
@@ -37,11 +38,15 @@ export const useInventoryStore = defineStore('inventory', {
       try {
         await user.post('/inventory', Item)
         await this.fetchItems()
+        this.error = null
       } catch (err) {
         this.error = err
       }
     },
     async updateItem(ItemData) {
+
+      console.log("Updating item with data:", ItemData);
+
       try {
         await user.put(`/inventory/${ItemData.id}`, ItemData)
         const index = this.items.findIndex(p => p.id === ItemData.id)
@@ -49,9 +54,11 @@ export const useInventoryStore = defineStore('inventory', {
           this.items[index] = {
             ...this.items[index],
             ...ItemData,
-            id: ItemData.id
+            id: ItemData.id,
+            stockedAmount: ItemData.stockedAmount ?? 0,
           }
         }
+        this.error = null
       } catch (err) {
         this.error = err
       }
@@ -60,6 +67,7 @@ export const useInventoryStore = defineStore('inventory', {
       try {
         await user.delete(`/inventory/${itemId}`)
         await this.fetchItems()
+        this.error = null
       } catch (err) {
         this.error = err
       }

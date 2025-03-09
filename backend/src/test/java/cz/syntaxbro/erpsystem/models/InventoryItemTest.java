@@ -15,7 +15,14 @@ class InventoryItemTest {
 
     private Validator validator;
 
-    private final Product product = new Product(1L, "Test Product", 50.0, "Sample product description");
+    private final Product product = Product.builder()
+            .id(1L)
+            .name("Test product")
+            .purchasePrice(50.0)
+            .buyoutPrice(30.0)
+            .description("Sample product description")
+            .build();
+
 
     @BeforeEach
     void setUp() {

@@ -40,13 +40,15 @@ class OrderRequestTest {
     @Test
     void shouldPassValidationWithValidData() {
         // Arrange: Create a valid order request
-        OrderRequest request = new OrderRequest(
-                5, // amount
-                150.0, // cost
-                Order.Status.PENDING, // status
-                LocalDateTime.now().plusDays(1), // order time in the future
-                1L // valid product ID
-        );
+
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(150.0)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);
@@ -62,13 +64,14 @@ class OrderRequestTest {
     @Test
     void shouldFailValidationForNullCost() {
         // Arrange: Create an order request with null cost
-        OrderRequest request = new OrderRequest(
-                5,
-                null,
-                Order.Status.PENDING,
-                LocalDateTime.now().plusDays(1),
-                1L
-        );
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(null)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);
@@ -86,13 +89,15 @@ class OrderRequestTest {
     @Test
     void shouldFailValidationForNegativeCost() {
         // Arrange: Create an order request with negative cost
-        OrderRequest request = new OrderRequest(
-                5,
-                -10.0,
-                Order.Status.PENDING,
-                LocalDateTime.now().plusDays(1),
-                1L
-        );
+
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(-10.0)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);
@@ -110,13 +115,16 @@ class OrderRequestTest {
     @Test
     void shouldFailValidationForNullStatus() {
         // Arrange: Create an order request with null status
-        OrderRequest request = new OrderRequest(
-                5,
-                150.0,
-                null,
-                LocalDateTime.now().plusDays(1),
-                1L
-        );
+
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(150.0)
+                .status(null)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);
@@ -134,13 +142,15 @@ class OrderRequestTest {
     @Test
     void shouldFailValidationForPastOrderTime() {
         // Arrange: Create an order request with past order time
-        OrderRequest request = new OrderRequest(
-                5,
-                150.0,
-                Order.Status.PENDING,
-                LocalDateTime.now().minusDays(1), // past date
-                1L
-        );
+
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now.minusDays(1))
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(150.0)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);
@@ -158,13 +168,15 @@ class OrderRequestTest {
     @Test
     void shouldFailValidationForNullProductId() {
         // Arrange: Create an order request with null product ID
-        OrderRequest request = new OrderRequest(
-                5,
-                150.0,
-                Order.Status.PENDING,
-                LocalDateTime.now().plusDays(1),
-                null
-        );
+
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(150.0)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);
@@ -182,13 +194,15 @@ class OrderRequestTest {
     @Test
     void shouldFailValidationForInvalidProductId() {
         // Arrange: Create an order request with invalid product ID
-        OrderRequest request = new OrderRequest(
-                5,
-                150.0,
-                Order.Status.PENDING,
-                LocalDateTime.now().plusDays(1),
-                0L
-        );
+
+        LocalDateTime now = LocalDateTime.now();
+        OrderRequest request = OrderRequest.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .amount(5)
+                .comment("test comment")
+                .cost(150.0)
+                .build();
 
         // Act: Validate the request
         Set<ConstraintViolation<OrderRequest>> violations = validator.validate(request);

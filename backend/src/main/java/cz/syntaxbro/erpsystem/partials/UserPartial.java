@@ -18,8 +18,10 @@ public class UserPartial {
     @Email(message = "Invalid email format")
     private String email;
 
+    @NotEmpty(message = "First Name cannot be empty field")
     private String firstName;
 
+    @NotEmpty(message = "Last Name cannot be empty field")
     private String lastName;
 
     private boolean isActive;

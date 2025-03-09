@@ -47,7 +47,7 @@ const availableRoles = [
 const tableHeaders = [
   { field: 'firstName', label: 'First name', sortable: true },
   { field: 'lastName', label: 'Last name', sortable: true },
-  { field: 'email', label: 'Email', sortable: true },
+  { field: 'email', label: 'Email', sortable: true},
   { field: 'username', label: 'Username', sortable: true },
   { field: 'roles', label: 'Role', sortable: true },
   { field: 'active', label: 'Active', sortable: true },
@@ -125,7 +125,6 @@ const deleteUser = async (userId) => {
     }
   }
 }
-
 
 const openEditModal = (index) => {
   reactiveUser.$clear();

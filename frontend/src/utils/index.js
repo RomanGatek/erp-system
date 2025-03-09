@@ -58,3 +58,7 @@ export const formatDate = (dateString) => {
     minute: '2-digit'
   })
 }
+
+export const objectDeepCopy = object => {
+  JSON.parse(JSON.stringify(object))
+}

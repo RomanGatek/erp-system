@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.models;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,15 +19,24 @@ public class OrderTest {
     @Test
     public void testOrderCreation() {
         // Arrange: Create a new product instance (assuming Product class exists)
-        Product product = new Product();
+        OrderItem orderItem =  new OrderItem();
 
         // Act: Create a new order with specified values
-        Order order = new Order(1L, product, 5, 100.0, Order.Status.PENDING, LocalDateTime.now());
+       LocalDateTime now = LocalDateTime.now();
+       Order order = Order.builder()
+                .id(1L)
+                .orderTime(now)
+                .orderItems(List.of(orderItem))
+                .orderType(Order.OrderType.SELL)
+                .decisionTime(now.plusDays(1))
+                .cost(100)
+                .comment("comment")
+                .status(Order.Status.PENDING)
+                .build();
 
         // Assert: Verify that all order attributes were set correctly
         assertEquals(1L, order.getId(), "Order ID should be 1");
-        assertEquals(product, order.getProduct(), "Order product should match the provided product");
-        assertEquals(5, order.getAmount(), "Order amount should be 5");
+        assertEquals(orderItem, order.getOrderItems().getFirst(), "Order product should match the provided product");
         assertEquals(100.0, order.getCost(), "Order cost should be 100.0");
         assertEquals(Order.Status.PENDING, order.getStatus(), "Order status should be ORDERED");
     }

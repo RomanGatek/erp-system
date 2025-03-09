@@ -37,10 +37,13 @@ class ProductTest {
     @Test
     void shouldCreateValidProduct() {
         // Arrange: Create a valid product instance
+
         Product product = Product.builder()
+                .id(1L)
                 .name("Test Product")
-                .price(99.99)
                 .description("A sample product")
+                .buyoutPrice(89.9)
+                .purchasePrice(99.99)
                 .build();
 
         // Act: Validate the product
@@ -57,9 +60,11 @@ class ProductTest {
     void shouldFailWhenNameIsBlank() {
         // Arrange: Create a product with a blank name
         Product product = Product.builder()
-                .name("")  // Invalid: blank name
-                .price(99.99)
+                .id(1L)
+                .name(null)
                 .description("A sample product")
+                .buyoutPrice(89.9)
+                .purchasePrice(99.99)
                 .build();
 
         // Act: Validate the product
@@ -75,12 +80,15 @@ class ProductTest {
      * Test to verify that a product with a negative price fails validation.
      */
     @Test
-    void shouldFailWhenPriceIsNegative() {
+    void shouldFailWhenBuyoutPriceIsNegative() {
         // Arrange: Create a product with an invalid negative price
+
         Product product = Product.builder()
-                .name("Valid Name")
-                .price(-10.0)  // Invalid: negative price
+                .id(1L)
+                .name("Test Product")
                 .description("A sample product")
+                .buyoutPrice(-10.0)
+                .purchasePrice(9)
                 .build();
 
         // Act: Validate the product
@@ -89,7 +97,28 @@ class ProductTest {
         // Assert: The validation should fail due to a negative price
         assertThat(violations).isNotEmpty();
         assertThat(violations).extracting(ConstraintViolation::getMessage)
-                .contains("Product price must be greater than zero");
+                .contains("Product buyout price must be greater than zero");
+    }
+
+    @Test
+    void shouldFailWhenPurchasePriceIsNegative() {
+        // Arrange: Create a product with an invalid negative price
+
+        Product product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("A sample product")
+                .buyoutPrice(10.0)
+                .purchasePrice(-9)
+                .build();
+
+        // Act: Validate the product
+        Set<ConstraintViolation<Product>> violations = validator.validate(product);
+
+        // Assert: The validation should fail due to a negative price
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).extracting(ConstraintViolation::getMessage)
+                .contains("Product purchase price must be greater than zero");
     }
 
     /**
@@ -98,10 +127,13 @@ class ProductTest {
     @Test
     void shouldAllowNullDescription() {
         // Arrange: Create a product with a null description
+
         Product product = Product.builder()
+                .id(1L)
                 .name("Valid Name")
-                .price(50.0)
-                .description(null)  // Allowed: description is nullable
+                .description("A sample product")
+                .buyoutPrice(40)
+                .purchasePrice(50)
                 .build();
 
         // Act: Validate the product

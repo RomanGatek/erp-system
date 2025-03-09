@@ -1,6 +1,9 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.models.OrderItem;
+import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
+import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,12 +27,34 @@ public class OrderControllerTest {
     @InjectMocks
     private OrderController orderController;
 
+    private OrderResponse orderResponse;
+    private Order order;
+
     /**
      * Initializes mocks before each test execution.
      */
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        LocalDateTime now = LocalDateTime.now();
+        // Arrange: Create a sample order
+        this.orderResponse = OrderResponse.builder()
+                .orderItems(List.of())
+                .orderTime(now)
+                .status(Order.Status.PENDING)
+                .orderType(Order.OrderType.SELL)
+                .build();
+
+
+        this.order = Order.builder()
+                .id(1L)
+                .orderItems(List.of())
+                .status(Order.Status.PENDING)
+                .orderType(Order.OrderType.SELL)
+                .orderTime(now)
+                .build();
+        when(orderService.getOrderById(1L)).thenReturn(order);
     }
 
     /**
@@ -40,9 +65,23 @@ public class OrderControllerTest {
      */
     @Test
     public void testGetOrder() {
-
+        LocalDateTime now = LocalDateTime.now();
         // Arrange: Create a sample order
-        Order order = new Order(1L, null, 5, 100.0, Order.Status.PENDING, LocalDateTime.now());
+        OrderResponse orderResponse = OrderResponse.builder()
+                .orderItems(List.of())
+                .orderTime(now)
+                .status(Order.Status.PENDING)
+                .orderType(Order.OrderType.SELL)
+                .build();
+
+
+        Order order = Order.builder()
+                .id(1L)
+                .orderItems(List.of())
+                .status(Order.Status.PENDING)
+                .orderType(Order.OrderType.SELL)
+                .orderTime(now)
+                .build();
         when(orderService.getOrderById(1L)).thenReturn(order);
 
         // Act: Call the controller method
@@ -63,11 +102,11 @@ public class OrderControllerTest {
     public void testGetAllOrders() {
 
         // Arrange: Create a sample list of orders
-        List<Order> orders = Collections.singletonList(new Order());
+        List<OrderResponse> orders =List.of(this.orderResponse);
         when(orderService.getOrders()).thenReturn(orders);
 
         // Act: Call the controller method
-        ResponseEntity<List<Order>> response = orderController.getAllOrders();
+        ResponseEntity<List<OrderResponse>> response = orderController.getAllOrders();
 
         // Assert: Verify response
         assertEquals(200, response.getStatusCode().value());
@@ -82,22 +121,20 @@ public class OrderControllerTest {
      */
     @Test
     public void testCreateOrder() {
+        OrderCreateRequest orderCreateRequest = OrderCreateRequest.builder()
+                .orderType(Order.OrderType.SELL)
+                .comment("comment")
+                .build();
 
         // Arrange
         Long itemId = 1L;
         int quantity = 5;
-        Order createdOrder = Order.builder()
-                .id(1L)
-                .amount(quantity)
-                .cost(100.0)
-                .status(Order.Status.PENDING)
-                .orderTime(LocalDateTime.now())
-                .build();
+        Order createdOrder = this.order;
 
-        when(orderService.createdOrder(itemId, quantity)).thenReturn(createdOrder);
+        when(orderService.createdOrder(orderCreateRequest)).thenReturn(createdOrder);
 
         // Act
-        ResponseEntity<Order> response = orderController.createOrder(itemId, quantity);
+        ResponseEntity<Order> response = orderController.createOrder(orderCreateRequest);
 
         // Assert
         assertEquals(200, response.getStatusCode().value());
