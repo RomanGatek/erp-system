@@ -22,6 +22,6 @@ public class ProductCategory {
     @NotBlank(message = "Name cannot be null or empty")
     private String name;
     private String description;
-    @OneToMany(mappedBy = "productCategory")
+    @OneToMany(mappedBy = "productCategory", fetch = FetchType.EAGER)
     private List<Product> products;
 }

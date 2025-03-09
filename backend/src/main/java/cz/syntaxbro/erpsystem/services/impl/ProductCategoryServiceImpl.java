@@ -35,7 +35,9 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Override
     public ProductCategory updateProductCategory(Long categoryId, ProductCategory productCategory) {
+        ProductCategory productCategoryFromDb = getProductCategory(categoryId);
         if(getProductCategory(categoryId) != null) {
+            productCategory.setId(productCategoryFromDb.getId());
             return productCategoryRepository.save(productCategory);
         } return null;
     }

@@ -25,8 +25,8 @@ public class ProductCategoryController {
         this.productCategoryService = productCategoryService;
     }
 
-    @GetMapping("/id")
-    public ResponseEntity<ProductCategory> getProductCategoryById(@RequestParam("id") long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductCategory> getProductCategoryById(@PathVariable long id) {
         return ResponseEntity.ok(
                 productCategoryService.getProductCategory(id)
         );
@@ -55,7 +55,7 @@ public class ProductCategoryController {
         );
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable long id) {
         productCategoryService.deleteProductCategory(id);
         return ResponseEntity.noContent().build();
