@@ -35,7 +35,7 @@ public class ProductCategoryTest {
         //Assert
         assertThat(violations).isNotEmpty();
         assertThat(violations).extracting(ConstraintViolation::getMessage)
-                .contains("Name can be null or empty");
+                .contains("Name cannot be null or empty");
     }
 
     @Test
