@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface ProductCategoryService {
 
-    void createProductCategory(ProductCategory productCategory);
+    ProductCategory createProductCategory(ProductCategory productCategory);
 
-    void updateProductCategory(Long categoryId, ProductCategory productCategory);
+    ProductCategory updateProductCategory(Long categoryId, ProductCategory productCategory);
 
     void deleteProductCategory(long id);
 

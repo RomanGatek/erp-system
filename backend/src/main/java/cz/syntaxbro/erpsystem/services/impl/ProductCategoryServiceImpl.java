@@ -23,21 +23,21 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
 
     @Override
-    public void createProductCategory(ProductCategory productCategory) {
+    public ProductCategory createProductCategory(ProductCategory productCategory) {
 
         Optional<ProductCategory> existingProductCategory = productCategoryRepository.findByName(productCategory.getName());
-        if(!existingProductCategory.isPresent()) {
-            productCategoryRepository.save(productCategory);
+        if(existingProductCategory.isEmpty()) {
+            return productCategoryRepository.save(productCategory);
         } else {
             throw new EntityExistsException(String.format("Category with name %s exist", productCategory.getName()));
         }
     }
 
     @Override
-    public void updateProductCategory(Long categoryId, ProductCategory productCategory) {
+    public ProductCategory updateProductCategory(Long categoryId, ProductCategory productCategory) {
         if(getProductCategory(categoryId) != null) {
-            productCategoryRepository.save(productCategory);
-        }
+            return productCategoryRepository.save(productCategory);
+        } return null;
     }
 
     @Override
