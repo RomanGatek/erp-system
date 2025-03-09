@@ -46,7 +46,7 @@ const tableHeaders = [
   },
   {
     field: 'price',
-    label: 'Price',
+    label: 'Buy / Sell',
     sortable: true
   },
   {
@@ -55,8 +55,8 @@ const tableHeaders = [
     sortable: true
   },
   {
-    field: 'quantity',
-    label: 'Quantity',
+    field: 'stockedAmount',
+    label: 'Stocked amount',
     sortable: true
   },
   {
@@ -78,6 +78,9 @@ onMounted(async() => {
       await productStore.fetchProducts()
     }
     await inventoryStore.fetchItems()
+
+    console.log(inventoryStore.items)
+
     if (inventoryStore.error) {
       errorStore.handle(inventoryStore.error)
     }
@@ -217,13 +220,13 @@ const cancelAdd = () => {
                 {{ item.product.name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                {{ item.product.price }}
+                <p class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-600 ring-1 ring-green-500/10 ring-inset">{{ item.product.buyoutPrice }}</p> / <p class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 ring-1 ring-red-500/10 ring-inset">{{ item.product.purchasePrice }}</p>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
                 {{ item.product.description }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ item.quantity }}
+                {{ item.stockedAmount }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button @click="openEditModal(item)"
@@ -253,7 +256,7 @@ const cancelAdd = () => {
       <div class="space-y-3">
         <SearchSelect :items="productStore.items" v-model="reactiveItem.product" by="name" label="Product"
                       placeholder="Search product.."/>
-        <BaseInput v-model="reactiveItem.quantity" placeholder="10" label="Quantity"/>
+        <BaseInput v-model="reactiveItem.stockedAmount" placeholder="10" label="Stocked amount"/>
         <div class="flex justify-end space-x-3 pt-2">
           <button type="button" @click="cancelAdd"
                   class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
@@ -272,7 +275,7 @@ const cancelAdd = () => {
       <div class="space-y-3">
         <SearchSelect :items="productStore.items" v-model="reactiveItem.product" by="name" label="Product"
                       placeholder="Search product.."/>
-        <BaseInput v-model="reactiveItem.quantity" placeholder="10" label="Quantity"/>
+        <BaseInput v-model="reactiveItem.stockedAmount" placeholder="10" label="Stocked amount"/>
         <div class="flex justify-between pt-2">
           <button type="submit"
                   class="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm transition">

@@ -3,11 +3,9 @@ package cz.syntaxbro.erpsystem.services;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
-import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderService {

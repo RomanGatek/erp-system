@@ -45,10 +45,7 @@
                 {{ item.name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ formatPrice(item.buyoutPrice) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ formatPrice(item.purchasePrice) }}
+                <p class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-600 ring-1 ring-green-500/10 ring-inset">{{ item.buyoutPrice }}</p> / <p class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 ring-1 ring-red-500/10 ring-inset">{{ item.purchasePrice }}</p>
               </td>
               <td class="px-6 py-4 whitespace-normal text-gray-600 line-clamp-2">
                 {{ item.description }}
@@ -80,8 +77,10 @@
     <Modal :show="isAddModalOpen" title="Add New Product" @close="cancelAdd" @submit="addProduct">
       <div class="space-y-3">
         <BaseInput :error="errorStore.errors.name" v-model="reactiveProduct.name" placeholder="Product name" label="Name" />
-        <BaseInput v-model="reactiveProduct.price" :error="errorStore.errors.price" type="number" placeholder="Price"
-                   label="Price" />
+        <BaseInput v-model="reactiveProduct.buyoutPrice" :error="errorStore.errors.buyoutPrice" type="number" placeholder="Buyout Price"
+                   label="Buyout Price" />
+        <BaseInput v-model="reactiveProduct.purchasePrice" :error="errorStore.errors.purchasePrice" type="number" placeholder="Purchase Price"
+                   label="Purchase Price" />
         <BaseInput v-model="reactiveProduct.description" :error="errorStore.errors.description" placeholder="Product description"
                    label="Product description" />
         <div class="flex justify-end space-x-3 pt-2">
@@ -102,8 +101,10 @@
       <div class="space-y-3">
         <BaseInput v-model="reactiveProduct.name" :error="errorStore.errors.name" placeholder="Product name" label="Name"
                    variant="success" />
-        <BaseInput v-model="reactiveProduct.price" :error="errorStore.errors.price" type="number" placeholder="Price"
-                   label="Price" variant="success" />
+        <BaseInput v-model="reactiveProduct.buyoutPrice" :error="errorStore.errors.buyoutPrice" type="number" placeholder="Buyout Price"
+                   label="Buyout Price" variant="success" />
+        <BaseInput v-model="reactiveProduct.purchasePrice" :error="errorStore.errors.purchasePrice" type="number" placeholder="Purchase Price"
+                   label="Purchase Price" variant="success" />
         <BaseInput v-model="reactiveProduct.description" :error="errorStore.errors.description"
                    placeholder="Product description" label="Product description" variant="success" />
         <div class="flex justify-between pt-2">
@@ -153,14 +154,14 @@ const $notifier = useNotifier()
 const reactiveProduct = $reactive({
   id: undefined,
   name: '',
-  price: null,
+  buyoutPrice: null,
+  purchasePrice: null,
   description: ''
 })
 
 const tableHeaders = [
   { field: 'name', label: 'Name', sortable: true },
-  { field: 'buyoutPrice', label: 'Buyout', sortable: true },
-  { field: 'purchasePrice', label: 'Purchase', sortable: true },
+  { field: 'buyoutPrice', label: 'Buy / Sell', sortable: true },
   { field: 'description', label: 'Description', sortable: false },
   { field: 'actions', label: '', sortable: false, class: 'text-right' },
 ]

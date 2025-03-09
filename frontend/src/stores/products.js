@@ -19,7 +19,7 @@ export const useProductsStore = defineStore('products', {
         filtered: (state) => filter(state, (product) => {
             const search = state.searchQuery.toLocaleLowerCase();
             return product.name.toLowerCase().includes(search) ||
-            product.price.toString().includes(search)
+            product.buyoutPrice.toString().includes(search) || product.purchasePrice.toString().includes(search)
         }),
         paginateItems: (state) => __paginate(state)
     },

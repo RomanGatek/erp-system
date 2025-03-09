@@ -35,22 +35,16 @@ export const navLinks = ref([
           icon: productsIcon
         },
         {
-          to: '/orders',
-          text: 'Create Order',
-          requiredRole: 'MANAGER',
-          icon: ordersIcon
-        },
-        {
           to: '/storage',
           text: 'Storage',
           requiredRole: 'MANAGER',
           icon: storageIcon
         },
         {
-          to: '/stock-orders',
-          text: 'Stock Orders',
+          to: '/orders',
+          text: 'Create Order',
           requiredRole: 'MANAGER',
-          icon: storageIcon
+          icon: ordersIcon
         }
       ],
     },

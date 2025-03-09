@@ -24,9 +24,9 @@
               {{ filter.label }}
             </button>
           </div>
-          <SearchBar 
-            v-model="searchQuery" 
-            @update:modelValue="(value) => workflowStore.setSearch(value)" 
+          <SearchBar
+            v-model="searchQuery"
+            @update:modelValue="(value) => workflowStore.setSearch(value)"
           />
         </div>
       </div>
@@ -36,213 +36,158 @@
 
       <!-- Data table -->
       <template v-else>
-        <div class="overflow-hidden border border-gray-200 rounded-lg">
-          <div class="overflow-x-auto">
-            <div class="overflow-y-auto max-h-[calc(100vh-24rem)]">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      v-for="header in tableHeaders"
-                      :key="header.field"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      :class="header.class"
-                    >
-                      <div
-                        class="flex items-center cursor-pointer"
-                        @click="header.sortable ? setSorting(header.field) : null"
-                      >
-                        {{ header.label }}
-                        <template v-if="header.sortable">
-                          <svg
-                            class="ml-1 w-3 h-3"
-                            :class="{'text-blue-500': sorting.field === header.field}"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              :d="sorting.field === header.field && sorting.direction === 'desc'
-                                ? 'M19 9l-7 7-7-7'
-                                : 'M5 15l7-7 7 7'"
-                            />
-                          </svg>
-                        </template>
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <template v-for="item in workflowStore.paginatedOrders" :key="item.id">
-                    <tr
-                      class="hover:bg-gray-50 cursor-pointer transition-colors"
-                      :class="{'bg-blue-50': expandedRows.has(item.id)}"
-                      @click="toggleRow(item.id)"
-                    >
-                      <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                        {{ item.id }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                        {{ item.orderItems?.length || 0 }} items
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                        {{ formatDate(item.orderTime) }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                        {{ formatPrice(item.cost) }} Kč
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <span
-                          class="px-2 py-1 text-xs font-medium rounded-full"
-                          :class="{
-                            'bg-green-100 text-green-800': item.orderType === 'SELL',
-                            'bg-red-100 text-red-800': item.orderType === 'PURCHASE'
-                          }"
-                        >
-                          {{ item.orderType }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <span
-                          class="px-2 py-1 text-xs font-medium rounded-full"
-                          :class="{
-                            'bg-yellow-100 text-yellow-800': item.status === 'PENDING',
-                            'bg-green-100 text-green-800': item.status === 'CONFIRMED',
-                            'bg-red-100 text-red-800': item.status === 'CANCELED'
-                          }"
-                        >
-                          {{ getStatusText(item.status) }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button
-                          @click.stop="openOrderDetail(item)"
-                          class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                          title="View Details"
-                        >
-                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                        <button
-                          @click.stop="confirmDelete(item)"
-                          class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                          title="Delete Order"
-                        >
-                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                    <!-- Expanded Row Content -->
-                    <tr v-if="expandedRows.has(item.id)">
-                      <td colspan="7" class="px-6 py-4 bg-gray-50/80 backdrop-blur-sm">
-                        <div class="animate-expand-content">
-                          <div class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
-                            <div class="p-4">
-                              <div class="flex items-center justify-between mb-3">
-                                <h4 class="text-sm font-medium text-gray-700">Order Items</h4>
-                                <button
-                                  @click.stop="toggleRow(item.id)"
-                                  class="p-1 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100"
-                                >
-                                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              </div>
-                              <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                  <thead class="bg-gray-50/80 backdrop-blur-sm">
-                                    <tr>
-                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
-                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Quantity</th>
-                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Price</th>
-                                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody class="divide-y divide-gray-200">
-                                    <tr>
-                                      <td colspan="4" class="p-0">
-                                        <div class="overflow-y-auto max-h-[16rem]">
-                                          <table class="min-w-full">
-                                            <tbody class="divide-y divide-gray-200">
-                                              <tr v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-sm hover:bg-gray-50/80">
-                                                <td class="px-4 py-2 w-[40%]">
-                                                  <div class="text-gray-900 font-medium">{{ orderItem.name }}</div>
-                                                  <div class="text-xs text-gray-500">{{ orderItem.description }}</div>
-                                                </td>
-                                                <td class="px-4 py-2 w-[20%]">
-                                                  <div :class="{
-                                                    'text-red-600 font-medium': orderItem.needQuantity > orderItem.stockedQuantity,
-                                                    'text-gray-600': orderItem.needQuantity <= orderItem.stockedQuantity
-                                                  }">
-                                                    {{ orderItem.needQuantity }}
-                                                  </div>
-                                                  <div class="text-xs text-gray-500">
-                                                    Stock: {{ orderItem.stockedQuantity }}
-                                                  </div>
-                                                </td>
-                                                <td class="px-4 py-2 w-[20%] text-gray-600">
-                                                  {{ formatPrice(orderItem.buyoutPrice) }} Kč
-                                                </td>
-                                                <td class="px-4 py-2 w-[20%] font-medium text-gray-900">
-                                                  {{ formatPrice(orderItem.buyoutPrice * orderItem.needQuantity) }} Kč
-                                                </td>
-                                              </tr>
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                  <tfoot class="bg-gray-50/80 backdrop-blur-sm">
-                                    <tr>
-                                      <td colspan="3" class="px-4 py-2 text-sm font-medium text-gray-700 text-right">
-                                        Total:
-                                      </td>
-                                      <td class="px-4 py-2 text-sm font-bold text-gray-900">
-                                        {{ formatPrice(item.cost) }} Kč
-                                      </td>
-                                    </tr>
-                                  </tfoot>
-                                </table>
-                              </div>
-                            </div>
+        <DataTable
+          :headers="tableHeaders"
+          :items="workflowStore.paginatedOrders"
+          :sorting="workflowStore.sorting"
+          :sortBy="workflowStore.setSorting"
+          :onEdit="openOrderDetail"
+          :onDelete="confirmDelete"
+          :expandedRows="expandedRows"
+          :onRowClick="toggleRow"
+        >
+          <template #row="{ item }">
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
+              {{ item.id }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+              {{ item.orderItems?.length || 0 }} items
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+              {{ formatDate(item.orderTime) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+              {{ formatPrice(item.cost) }} Kč
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-2 py-1 text-xs font-medium rounded-full"
+                :class="{
+                  'bg-green-100 text-green-800': item.orderType === 'SELL',
+                  'bg-red-100 text-red-800': item.orderType === 'PURCHASE'
+                }"
+              >
+                {{ item.orderType }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-2 py-1 text-xs font-medium rounded-full"
+                :class="{
+                  'bg-yellow-100 text-yellow-800': item.status === 'PENDING',
+                  'bg-green-100 text-green-800': item.status === 'CONFIRMED',
+                  'bg-red-100 text-red-800': item.status === 'CANCELED'
+                }"
+              >
+                {{ getStatusText(item.status) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+              <button
+                @click.stop="openOrderDetail(item)"
+                class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                title="View Details"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+              <button
+                @click.stop="confirmDelete(item)"
+                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                title="Delete Order"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </td>
+          </template>
+
+          <template #expanded-content="{ item }">
+            <div class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
+              <div class="p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-medium text-gray-700">Order Items</h4>
+                  <button
+                    @click.stop="toggleRow(item.id)"
+                    class="p-1 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50/80 backdrop-blur-sm">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Quantity</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Price</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                      <tr v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-sm hover:bg-gray-50/80">
+                        <td class="px-4 py-2 w-[40%]">
+                          <div class="text-gray-900 font-medium">{{ orderItem.name }}</div>
+                          <div class="text-xs text-gray-500">{{ orderItem.description }}</div>
+                        </td>
+                        <td class="px-4 py-2 w-[20%]">
+                          <div :class="{
+                            'text-red-600 font-medium': orderItem.needQuantity > orderItem.stockedQuantity,
+                            'text-gray-600': orderItem.needQuantity <= orderItem.stockedQuantity
+                          }">
+                            {{ orderItem.needQuantity }}
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
+                          <div class="text-xs text-gray-500">
+                            Stock: {{ orderItem.stockedQuantity }}
+                          </div>
+                        </td>
+                        <td class="px-4 py-2 w-[20%] text-gray-600">
+                          {{ formatPrice(orderItem.buyoutPrice) }} Kč
+                        </td>
+                        <td class="px-4 py-2 w-[20%] font-medium text-gray-900">
+                          {{ formatPrice(orderItem.buyoutPrice * orderItem.needQuantity) }} Kč
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot class="bg-gray-50/80 backdrop-blur-sm">
+                      <tr>
+                        <td colspan="3" class="px-4 py-2 text-sm font-medium text-gray-700 text-right">
+                          Total:
+                        </td>
+                        <td class="px-4 py-2 text-sm font-bold text-gray-900">
+                          {{ formatPrice(item.cost) }} Kč
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </template>
+        </DataTable>
 
         <Pagination :store="useWorkflowStore" />
-
       </template>
     </div>
 
     <!-- Order Details Modal -->
-    <Modal 
-      :show="isDetailModalOpen" 
+    <Modal
+      :show="isDetailModalOpen"
       @close="closeOrderDetail"
       title="Order Details"
     >
       <div v-if="selectedOrder" class="space-y-4">
         <!-- Header with close button -->
         <div class="flex items-center justify-between pb-2 border-b border-gray-200">
-          <h2 class="text-xl font-bold text-gray-900">Order Details</h2>
+          <h6 class="text-xl font-bold text-gray-900"></h6>
           <button
             @click="closeOrderDetail"
             class="p-1.5 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors"
@@ -310,11 +255,11 @@
           <div class="bg-white rounded-xl border border-gray-200">
             <div class="p-4">
               <BaseInput
-                v-model="approvalComment"
+                v-model="modelComment"
                 type="textarea"
                 label="Comment"
                 placeholder="Enter your decision comment..."
-                rows="3"
+                :rows="3"
               />
             </div>
 
@@ -374,8 +319,8 @@
 
             <div v-if="selectedOrder.comment" class="p-4 space-y-2">
               <span class="text-sm font-medium text-gray-500">Comment</span>
-              <p class="mt-1 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
-                {{ selectedOrder.comment }}
+              <p class="mt-1 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200 whitespace-pre-wrap">
+                {{ parsedComment }}
               </p>
             </div>
           </div>
@@ -392,12 +337,14 @@ import {
   Modal,
   StatusBar,
   EmptyState,
-  BaseInput
+  BaseInput,
+  DataTable,
+  Pagination
 } from '@/components/common'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { useWorkflowStore } from '@/stores/workflow.store.js'
-import {Pagination} from "@/components/common/index.js";
+import { formatDate } from "@/utils/index.js";
 
 defineOptions({
   name: 'WorkflowView',
@@ -410,6 +357,28 @@ const workflowStore = useWorkflowStore()
 
 // Computed
 const selectedOrder = computed(() => workflowStore.selectedOrder)
+const parsedComment = computed(() => {
+  try {
+    return selectedOrder.value?.comment ? JSON.parse(selectedOrder.value.comment) : ''
+    // eslint-disable-next-line no-unused-vars
+  } catch (_) {
+    return selectedOrder.value?.comment || ''
+  }
+})
+
+const modelComment = computed({
+  get: () => {
+    try {
+      return approvalComment.value ? JSON.parse(approvalComment.value) : ''
+      // eslint-disable-next-line no-unused-vars
+    } catch (_) {
+      return approvalComment.value || ''
+    }
+  },
+  set: (value) => {
+    approvalComment.value = JSON.stringify(value)
+  }
+})
 
 // State
 const searchQuery = ref('')
@@ -422,8 +391,11 @@ const expandedRows = ref(new Set())
 watch(searchQuery, (newValue) => {
   workflowStore.setSearch(newValue)
 })
+watch(currentFilter, (newValue) => {
+  workflowStore.type = newValue
+  workflowStore.pagination.currentPage = 1  // Reset to first page when filter changes
+})
 
-// Table headers in English
 const tableHeaders = [
   { field: 'id', label: 'ID', sortable: true },
   { field: 'orderItems', label: 'Items Count', sortable: true },
@@ -431,10 +403,9 @@ const tableHeaders = [
   { field: 'cost', label: 'Amount', sortable: true },
   { field: 'orderType', label: 'Type', sortable: true },
   { field: 'status', label: 'Status', sortable: true },
-  { field: 'actions', label: '', sortable: false, class: 'text-right' },
+  { field: 'actions', label: '', sortable: false, class: 'text-right' }
 ]
 
-// Filters in English
 const filters = [
   { label: 'All', value: 'all' },
   { label: 'Pending', value: 'pending' },
@@ -442,13 +413,6 @@ const filters = [
   { label: 'Rejected', value: 'canceled' },
 ]
 
-// Sorting state
-const sorting = ref({
-  field: 'orderTime',
-  direction: 'desc'
-})
-
-// Fetch data
 onMounted(async () => {
   try {
     await workflowStore.fetchOrders()
@@ -457,21 +421,6 @@ onMounted(async () => {
   }
 })
 
-
-// Formátování data
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('cs-CZ', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-// Update the status text function to English
 const getStatusText = (status) => {
   switch (status) {
     case 'PENDING': return 'Pending'

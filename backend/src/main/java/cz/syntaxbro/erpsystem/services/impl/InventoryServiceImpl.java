@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
@@ -61,7 +62,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public List<InventoryItem> getAll() {
-        return List.of();
+        return inventoryRepository.findAll();
     }
 
     @Override
@@ -80,13 +81,9 @@ public class InventoryServiceImpl implements InventoryService {
             if (inventoryItem.getStockedAmount() < quantity) {
                 throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "not enough quantity of product");
             }
+            ErpSystemApplication.getLogger().info("before: {}", inventoryItem.getStockedAmount());
             inventoryItem.setStockedAmount(inventoryItem.getStockedAmount() - quantity);
-
-            if (inventoryItem.getStockedAmount() < quantityWarning()) {
-                inventoryRepository.save(inventoryItem);
-                System.out.println(inventoryItem);
-                throw new ResponseStatusException(HttpStatus.OK, "last pieces in stock");
-            }
+            ErpSystemApplication.getLogger().info("after: {}", inventoryItem.getStockedAmount());
             inventoryRepository.save(inventoryItem);
         }
     }
@@ -103,18 +100,6 @@ public class InventoryServiceImpl implements InventoryService {
         return inventoryRepository.findByProduct(product).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Inventory item for product '%s' not found", product.getName()))
         );
-    }
-
-    private int supplierDeliveryDelay() {
-        return 7;
-    }
-
-    private int averageDailySail() {
-        return 50;
-    }
-
-    private int quantityWarning() {
-        return averageDailySail() * supplierDeliveryDelay();
     }
 
 

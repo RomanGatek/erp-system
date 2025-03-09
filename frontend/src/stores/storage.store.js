@@ -13,7 +13,7 @@ export const useInventoryStore = defineStore('inventory', {
     error: null,
     searchQuery: '',
     sorting: setupSort('product.name'),
-    pagination: { currentPage: 1, perPage: 10 }
+    pagination: { currentPage: 1, perPage: 10 },
   }),
   getters: {
     filtered: (state) => filter(state, (item) => {
