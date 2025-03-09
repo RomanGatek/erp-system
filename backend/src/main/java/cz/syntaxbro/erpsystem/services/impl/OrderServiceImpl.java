@@ -5,6 +5,7 @@ import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
@@ -70,7 +71,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order createdOrder(Order order) {
+    public Order createdOrder(OrderCreateRequest orderRequest) {
+        Order order = null;
         return orderRepository.save(order);
     }
 

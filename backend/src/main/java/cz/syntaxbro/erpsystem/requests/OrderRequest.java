@@ -26,6 +26,9 @@ public class OrderRequest {
     @NotNull(message = "Status cannot be null")
     private Order.Status status;
 
+    @NotNull(message = "Status cannot be null")
+    private Order.OrderType orderType;
+
     @FutureOrPresent
     private LocalDateTime orderTime;
 

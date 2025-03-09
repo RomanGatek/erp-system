@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
@@ -17,7 +18,7 @@ public interface OrderService {
 
     List<Order> getOrdersByProduct(Long productId);
 
-    Order createdOrder(Order order);
+    Order createdOrder(OrderCreateRequest orderRequest);
 
     void updateOrder(Long orderId, OrderRequest orderDto);
 
