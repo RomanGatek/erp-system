@@ -25,7 +25,7 @@ class ReportsControllerTest {
      * Expected result: HTTP 200 OK.
      */
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void getAllReports_shouldReturnOk_whenUserIsAdmin() throws Exception {
         mockMvc.perform(get("/api/reports")
                         .contentType(MediaType.APPLICATION_JSON))

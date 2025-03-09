@@ -36,6 +36,7 @@ public class InventoryServiceTest {
     void setUp() {
         this.product = Product.builder()
                 .id(1L)
+                .name("Test Product")
                 .description("Sample product description")
                 .buyoutPrice(10)
                 .purchasePrice(20)

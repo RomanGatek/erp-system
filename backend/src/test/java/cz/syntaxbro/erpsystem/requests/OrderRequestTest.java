@@ -1,14 +1,19 @@
 package cz.syntaxbro.erpsystem.requests;
 
+import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Order;
+import cz.syntaxbro.erpsystem.models.OrderItem;
+import cz.syntaxbro.erpsystem.models.Product;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -20,17 +25,35 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class OrderRequestTest {
 
-    private static Validator validator;
+    private Validator validator;
+    private Product product;
+    private InventoryItem inventoryItem;
+    private OrderItem orderItem;
 
     /**
      * Initializes the Validator instance before all tests.
      * The Validator is used to validate OrderRequest objects.
      */
-    @BeforeAll
-    static void setUp() {
+    @BeforeEach
+    void setUp() {
         Locale.setDefault(Locale.ENGLISH); // Ensures messages are in English
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+
+        this.product = Product.builder()
+                .name("Ahoj")
+                .build();
+
+        this.inventoryItem = InventoryItem.builder()
+                .stockedAmount(123)
+                .product(product)
+                .build();
+
+        orderItem = OrderItem.builder()
+                .quantity(12)
+                .inventoryItem(this.inventoryItem)
+                .build();
+
     }
 
     /**
@@ -41,11 +64,14 @@ class OrderRequestTest {
     void shouldPassValidationWithValidData() {
         // Arrange: Create a valid order request
 
-        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime now = LocalDateTime.now().plusYears(1);
         OrderRequest request = OrderRequest.builder()
                 .orderTime(now)
                 .orderType(Order.OrderType.SELL)
                 .amount(5)
+                .status(Order.Status.PENDING)
+                .orderItems(List.of(orderItem))
                 .comment("test comment")
                 .cost(150.0)
                 .build();
@@ -195,13 +221,15 @@ class OrderRequestTest {
     void shouldFailValidationForInvalidProductId() {
         // Arrange: Create an order request with invalid product ID
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().minusDays(1);
         OrderRequest request = OrderRequest.builder()
                 .orderTime(now)
                 .orderType(Order.OrderType.SELL)
                 .amount(5)
+                .orderItems(List.of(this.orderItem))
                 .comment("test comment")
                 .cost(150.0)
+                .status(Order.Status.PENDING)
                 .build();
 
         // Act: Validate the request
@@ -210,6 +238,6 @@ class OrderRequestTest {
         // Assert: Product ID validation should fail
         assertThat(violations).isNotEmpty();
         assertThat(violations)
-                .anyMatch(v -> v.getMessage().contains("Product ID must be greater than 0"));
+                .anyMatch(v -> v.getMessage().contains("must be a date in the present or in the future"));
     }
 }

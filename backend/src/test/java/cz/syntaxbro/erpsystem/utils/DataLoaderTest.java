@@ -35,6 +35,9 @@ class DataLoaderTest {
 
     @Mock
     private PasswordSecurity passwordSecurity;
+    
+    @Mock
+    private OrderService orderService;  // Mock the OrderService instead of autowiring it
 
     @InjectMocks
     private DataLoader dataLoader;
@@ -45,11 +48,7 @@ class DataLoaderTest {
     private final PermissionRepository permissionRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final OrderService orderService;
-
-    @Autowired
-    private ProductRepository productRepository; // Directly injected by Spring
-
+    private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
 
     /**
@@ -62,8 +61,7 @@ class DataLoaderTest {
                    @Autowired InventoryRepository inventoryRepository,
                    @Autowired ProductRepository productRepository,
                    @Autowired OrderRepository orderRepository,
-                   @Autowired OrderItemRepository orderItemRepository,
-                   @Autowired OrderService orderService
+                   @Autowired OrderItemRepository orderItemRepository
     ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
@@ -72,7 +70,6 @@ class DataLoaderTest {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
-        this.orderService = orderService;
     }
 
     /**
@@ -84,7 +81,8 @@ class DataLoaderTest {
     void setUp() {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
-        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, productRepository, inventoryRepository, orderRepository, orderItemRepository, orderService);
+        dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, 
+                                    productRepository, inventoryRepository, orderRepository, orderItemRepository, orderService);
         dataLoader.run(); // Populates database with initial data.
     }
 
@@ -107,11 +105,11 @@ class DataLoaderTest {
     void shouldPersistRolesWithPermissions() {
         Optional<Role> adminRole = roleRepository.findByName("ROLE_ADMIN");
         assertThat(adminRole).isPresent();
-        assertThat(adminRole.get().getPermissions()).hasSize(3); // Admin should have 2 permissions.
+        assertThat(adminRole.get().getPermissions()).hasSize(2); // Admin has READ_REPORTS and APPROVE_BUDGETS
 
         Optional<Role> managerRole = roleRepository.findByName("ROLE_MANAGER");
         assertThat(managerRole).isPresent();
-        assertThat(managerRole.get().getPermissions()).hasSize(2); // Manager should have 1 permission.
+        assertThat(managerRole.get().getPermissions()).hasSize(1); // Manager should have 1 permissions.
 
         Optional<Role> userRole = roleRepository.findByName("ROLE_USER");
         assertThat(userRole).isPresent();

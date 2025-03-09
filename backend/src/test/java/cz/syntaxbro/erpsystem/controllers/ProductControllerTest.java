@@ -40,19 +40,23 @@ class ProductControllerTest {
 
     @BeforeEach
     void setUp() {
-       this.testProduct = Product.builder()
-               .description("sort description")
-               .name("testName")
-               .purchasePrice(20.0)
-               .buyoutPrice(10.0)
-               .build();
-
+       // Create the product request for tests
        this.testProductRequest = ProductRequest.builder()
                .description("sort description")
                .name("testName")
                .purchasePrice(20.0)
                .buyoutPrice(10.0)
                .build();
+               
+       // Create and save a test product to the database
+       Product product = Product.builder()
+               .description("sort description")
+               .name("testProduct-" + System.currentTimeMillis()) // Ensure unique name
+               .purchasePrice(20.0)
+               .buyoutPrice(10.0)
+               .build();
+               
+       this.testProduct = productService.createProduct(product);
     }
 
     /**
@@ -68,8 +72,8 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("New Product"))
-                .andExpect(jsonPath("$.price").value(20.0));
+                .andExpect(jsonPath("$.name").value("testName"))
+                .andExpect(jsonPath("$.purchasePrice").value(20.0));
     }
 
     /**

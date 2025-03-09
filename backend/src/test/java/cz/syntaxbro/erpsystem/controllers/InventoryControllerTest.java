@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,11 +36,10 @@ class InventoryControllerTest {
 
     private InventoryItem sampleItem;
 
-    private Product sampleProduct;
-
     @BeforeEach
     void setUp() {
-        this.sampleProduct = Product.builder()
+        Product sampleProduct = Product.builder()
+                .id(1L)
                 .purchasePrice(10)
                 .buyoutPrice(10)
                 .description("test description")
@@ -49,7 +49,7 @@ class InventoryControllerTest {
         this.sampleItem = InventoryItem.builder()
                 .id(1L)
                 .stockedAmount(10)
-                .product(this.sampleProduct)
+                .product(sampleProduct)
                 .build();
     }
 
@@ -63,11 +63,9 @@ class InventoryControllerTest {
 
         ResponseEntity<InventoryItem> response = inventoryController.getItem(1L);
         assertNotNull(response.getBody());
-        assertNotNull(response.getBody(), "Ensures the response body is not null");
         assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
         assertEquals(1L, response.getBody().getId());
-        assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
-        assertEquals("Test Product", response.getBody().getProduct().getName(), "Verifies the product name is correct");
+        assertEquals("testName", response.getBody().getProduct().getName(), "Verifies the product name is correct");
     }
 
     /**
@@ -81,46 +79,45 @@ class InventoryControllerTest {
         ResponseEntity<InventoryItem> response = inventoryController.addItem(sampleItem);
 
         assertNotNull(response.getBody());
-        assertNotNull(response.getBody(), "Ensures the response body is not null");
         assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
-        assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
-        assertEquals("Test Product", response.getBody().getProduct().getName(), "Verifies the product name is correct");
+        assertEquals("testName", response.getBody().getProduct().getName(), "Verifies the product name is correct");
     }
 
     /**
-     * Test: Fetching a single inventory item
-     * Expected result: 200 OK + item details
+     * Test: Updating an inventory item
+     * Expected result: 200 OK + updated item details
      */
     @Test
     void testUpdateItem() {
-        when(inventoryRepository.findById(anyLong())).thenReturn(Optional.of(sampleItem));
-        when(inventoryRepository.save(any(InventoryItem.class))).thenReturn(sampleItem);
+        when(inventoryService.updateItem(anyLong(), any(InventoryItem.class))).thenReturn(sampleItem);
 
         ResponseEntity<InventoryItem> response = inventoryController.updateItem(1L, sampleItem);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody(), "Ensures the response body is not null");
         assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
-        assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
-        assertEquals("Test Product", response.getBody().getProduct().getName(), "Verifies the product name is correct");
+        assertEquals("testName", response.getBody().getProduct().getName(), "Verifies the product name is correct");
     }
 
     /**
-     * Test: Fetching a single inventory item
-     * Expected result: 200 OK + item details
+     * Test: Fetching all inventory items
+     * Expected result: 200 OK + list of items
      */
     @Test
     void testGetAllItems() {
-        when(inventoryRepository.findAll()).thenReturn(List.of(sampleItem));
+        List<InventoryItem> items = Arrays.asList(sampleItem);
+        when(inventoryService.getAll()).thenReturn(items);
+
         ResponseEntity<List<InventoryItem>> response = inventoryController.getAllItems();
+        
         assertNotNull(response.getBody());
         assertFalse(response.getBody().isEmpty());
         assertEquals(1, response.getBody().size());
     }
 
     /**
-     * Test: Fetching a single inventory item
-     * Expected result: 200 OK + item details
+     * Test: Removing an inventory item
+     * Expected result: 200 OK status
      */
     @Test
     void testRemoveItem() {

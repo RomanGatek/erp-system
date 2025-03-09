@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,10 +19,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Ensures that database operations on the Product entity work as expected.
  */
 @DataJpaTest
+@ActiveProfiles("test")
 class ProductRepositoryTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    private Product testProduct;
+    private String uniqueName;
 
     /**
      * Sets up test data before each test.
@@ -28,14 +34,22 @@ class ProductRepositoryTest {
      */
     @BeforeEach
     void setUp() {
-        Product testProduct = Product.builder()
-                .id(1L)
-                .name("Test Product")
-                .description("A sample product for testing.")
-                .buyoutPrice(89.9)
-                .purchasePrice(99.99)
+        // Clean up previous test data
+        productRepository.deleteAll();
+        
+        // Create unique name to prevent conflicts
+        uniqueName = "Test Product " + UUID.randomUUID().toString().substring(0, 8);
+        
+        // Create product without specifying ID - let the database assign it
+        this.testProduct = Product.builder()
+                .name(uniqueName)
+                .description("Test description")
+                .buyoutPrice(10.0)
+                .purchasePrice(20.0)
                 .build();
-        productRepository.save(testProduct);
+                
+        // Save the product
+        this.testProduct = productRepository.save(testProduct);
     }
 
     /**
@@ -44,14 +58,14 @@ class ProductRepositoryTest {
     @Test
     void findByName_ShouldReturnProduct_WhenProductExists() {
         // Act: Retrieve product by name
-        Optional<Product> foundProduct = productRepository.findByName("Test Product");
+        Optional<Product> foundProduct = productRepository.findByName(uniqueName);
 
         // Assert: Ensure the product is found and matches expected values
         assertThat(foundProduct).isPresent();
-        assertThat(foundProduct.get().getName()).isEqualTo("Test Product");
-        assertThat(foundProduct.get().getPurchasePrice()).isEqualTo(99.99);
-        assertThat(foundProduct.get().getBuyoutPrice()).isEqualTo(89.99);
-        assertThat(foundProduct.get().getDescription()).isEqualTo("A sample product for testing.");
+        assertThat(foundProduct.get().getName()).isEqualTo(uniqueName);
+        assertThat(foundProduct.get().getPurchasePrice()).isEqualTo(20.0);
+        assertThat(foundProduct.get().getBuyoutPrice()).isEqualTo(10.0);
+        assertThat(foundProduct.get().getDescription()).isEqualTo("Test description");
     }
 
     /**
@@ -74,7 +88,7 @@ class ProductRepositoryTest {
         // Arrange: Create another product with the same name
 
         Product duplicateProduct = Product.builder()
-                .name("Test Product")
+                .name(uniqueName)
                 .description("Another product with the same name.")
                 .buyoutPrice(40.00)
                 .purchasePrice(50.00)
@@ -82,5 +96,43 @@ class ProductRepositoryTest {
 
         // Act & Assert: Expect a DataIntegrityViolationException due to unique constraint violation
         assertThrows(DataIntegrityViolationException.class, () -> productRepository.saveAndFlush(duplicateProduct));
+    }
+
+    @Test
+    void shouldFindProductById() {
+        // When
+        Optional<Product> foundProduct = productRepository.findById(testProduct.getId());
+        
+        // Then
+        assertThat(foundProduct).isPresent();
+        assertThat(foundProduct.get().getName()).isEqualTo(uniqueName);
+    }
+    
+    @Test
+    void shouldUpdateProduct() {
+        // Given
+        final String updatedDescription = "Updated description";
+        testProduct.setDescription(updatedDescription);
+        
+        // When
+        Product updatedProduct = productRepository.save(testProduct);
+        
+        // Then
+        assertThat(updatedProduct.getDescription()).isEqualTo(updatedDescription);
+        
+        // Verify the update persisted
+        Optional<Product> retrievedProduct = productRepository.findById(testProduct.getId());
+        assertThat(retrievedProduct).isPresent();
+        assertThat(retrievedProduct.get().getDescription()).isEqualTo(updatedDescription);
+    }
+    
+    @Test
+    void shouldDeleteProduct() {
+        // When
+        productRepository.delete(testProduct);
+        
+        // Then
+        Optional<Product> deletedProduct = productRepository.findById(testProduct.getId());
+        assertThat(deletedProduct).isEmpty();
     }
 }

@@ -14,12 +14,6 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("select o from Order o where o.cost between :startCost and :endCost")
-    List<Order> findByCostBetween(@Param("startCost") Double startCost, @Param("endCost") Double endCost);
-
-    @Query("select o from Order o where o.orderTime between :startDate and :endDate")
-    List<Order> findByOrderTimeBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-
     @Query("select distinct o from Order o join o.orderItems oi where oi.inventoryItem.product = :product")
     List<Order> findByProduct(@Param("product") Product product);
 

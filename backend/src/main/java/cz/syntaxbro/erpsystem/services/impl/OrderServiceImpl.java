@@ -209,7 +209,7 @@ public class OrderServiceImpl implements OrderService {
         return ResponseEntity.status(HttpStatus.OK).body("Order with id " + orderId + " has been updated to " + status);
     }
 
-    private User getCurrentUser() {
+    public User getCurrentUser() {
         // Get current user
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
