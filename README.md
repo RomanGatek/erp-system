@@ -11,7 +11,6 @@ The following features are currently implemented and ready to use:
 - Simple reporting dashboard
 
 ## Features
-- **Modular Architecture**: Components can be enabled or disabled based on business needs
 - **User Management**: Role-based access control with customizable permissions
 - ~~**Inventory Management**: Track stock levels, orders, and deliveries~~
 - ~~**Sales Management**: Manage the entire sales cycle from quotation to invoicing~~
