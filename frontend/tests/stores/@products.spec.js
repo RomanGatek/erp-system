@@ -135,17 +135,17 @@ describe('useProductsStore', () => {
 
   it('getter filtered: should return items matching the search query', () => {
     store.items = [
-      { id: 1, name: 'Alpha', price: 100 },
-      { id: 2, name: 'Beta', price: 200 },
-      { id: 3, name: 'Gamma', price: 300 }
+      { id: 1, name: 'Alpha', buyoutPrice: 100, purchasePrice: 100 },
+      { id: 2, name: 'Beta', buyoutPrice: 200, purchasePrice: 200 },
+      { id: 3, name: 'Gamma', buyoutPrice: 300, purchasePrice: 300 }
     ]
     // Search by name
     store.setSearch('beta')
     const filtered = store.filtered
-    expect(filtered).toEqual([{ id: 2, name: 'Beta', price: 200 }])
+    expect(filtered).toEqual([{ id: 2, name: 'Beta', buyoutPrice: 200, purchasePrice: 200 }])
     // Search by price
     store.setSearch('300')
-    expect(store.filtered).toEqual([{ id: 3, name: 'Gamma', price: 300 }])
+    expect(store.filtered).toEqual([{ id: 3, name: 'Gamma', buyoutPrice: 300, purchasePrice: 300 }])
   })
 
   it('getter paginateItems: should return items for the current page', () => {
