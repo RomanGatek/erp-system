@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ public class ProductCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotEmpty(message = "Name can be null or empty")
+    @NotBlank(message = "Name cannot be null or empty")
     private String name;
     private String description;
     @OneToMany(mappedBy = "productCategory")
