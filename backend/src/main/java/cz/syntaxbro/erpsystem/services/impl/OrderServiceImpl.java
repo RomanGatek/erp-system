@@ -49,7 +49,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponse> getOrders() {
         return orderRepository.findAll().stream().map(order -> {
-            var orderResponse = new OrderResponse();
+            var orderResponse = OrderResponse.builder().build();
             orderResponse.map(order);
             orderResponse.setOrderItems(order.getOrderItems().stream().map(OrderItemReponse::new).toList());
             return orderResponse;
@@ -74,7 +74,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderType(orderRequest.getOrderType())
                 .approvedBy(this.getCurrentUser())
                 .comment(orderRequest.getComment())
-                .decisionTime(LocalDateTime.now())
+                .decisionTime(null)
                 .status(Order.Status.PENDING)
                 .cost(totalCost)
                 .build();
@@ -82,7 +82,20 @@ public class OrderServiceImpl implements OrderService {
         order = orderRepository.save(order);
 
         for (var orderItemRequest : orderRequest.getProducts()) {
-            InventoryItem inventoryItem = inventoryService.getItem(orderItemRequest.getId());
+            Product product = productRepository.findById(orderItemRequest.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product with id " + orderItemRequest.getId() + " not found"));
+
+            InventoryItem inventoryItem = inventoryService.findItemByProduct(product);
+
+            if (inventoryItem == null) {
+                inventoryItem = InventoryItem.builder()
+                        .product(product)
+                        .stockedAmount(0)
+                        .build();
+
+                inventoryService.addItem(inventoryItem);
+            }
+
             double productPrice = orderRequest.getOrderType() == Order.OrderType.SELL
                     ? inventoryItem.getProduct().getPurchasePrice()
                     : inventoryItem.getProduct().getBuyoutPrice();
