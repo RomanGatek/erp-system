@@ -290,11 +290,14 @@ public class DataLoader implements CommandLineRunner {
     }
 
     private void createProductCategoryIfNotExists(String categoryName, String description) {
-        //create product categorry
-        productCategoryRepository.save(ProductCategory.builder()
-                .name(categoryName)
-                .description(description)
-                .build());
+        //create product category
+        Optional<ProductCategory> productCategoryFromDb = productCategoryRepository.findByName(categoryName);
+        if (productCategoryFromDb.isEmpty()) {
+            productCategoryRepository.save(ProductCategory.builder()
+                    .name(categoryName)
+                    .description(description)
+                    .build());
+        }
     }
 
     private void createProductIfNotExists(String name, double buyoutPrice, double purchasePrice, String description, ProductCategory productCategory) {
