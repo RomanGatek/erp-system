@@ -1,10 +1,7 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.exceptions.ResourceNotFoundException;
-import cz.syntaxbro.erpsystem.models.InventoryItem;
-import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.models.User;
+import cz.syntaxbro.erpsystem.models.*;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
@@ -12,24 +9,18 @@ import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
-import cz.syntaxbro.erpsystem.services.InventoryService;
-import cz.syntaxbro.erpsystem.services.OrderService;
-import cz.syntaxbro.erpsystem.services.ProductService;
-import cz.syntaxbro.erpsystem.services.UserService;
+import cz.syntaxbro.erpsystem.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,13 +29,15 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
+    private final OrderItemService orderItemService;
 
 
     @Autowired
-    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, InventoryService inventoryService) {
+    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, InventoryService inventoryService, OrderItemService orderItemService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.inventoryService = inventoryService;
+        this.orderItemService = orderItemService;
     }
 
     @Override
@@ -71,8 +64,43 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order createdOrder(OrderCreateRequest orderRequest) {
-        Order order = null;
+        double totalCost = 0;
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        Order order = Order.builder()
+                .orderTime(LocalDateTime.now())
+                .orderType(orderRequest.getOrderType())
+                .approvedBy(this.getCurrentUser())
+                .comment(orderRequest.getComment())
+                .decisionTime(LocalDateTime.now())
+                .status(Order.Status.PENDING)
+                .cost(totalCost)
+                .build();
+
+        order = orderRepository.save(order);
+
+        for (var orderItemRequest : orderRequest.getProducts()) {
+            InventoryItem inventoryItem = inventoryService.getItem(orderItemRequest.getId());
+            double productPrice = orderRequest.getOrderType() == Order.OrderType.SELL
+                    ? inventoryItem.getProduct().getPurchasePrice()
+                    : inventoryItem.getProduct().getBuyoutPrice();
+
+            OrderItem orderItem = OrderItem.builder()
+                    .inventoryItem(inventoryItem)
+                    .quantity(orderItemRequest.getQuantity())
+                    .order(order)
+                    .build();
+
+            orderItemService.createOrderItem(orderItem);
+            orderItems.add(orderItem);
+            totalCost += orderItemRequest.getQuantity() * productPrice;
+        }
+
+        order.setCost(totalCost);
+        order.setOrderItems(orderItems);
+
         return orderRepository.save(order);
     }
 
@@ -97,11 +125,8 @@ public class OrderServiceImpl implements OrderService {
         if (!order.getStatus().equals(Order.Status.PENDING)) {
             throw new IllegalStateException("Only pending orders can be confirmed");
         }
-        
-        // Get current user
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        User user = userDetails.getUser();
+
+        User user = getCurrentUser();
 
         for (var item : order.getOrderItems()) {
             if (item != null) inventoryService.releaseStock(item.getId(), item.getQuantity());
@@ -163,5 +188,12 @@ public class OrderServiceImpl implements OrderService {
          */
 
         return ResponseEntity.status(HttpStatus.OK).body("Order with id " + orderId + " has been updated to " + status);
+    }
+
+    private User getCurrentUser() {
+        // Get current user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        return userDetails.getUser();
     }
 }

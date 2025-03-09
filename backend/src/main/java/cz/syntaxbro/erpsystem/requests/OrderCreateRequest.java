@@ -13,7 +13,7 @@ public class OrderCreateRequest {
     List<ProductRequest> products;
 
     @Data
-    static class ProductRequest {
+    public static class ProductRequest {
         private Long id;
         private Integer quantity;
     }

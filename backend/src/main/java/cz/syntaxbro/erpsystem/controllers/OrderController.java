@@ -54,11 +54,10 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderCreateRequest> createOrder(@RequestBody OrderCreateRequest orderRequest) {
-        System.out.println(orderRequest);
+    public ResponseEntity<Order> createOrder(@RequestBody OrderCreateRequest orderRequest) {
+        Order createdOrder = orderService.createdOrder(orderRequest);
 
-//        Order createdOrder = orderService.createdOrder(orderRequest);
-        return ResponseEntity.ok(orderRequest);
+        return ResponseEntity.ok(createdOrder);
     }
 
     @PutMapping("/{orderId}/cancel")

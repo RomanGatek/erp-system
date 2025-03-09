@@ -9,9 +9,11 @@ import cz.syntaxbro.erpsystem.services.OrderItemService;
 import cz.syntaxbro.erpsystem.services.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,12 +21,13 @@ public class OrderItemServiceImpl implements OrderItemService {
 
 
     private final OrderItemRepository orderItemRepository;
-    private final OrderService orderService;
+
+    private final OrderRepository orderRepository;
 
     @Autowired
-    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, OrderService orderService) {
+    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, OrderRepository orderRepository) {
         this.orderItemRepository = orderItemRepository;
-        this.orderService = orderService;
+        this.orderRepository = orderRepository;
     }
 
     @Override
@@ -35,11 +38,12 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     @Override
     public List<OrderItemReponse> getOrderItemsByOrderId(Long orderId) {
-        Order order = orderService.getOrderById(orderId);
-        if(order != null) {
-            return order.getOrderItems().stream().map(OrderItemReponse::new).collect(Collectors.toList());
-        }
-        return null;
+        Optional<Order> order = orderRepository.findById(orderId);
+
+        return order.map(value -> value.getOrderItems().stream()
+                .map(OrderItemReponse::new)
+                .collect(Collectors.toList()))
+                .orElse(null);
     }
 
     @Override
