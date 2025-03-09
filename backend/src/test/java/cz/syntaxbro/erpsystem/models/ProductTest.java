@@ -37,6 +37,10 @@ class ProductTest {
     @Test
     void shouldCreateValidProduct() {
         // Arrange: Create a valid product instance
+        ProductCategory productCategory = ProductCategory.builder()
+                .name("test")
+                .description("test products")
+                .build();
 
         Product product = Product.builder()
                 .id(1L)
@@ -44,6 +48,7 @@ class ProductTest {
                 .description("A sample product")
                 .buyoutPrice(89.9)
                 .purchasePrice(99.99)
+                .productCategory(productCategory)
                 .build();
 
         // Act: Validate the product
@@ -59,12 +64,18 @@ class ProductTest {
     @Test
     void shouldFailWhenNameIsBlank() {
         // Arrange: Create a product with a blank name
+        ProductCategory productCategory = ProductCategory.builder()
+                .name("test")
+                .description("test products")
+                .build();
+
         Product product = Product.builder()
                 .id(1L)
                 .name(null)
                 .description("A sample product")
                 .buyoutPrice(89.9)
                 .purchasePrice(99.99)
+                .productCategory(productCategory)
                 .build();
 
         // Act: Validate the product
@@ -82,6 +93,10 @@ class ProductTest {
     @Test
     void shouldFailWhenBuyoutPriceIsNegative() {
         // Arrange: Create a product with an invalid negative price
+        ProductCategory productCategory = ProductCategory.builder()
+                .name("test")
+                .description("test products")
+                .build();
 
         Product product = Product.builder()
                 .id(1L)
@@ -89,6 +104,7 @@ class ProductTest {
                 .description("A sample product")
                 .buyoutPrice(-10.0)
                 .purchasePrice(9)
+                .productCategory(productCategory)
                 .build();
 
         // Act: Validate the product
@@ -103,6 +119,10 @@ class ProductTest {
     @Test
     void shouldFailWhenPurchasePriceIsNegative() {
         // Arrange: Create a product with an invalid negative price
+        ProductCategory productCategory = ProductCategory.builder()
+                .name("test")
+                .description("test products")
+                .build();
 
         Product product = Product.builder()
                 .id(1L)
@@ -110,6 +130,7 @@ class ProductTest {
                 .description("A sample product")
                 .buyoutPrice(10.0)
                 .purchasePrice(-9)
+                .productCategory(productCategory)
                 .build();
 
         // Act: Validate the product
@@ -127,6 +148,10 @@ class ProductTest {
     @Test
     void shouldAllowNullDescription() {
         // Arrange: Create a product with a null description
+        ProductCategory productCategory = ProductCategory.builder()
+                .name("test")
+                .description("test products")
+                .build();
 
         Product product = Product.builder()
                 .id(1L)
@@ -134,6 +159,7 @@ class ProductTest {
                 .description("A sample product")
                 .buyoutPrice(40)
                 .purchasePrice(50)
+                .productCategory(productCategory)
                 .build();
 
         // Act: Validate the product
