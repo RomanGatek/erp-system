@@ -82,7 +82,7 @@ describe('useInventoryStore', () => {
   it('updateItem: should update an existing item', async () => {
     // Set initial items
     store.items = [{ id: 1, product: { name: 'Product A', description: 'Desc A' } }]
-    const updatedData = { id: 1, product: { name: 'Updated Product A', description: 'Updated Desc A' } }
+    const updatedData = { id: 1, product: { name: 'Updated Product A', description: 'Updated Desc A' }, stockedAmount: 0 }
     user.put.mockResolvedValue({ data: {} })
 
     await store.updateItem(updatedData)
