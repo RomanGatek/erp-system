@@ -29,6 +29,7 @@ const $notifier = useNotifier()
 const searchQuery = ref('')
 const showDropdown = ref(false)
 const searchContainerRef = ref(null)
+const selectedProducts = ref(props.modelValue)
 
 // Load inventory data
 onMounted(async () => {
@@ -36,6 +37,11 @@ onMounted(async () => {
     await inventoryStore.fetchItems()
   }
 })
+
+// Add watcher for modelValue to update selectedProducts when parent changes it
+watch(() => props.modelValue, (newValue) => {
+  selectedProducts.value = newValue
+}, { deep: true })
 
 // Check if product exists in inventory
 const isProductInInventory = (productId) => {
@@ -124,8 +130,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-
-const selectedProducts = ref(props.modelValue)
 
 watch(selectedProducts, (newValue) => {
   emit('update:modelValue', newValue)

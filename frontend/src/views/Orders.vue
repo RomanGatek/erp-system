@@ -346,25 +346,25 @@ const createOrder = async () => {
   if (!isValid.value) return
 
   loading.value = true
-  try {
-    // Create orders for each product
-    for (const product of selectedProducts.value) {
-      const response = await api.post('/orders', null, {
-        params: {
-          itemId: product.id,
-          quantity: product.quantity,
-          orderType: orderType.value
-        }
-      })
 
-      if (response.data) {
-        if (comment.value.trim()) {
-          await api.put(`/orders/${response.data.id}/workflow-comment`, comment.value)
-        }
-      }
+  console.log(selectedProducts.value)
+
+
+  const computedIds = selectedProducts.value.map(product => {
+    return {
+      quantity: product.quantity,
+      id: product.id
     }
+  })
 
-    $notifier.success('Orders created successfully')
+  try {
+    const response = await api.post('/orders', {
+      products: computedIds,
+      orderType: orderType.value,
+      comment: comment.value
+    })
+
+    console.log("RES: ", response.data)
 
     // Reset form
     selectedProducts.value = []
@@ -373,6 +373,7 @@ const createOrder = async () => {
 
     // Refresh orders list
     await fetchRecentOrders()
+    $notifier.success('Orders created successfully')
   } catch (err) {
     errorStore.handle(err)
   } finally {
