@@ -201,7 +201,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { StatusBar, BaseInput, DateTimePicker, MultiProductSelect } from '@/components/common'
+import { StatusBar, DateTimePicker, MultiProductSelect } from '@/components/common'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { api } from '@/services/api'

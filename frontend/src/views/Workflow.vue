@@ -1,3 +1,4 @@
+<!--suppress ALL -->
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
