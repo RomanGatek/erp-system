@@ -129,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
         User user = getCurrentUser();
 
         for (var item : order.getOrderItems()) {
-            if (item != null) inventoryService.releaseStock(item.getId(), item.getQuantity());
+            if (item != null) inventoryService.releaseStock(item.getInventoryItem().getId(), item.getQuantity());
         }
         order.setStatus(Order.Status.CONFIRMED);
         order.setComment(comment);
@@ -155,7 +155,7 @@ public class OrderServiceImpl implements OrderService {
         User user = userDetails.getUser();
 
             for (var item : order.getOrderItems()) {
-                if (item != null) inventoryService.receiveStock(item.getId(), item.getQuantity());
+                if (item != null) inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
             }
             order.setStatus(Order.Status.CANCELED);
             order.setComment(comment);

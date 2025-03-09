@@ -81,9 +81,7 @@ public class InventoryServiceImpl implements InventoryService {
             if (inventoryItem.getStockedAmount() < quantity) {
                 throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "not enough quantity of product");
             }
-            ErpSystemApplication.getLogger().info("before: {}", inventoryItem.getStockedAmount());
             inventoryItem.setStockedAmount(inventoryItem.getStockedAmount() - quantity);
-            ErpSystemApplication.getLogger().info("after: {}", inventoryItem.getStockedAmount());
             inventoryRepository.save(inventoryItem);
         }
     }
