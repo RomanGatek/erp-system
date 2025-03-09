@@ -2,7 +2,7 @@ package cz.syntaxbro.erpsystem.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,8 +35,8 @@ public class Product {
 
     private String description;
 
-    @NotEmpty(message = "Category can be null or empty")
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @NotNull(message = "Category can be null or empty")
     private ProductCategory productCategory;
 }
