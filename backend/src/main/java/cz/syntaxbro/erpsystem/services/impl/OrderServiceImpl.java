@@ -187,6 +187,10 @@ public class OrderServiceImpl implements OrderService {
         když uživatel bude mít daný sub na dané objednávce, tak v rámci observeru dostane informaci o tom že status objednávky bude změnen.
          */
 
+        order.setStatus(status);
+
+        orderRepository.save(order);
+
         return ResponseEntity.status(HttpStatus.OK).body("Order with id " + orderId + " has been updated to " + status);
     }
 
