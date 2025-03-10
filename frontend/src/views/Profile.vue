@@ -157,10 +157,12 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useMeStore } from '@/stores/me'
 import { notify } from '@kyvg/vue3-notification'
-import BaseInput from '@/components/common/BaseInput.vue'
-import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
+import {
+  BaseInput,
+  BaseCheckbox,
+  PasswordInput
+} from '@/components'
 import { jwtDecode } from 'jwt-decode'
-import PasswordInput from '@/components/common/PasswordInput.vue'
 
 defineOptions({
   name: 'ProfileView'

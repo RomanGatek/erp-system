@@ -13,8 +13,8 @@ import {
   StatusBar,
   EmptyState,
   BaseInput,
-} from '@/components/common'
-import SearchSelect from '@/components/common/SearchSelect.vue'
+} from '@/components'
+import {SearchSelect} from '@/components'
 import { useProductsStore } from '@/stores/products.js'
 
 

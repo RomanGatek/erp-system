@@ -1,4 +1,4 @@
-import { homeIcon, usersIcon, productsIcon, inventoryIcon, ordersIcon, storageIcon, workflowIcon } from '@/components/common/rawIcons'
+import { homeIcon, usersIcon, productsIcon, inventoryIcon, ordersIcon, storageIcon, workflowIcon } from '@/components'
 import { ref } from 'vue'
 
 export const navLinks = ref([

@@ -252,7 +252,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted, onBeforeUnmount } from 'vue'
-import { StatusBar, DateTimePicker, MultiProductSelect } from '@/components/common'
+import { StatusBar, DateTimePicker, MultiProductSelect } from '@/components'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { useOrdersStore } from '@/stores/orders.js'

@@ -147,7 +147,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { StatusBar, SearchSelect, BaseInput, DateTimePicker } from '@/components/common'
+import { StatusBar, SearchSelect, BaseInput, DateTimePicker } from '@/components'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { api } from '@/services/api'

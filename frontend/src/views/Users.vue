@@ -13,7 +13,7 @@ import {
   EmptyState,
   BaseInput,
   BaseCheckbox
-} from '@/components/common'
+} from '@/components'
 import { $reactive } from '@/utils/index.js'
 
 

@@ -34,7 +34,7 @@ import CustomNavbar from '@/components/CustomNavbar.vue'
 import CustomFooter from '@/components/CustomFooter.vue'
 import { computed } from 'vue'
 import { useMeStore } from './stores/me'
-import NotificationWrapper from '@/components/common/NotificationWrapper.vue'
+import {NotificationWrapper} from '@/components'
 
 export default {
   name: 'App',

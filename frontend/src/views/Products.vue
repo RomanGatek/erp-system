@@ -136,7 +136,7 @@ import {
   StatusBar,
   EmptyState,
   BaseInput
-} from '@/components/common'
+} from '@/components'
 import { useErrorStore } from '@/stores/errors.js'
 
 

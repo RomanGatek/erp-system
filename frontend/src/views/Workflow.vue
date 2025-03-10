@@ -411,7 +411,7 @@ import {
   BaseInput,
   DataTable,
   Pagination
-} from '@/components/common'
+} from '@/components'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { useWorkflowStore } from '@/stores/workflow.store.js'

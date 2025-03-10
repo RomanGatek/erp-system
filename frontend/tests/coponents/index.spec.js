@@ -1,4 +1,4 @@
-import * as Components from '@/components/common'; // Adjust the path if needed
+import * as Components from '@/components'; // Adjust the path if needed
 import * as IndeXomponents from '@/components'
 import { describe, it, expect } from 'vitest';
 
@@ -25,7 +25,7 @@ describe('Components common Barrel File', () => {
 });
 
 
-import * as Components2 from '@/components/ui'; // Adjust the path as necessary
+import * as Components2 from '@/components'; // Adjust the path as necessary
 
 describe('Components ui Barrel File', () => {
   const expectedExports = [

@@ -70,8 +70,10 @@ import Swal from 'sweetalert2'
 import { useMeStore } from '@/stores/me'
 import { navLinks } from '@/router/links'
 import { isLoggedIn, initMeStore } from '@/utils/user-utils'
-import NavBarLink from '@/components/ui/NavBarLink.vue'
-import NavBarLinkDropdown from '@/components/ui/NavBarLinkDropdown.vue'
+import {
+  NavBarLink,
+  NavBarLinkDropdown
+} from '@/components'
 
 const router = useRouter()
 const meStore = useMeStore()
