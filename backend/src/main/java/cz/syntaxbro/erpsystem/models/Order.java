@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -66,5 +67,26 @@ public class Order {
                 ? this.orderItems
                 : orderDto.getOrderItems();
         this.comment = orderDto.getComment() == null ? this.comment : orderDto.getComment();
+    }
+
+    public double getTotal(Order.OrderType orderType) {
+        double total = 0;
+        for (OrderItem item : orderItems) {
+            Product product = item.getInventoryItem().getProduct();
+            total += item.getQuantity() * (orderType.equals(OrderType.SELL) ? product.getBuyoutPrice() : product.getPurchasePrice());
+        }
+        return total;
+    }
+
+    public BigDecimal getTotal() {
+        double total = 0;
+        for (OrderItem item : orderItems) {
+            Product product = item.getInventoryItem().getProduct();
+            total += item.getQuantity() * (item.getOrder().getOrderType().equals(OrderType.SELL)
+                    ? product.getBuyoutPrice()
+                    : product.getPurchasePrice()
+            );
+        }
+        return BigDecimal.valueOf(total);
     }
 }

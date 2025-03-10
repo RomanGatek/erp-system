@@ -61,8 +61,8 @@ class OrderRepositoryTest {
         productTwo = productRepository.save(productTwo);
 
         // Create inventory items from products
-        InventoryItem inventoryItemOne = new InventoryItem(null, productOne, 100);
-        InventoryItem inventoryItemTwo = new InventoryItem(null, productTwo, 200);
+        InventoryItem inventoryItemOne = new InventoryItem(null, productOne, 100, LocalDateTime.now());
+        InventoryItem inventoryItemTwo = new InventoryItem(null, productTwo, 200, LocalDateTime.now());
         inventoryItemOne = inventoryRepository.save(inventoryItemOne);
         inventoryItemTwo = inventoryRepository.save(inventoryItemTwo);
 
