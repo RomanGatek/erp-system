@@ -528,6 +528,10 @@ const closeOrderDetail = () => {
 }
 
 const openOrderEdit = async (order) => {
+  if (order.status !== 'PENDING') {
+    return $notifier.warning('You can edit only order with status PENDING.')
+  }
+
   try {
     // Fetch fresh order data from API
     const orderFromApi = await workflowStore.getOrderById(order.id)

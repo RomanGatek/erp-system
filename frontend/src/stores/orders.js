@@ -6,7 +6,6 @@ export const useOrdersStore = defineStore('orders', {
     }),
     actions: {
       loadOrderForEdit(orderFromDb)  {
-        console.log(orderFromDb);
         this.order = orderFromDb;
       }
     }

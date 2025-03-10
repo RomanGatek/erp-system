@@ -90,7 +90,7 @@
               @before-leave="isAnimating = true"
               @after-leave="isAnimating = false"
             >
-              <div v-if="showCommentField" class="relative">
+              <div v-if="showCommentField || comment" class="relative">
                 <textarea
                   v-model="comment"
                   placeholder="Enter order comment..."
@@ -169,16 +169,27 @@
           </div>
 
           <!-- Submit Button -->
-          <div class="mt-8 flex justify-center">
+          <div class="mt-8 flex justify-center gap-5">
             <button
               type="button"
-              @click="isEditing ? editOrder : createOrder()"
+              @click="isEditing ? editOrder() : createOrder()"
               class="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
               :disabled="loading || !isValid"
             >
               <span class="relative z-10">{{ isEditing ? 'Edit' : 'Create' }} Order</span>
               <div
                 class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              ></div>
+            </button>
+            <button
+              v-if="isEditing"
+              type="button"
+              @click="cancelEdit"
+              class="group px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-300 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
+            >
+              <span class="relative z-10">Cancel</span>
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               ></div>
             </button>
           </div>
@@ -240,13 +251,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, onBeforeUnmount } from 'vue'
 import { StatusBar, DateTimePicker, MultiProductSelect } from '@/components/common'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
 import { useOrdersStore } from '@/stores/orders.js'
 import { api } from '@/services/api'
 import { formatDate } from '../utils/index.js'
+import {useRouter } from 'vue-router'
 
 function parseComment(comment) {
   try {
@@ -260,6 +272,7 @@ function parseComment(comment) {
 // Stores
 const ordersStore = useOrdersStore()
 const errorStore = useErrorStore()
+const $router = useRouter()
 const $notifier = useNotifier()
 
 // State
@@ -392,8 +405,6 @@ const createOrder = async () => {
 
   loading.value = true
 
-  console.log(selectedProducts.value)
-
   const computedIds = selectedProducts.value.map((product) => {
     return {
       quantity: product.quantity,
@@ -402,13 +413,11 @@ const createOrder = async () => {
   })
 
   try {
-    const response = await api.post('/orders', {
+    await api.post('/orders', {
       products: computedIds,
       orderType: orderType.value,
       comment: comment.value,
     })
-
-    console.log('RES: ', response.data)
 
     // Reset form
     selectedProducts.value = []
@@ -423,6 +432,52 @@ const createOrder = async () => {
   } finally {
     loading.value = false
   }
+}
+
+async function editOrder() {
+
+  if (!isValid.value) return
+
+  loading.value = true
+
+  const computedIds = selectedProducts.value.map((product) => {
+    return {
+      quantity: product.quantity,
+      id: product.id,
+    }
+  })
+  const id = ordersStore.order.id
+
+  try {
+    await api.put(`/orders/${id}`, {
+      products: computedIds,
+      orderType: orderType.value,
+      comment: comment.value,
+    })
+
+    // Reset form
+    selectedProducts.value = []
+    comment.value = ''
+    orderTime.value = createFutureDate()
+
+    $notifier.success(`Order with id ${id} was successfully edited`)
+
+    await $router.push({path: '/workflow'})
+  } catch (err) {
+    errorStore.handle(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+function cancelEdit() {
+  selectedProducts.value = []
+  currentStock.value = null
+  orderTime.value = createFutureDate()
+  orderType.value = 'SELL'
+  ordersStore.order = null
+
+  $router.push({path: '/workflow'})
 }
 
 const handleCommentBlur = () => {
@@ -469,123 +524,13 @@ onMounted(async () => {
       })
     }
 
+    comment.value = ordersStore.order.comment
     orderType.value = ordersStore.order.orderType
-
-    /*{
-      "id": 11,
-      "orderItems": [
-      {
-        "id": 51,
-        "inventoryItem": {
-          "id": 5,
-          "product": {
-            "id": 25,
-            "name": "Toilet Paper 8pcs",
-            "buyoutPrice": 89.9,
-            "purchasePrice": 89.9,
-            "description": "Soft and strong"
-          },
-          "stockedAmount": 488
-        },
-        "quantity": 8
-      },
-      {
-        "id": 52,
-        "inventoryItem": {
-          "id": 1,
-          "product": {
-            "id": 1,
-            "name": "Milka Chocolate 200g",
-            "buyoutPrice": 52.2,
-            "purchasePrice": 52.2,
-            "description": "Milk chocolate bar"
-          },
-          "stockedAmount": 24
-        },
-        "quantity": 7
-      },
-      {
-        "id": 53,
-        "inventoryItem": {
-          "id": 1,
-          "product": {
-            "id": 1,
-            "name": "Milka Chocolate 200g",
-            "buyoutPrice": 52.2,
-            "purchasePrice": 52.2,
-            "description": "Milk chocolate bar"
-          },
-          "stockedAmount": 24
-        },
-        "quantity": 1
-      },
-      {
-        "id": 54,
-        "inventoryItem": {
-          "id": 3,
-          "product": {
-            "id": 3,
-            "name": "Semi-skimmed Milk",
-            "buyoutPrice": 19.9,
-            "purchasePrice": 19.9,
-            "description": "Fresh dairy milk"
-          },
-          "stockedAmount": 182
-        },
-        "quantity": 8
-      },
-      {
-        "id": 55,
-        "inventoryItem": {
-          "id": 4,
-          "product": {
-            "id": 22,
-            "name": "Onions 1kg",
-            "buyoutPrice": 22.9,
-            "purchasePrice": 22.9,
-            "description": "Quality onions"
-          },
-          "stockedAmount": 382
-        },
-        "quantity": 1
-      }
-    ],
-      "cost": 1192,
-      "status": "CONFIRMED",
-      "orderType": "SELL",
-      "orderTime": "2025-02-08T21:38:16.1125",
-      "comment": "\"\"",
-      "approvedBy": {
-      "id": 1,
-        "username": "administrator",
-        "firstName": "_0",
-        "lastName": "_",
-        "email": "admin@example.com",
-        "avatar": null,
-        "active": true,
-        "roles": [
-        {
-          "id": 1,
-          "name": "ROLE_USER"
-        },
-        {
-          "id": 2,
-          "name": "ROLE_ADMIN"
-        },
-        {
-          "id": 3,
-          "name": "ROLE_MANAGER"
-        }
-      ]
-    },
-      "decisionTime": "2025-03-09T21:48:00.176369",
-      "createdAt": null,
-      "updatedAt": null
-    }*/
-
-    // const selectedProducts = ref([])
-    // const currentStock = ref(null)
   }
+})
+
+onBeforeUnmount(async () => {
+  ordersStore.order = null
 })
 </script>
 

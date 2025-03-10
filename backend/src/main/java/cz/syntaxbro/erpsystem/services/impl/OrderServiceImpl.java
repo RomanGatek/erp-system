@@ -125,6 +125,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order updateOrder(Long orderId, OrderUpdateRequest orderRequest) {
         Order order = getOrderById(orderId);
+
+        if (!order.getStatus().equals(Order.Status.PENDING)) {
+            throw new RuntimeException("You can edit only order with status PENDING.");
+        }
+
         if (orderRequest.getOrderType() != null) {
             order.setOrderType(orderRequest.getOrderType());
         }
