@@ -2,6 +2,7 @@ package cz.syntaxbro.erpsystem.repositories;
 
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.ProductCategory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class InventoryRepositoryTest {
     @Autowired
     private TestEntityManager testEntityManager;
 
+    @Autowired
+    private ProductCategoryRepository productCategoryRepository;
+
     /**
      * Setup method to initialize test data before each test.
      * Creates and saves an inventory item in the database.
@@ -42,11 +46,17 @@ public class InventoryRepositoryTest {
         // Arrange: Create and save a test inventory item
         // ew Product(1L, "Test Product", 50.0, "Sample product description")
 
+        ProductCategory pCategory = productCategoryRepository.save(ProductCategory.builder()
+                .name("test")
+                .description("test")
+                .build());
+
         productRepository.save(Product.builder()
                 .name("Test Product")
                 .description("A sample product")
                 .buyoutPrice(89.9)
                 .purchasePrice(99.99)
+                        .productCategory(pCategory)
                 .build()
 
         );
@@ -110,11 +120,13 @@ public class InventoryRepositoryTest {
     @Transactional
     void updateQuantity_Success() {
         // Arrange
+        ProductCategory productCategory = productCategoryRepository.findByName("test").get();
         Product product__ = Product.builder()
                 .name("testName")
                 .description("description")
                 .buyoutPrice(100)
                 .purchasePrice(200)
+                .productCategory(productCategory)
                 .build();
 
         productRepository.save(product__);
@@ -138,11 +150,13 @@ public class InventoryRepositoryTest {
     @Test
     public void deleteTest(){
         //Arrange
+        ProductCategory productCategory = productCategoryRepository.findByName("test").get();
         Product product__ = Product.builder()
                 .name("testName")
                 .description("description")
                 .buyoutPrice(100)
                 .purchasePrice(200)
+                .productCategory(productCategory)
                 .build();
 
         productRepository.save(product__);
