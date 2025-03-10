@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class ProductResponse {
     private String name;
     private double buyoutPrice;
+    private double purchasePrice;
     private String description;
     private ProductCategory productCategory;
 }

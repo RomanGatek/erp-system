@@ -34,9 +34,6 @@ public class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
-    private InventoryService inventoryService;
-    
-    @Mock
     private SecurityContext securityContext;
     
     @Mock

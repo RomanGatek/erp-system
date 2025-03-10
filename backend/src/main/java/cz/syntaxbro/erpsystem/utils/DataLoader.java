@@ -28,7 +28,6 @@ public class DataLoader implements CommandLineRunner {
     private final InventoryRepository inventoryRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final OrderService orderService;
     private final ProductCategoryRepository productCategoryRepository;
 
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
@@ -43,7 +42,6 @@ public class DataLoader implements CommandLineRunner {
         this.inventoryRepository = inventoryRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
-        this.orderService = orderService;
         this.productCategoryRepository = productCategoryRepository;
     }
 
@@ -79,7 +77,7 @@ public class DataLoader implements CommandLineRunner {
                 Set.of(userRole)
         );
 
-        createProductCategoryIfNotExists("default", "default");
+        createProductCategoryIfNotExists();
         ProductCategory defaultCategory = productCategoryRepository.findByName("default").get();
 
         // Create sample products
@@ -290,13 +288,13 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    private void createProductCategoryIfNotExists(String categoryName, String description) {
+    private void createProductCategoryIfNotExists() {
         //create product category
-        Optional<ProductCategory> productCategoryFromDb = productCategoryRepository.findByName(categoryName);
+        Optional<ProductCategory> productCategoryFromDb = productCategoryRepository.findByName("default");
         if (productCategoryFromDb.isEmpty()) {
             productCategoryRepository.save(ProductCategory.builder()
-                    .name(categoryName)
-                    .description(description)
+                    .name("default")
+                    .description("default")
                     .build());
         }
     }
