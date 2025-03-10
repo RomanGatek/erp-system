@@ -35,15 +35,7 @@ public class ProductController {
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) {
 
         ErpSystemApplication.getLogger().info("\u001B[32mCreating product: {}\u001B[0m", productRequest);
-
-        Product createdProduct = productService.createProduct(
-                Product.builder()
-                        .name(productRequest.getName())
-                        .buyoutPrice(productRequest.getBuyoutPrice())
-                        .purchasePrice(productRequest.getPurchasePrice())
-                        .description(productRequest.getDescription())
-                        .build()
-        );
+        Product createdProduct = productService.createProduct(productRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 

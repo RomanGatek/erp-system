@@ -1,10 +1,8 @@
 package cz.syntaxbro.erpsystem.requests;
 
-import cz.syntaxbro.erpsystem.models.ProductCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
 import lombok.Data;
 
@@ -26,5 +24,5 @@ public class ProductRequest {
     private String description;
 
     @NotNull(message = "Category can't be null")
-    private ProductCategory productCategory;
+    private String productCategory;
 }

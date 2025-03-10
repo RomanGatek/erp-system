@@ -70,7 +70,7 @@ class ProductControllerTest {
                .name("testName")
                .purchasePrice(20.0)
                .buyoutPrice(10.0)
-               .productCategory(testProductCategory)
+               .productCategory("default")
                .build();
                
        // Create and save a test product to the database
@@ -93,7 +93,7 @@ class ProductControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Transactional
     void createProductOkTest() throws Exception {
-        when(productService.createProduct(any(Product.class))).thenReturn(this.testProduct);
+        when(productService.createProduct(any(ProductRequest.class))).thenReturn(this.testProduct);
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(this.testProductRequest)))

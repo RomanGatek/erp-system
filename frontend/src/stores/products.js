@@ -28,6 +28,9 @@ export const useProductsStore = defineStore('products', {
             this.loading = true;
             try {
                 const response = await api.get('/products');
+
+                console.log(response.data)
+
                 this.items = response.data;
                 this.error = null;
             } catch (err) {

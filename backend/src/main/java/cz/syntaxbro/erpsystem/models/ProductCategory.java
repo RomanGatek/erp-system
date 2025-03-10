@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,8 @@ public class ProductCategory {
     @NotBlank(message = "Name cannot be null or empty")
     private String name;
     private String description;
+    
+    @JsonBackReference
     @OneToMany(mappedBy = "productCategory", fetch = FetchType.EAGER)
     private List<Product> products;
 }
