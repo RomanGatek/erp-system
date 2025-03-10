@@ -20,14 +20,16 @@ class OrderRepositoryTest {
     private final InventoryRepository inventoryRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
+    private final ProductCategoryRepository productCategoryRepository;
 
     @Autowired
-    OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository, InventoryRepository inventoryRepository, OrderItemRepository orderItemRepository, UserRepository userRepository) {
+    OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository, InventoryRepository inventoryRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductCategoryRepository productCategoryRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
+        this.productCategoryRepository = productCategoryRepository;
     }
 
     private Product productOne;
@@ -55,15 +57,15 @@ class OrderRepositoryTest {
         assertNotNull(testUser.getId(), "User ID should be generated");
 
         // Creating products
-        ProductCategory productCategoryOne = ProductCategory.builder()
+        ProductCategory productCategoryOne = productCategoryRepository.save(ProductCategory.builder()
                 .name("firstCategory")
                 .description("test products")
-                .build();
+                .build());
 
-        ProductCategory productCategoryTwo = ProductCategory.builder()
+        ProductCategory productCategoryTwo = productCategoryRepository.save(ProductCategory.builder()
                 .name("secondCategory")
                 .description("test products")
-                .build();
+                .build());
 
         productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne);
         Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo);
