@@ -23,7 +23,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -77,7 +76,7 @@ class ProductControllerTest {
        // Create and save a test product to the database
        this.testProduct = Product.builder()
                .description("sort description")
-               .name("testName" + System.currentTimeMillis()) // Ensure unique name
+               .name("testName") // Ensure unique name
                .purchasePrice(20.0)
                .buyoutPrice(10.0)
                .productCategory(testProductCategory)
@@ -110,7 +109,9 @@ class ProductControllerTest {
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void getProductById_shouldReturnProduct() throws Exception {
-        mockMvc.perform(get("/api/products/" + testProduct.getId()))
+        long id = 1L;
+        when(productService.getProductById(id)).thenReturn(this.testProduct);
+        mockMvc.perform(get("/api/products/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testProduct.getId()))
                 .andExpect(jsonPath("$.name").value(testProduct.getName()));
@@ -123,7 +124,9 @@ class ProductControllerTest {
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void deleteProductByIdOkTest() throws Exception {
-        mockMvc.perform(delete("/api/products/" + testProduct.getId()))
+        long id = 1L;
+        when(productService.getProductById(id)).thenReturn(testProduct);
+        mockMvc.perform(delete("/api/products/" + id))
                 .andExpect(status().isNoContent());
     }
 }
