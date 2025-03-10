@@ -46,6 +46,9 @@ public class Order {
     @Column(name = "decision_time")
     private LocalDateTime decisionTime;
 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     public enum Status {
         PENDING, CONFIRMED, CANCELED, IN_TRANSMIT
     }

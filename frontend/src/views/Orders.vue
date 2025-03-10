@@ -11,7 +11,7 @@
         />
 
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">Create New Order</h2>
+          <h2 class="text-2xl font-bold text-gray-800">{{ isEditing ? 'Edit' : 'Create New' }} Order</h2>
           <p class="text-sm text-gray-500 mt-1 mb-2">Select order type</p>
           <div class="flex gap-2">
             <button
@@ -20,7 +20,7 @@
               :class="[
                 orderType === 'PURCHASE'
                   ? 'bg-gradient-to-r from-red-500 to-red-400 text-white border-red-500 shadow-md'
-                  : 'border-red-500 text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100'
+                  : 'border-red-500 text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100',
               ]"
             >
               Purchase
@@ -31,7 +31,7 @@
               :class="[
                 orderType === 'SELL'
                   ? 'bg-gradient-to-r from-green-500 to-green-400 text-white border-green-500 shadow-md'
-                  : 'border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100'
+                  : 'border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100',
               ]"
             >
               Sell
@@ -40,7 +40,7 @@
         </div>
 
         <!-- Order Form -->
-        <form @submit.prevent="createOrder" class="space-y-6">
+        <form @submit.prevent="isEditing ? editOrder : createOrder()" class="space-y-6">
           <!-- Product Selection -->
           <MultiProductSelect
             :items="products"
@@ -51,11 +51,7 @@
           />
 
           <!-- Order Time -->
-          <DateTimePicker
-            v-model="orderTime"
-            label="Order Time"
-            :error="orderTimeError"
-          />
+          <DateTimePicker v-model="orderTime" label="Order Time" :error="orderTimeError" />
 
           <!-- Comment with Toggle -->
           <div class="space-y-2">
@@ -66,8 +62,19 @@
                 @click="showCommentField = !showCommentField"
                 class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
                 </svg>
                 <span>{{ showCommentField ? 'Hide comment' : 'Add comment' }}</span>
               </button>
@@ -83,7 +90,7 @@
               @before-leave="isAnimating = true"
               @after-leave="isAnimating = false"
             >
-              <div v-if="showCommentField" class="relative">
+              <div v-if="showCommentField || comment" class="relative">
                 <textarea
                   v-model="comment"
                   placeholder="Enter order comment..."
@@ -92,27 +99,45 @@
                   @blur="handleCommentBlur"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all"
                 ></textarea>
-                <div class="text-xs text-gray-400 text-right mt-1">
-                  {{ comment.length }}/500
-                </div>
+                <div class="text-xs text-gray-400 text-right mt-1">{{ comment.length }}/500</div>
               </div>
             </transition>
           </div>
 
           <!-- Stock Information -->
-          <div v-if="selectedProducts.length > 0"
-            class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/50 shadow-sm">
+          <div
+            v-if="selectedProducts.length > 0"
+            class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/50 shadow-sm"
+          >
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <div class="p-2 bg-white rounded-lg shadow-sm relative group cursor-help">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-5 h-5 text-gray-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    />
                   </svg>
                   <!-- Hover tooltip -->
-                  <div class="absolute left-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                    <div class="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap">
-                      {{ getTotalItemCount() }} items will be {{ orderType === 'SELL' ? 'removed from' : 'added to' }} inventory
-                      <div class="absolute left-3 top-full h-2 w-2 bg-gray-800 transform rotate-45"></div>
+                  <div
+                    class="absolute left-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                  >
+                    <div
+                      class="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap"
+                    >
+                      {{ getTotalItemCount() }} items will be
+                      {{ orderType === 'SELL' ? 'removed from' : 'added to' }} inventory
+                      <div
+                        class="absolute left-3 top-full h-2 w-2 bg-gray-800 transform rotate-45"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -120,8 +145,19 @@
               </div>
               <div class="flex items-center gap-3">
                 <div class="p-2 bg-white rounded-lg shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-5 h-5 text-gray-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
@@ -133,15 +169,28 @@
           </div>
 
           <!-- Submit Button -->
-          <div class="mt-8 flex justify-center">
+          <div class="mt-8 flex justify-center gap-5">
             <button
               type="button"
-              @click="createOrder"
+              @click="isEditing ? editOrder() : createOrder()"
               class="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
               :disabled="loading || !isValid"
             >
-              <span class="relative z-10">Create Order</span>
-              <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span class="relative z-10">{{ isEditing ? 'Edit' : 'Create' }} Order</span>
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              ></div>
+            </button>
+            <button
+              v-if="isEditing"
+              type="button"
+              @click="cancelEdit"
+              class="group px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-300 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
+            >
+              <span class="relative z-10">Cancel</span>
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              ></div>
             </button>
           </div>
         </form>
@@ -153,14 +202,15 @@
           Recent {{ orderType === 'PURCHASE' ? 'Purchase' : 'Sell' }} Orders
         </h3>
         <div class="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-          <div v-for="order in filteredRecentOrders" :key="order.id"
+          <div
+            v-for="order in filteredRecentOrders"
+            :key="order.id"
             class="p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 relative overflow-hidden"
             :class="{
               'order-sell': order.orderType === 'SELL',
-              'order-purchase': order.orderType === 'PURCHASE'
+              'order-purchase': order.orderType === 'PURCHASE',
             }"
           >
-
             <div class="flex justify-between items-start mb-2">
               <span class="text-sm font-medium text-gray-900">#{{ order.id }}</span>
               <div class="flex items-center gap-1">
@@ -169,7 +219,7 @@
                   :class="{
                     'bg-yellow-100 text-yellow-800': order.status === 'PENDING',
                     'bg-green-100 text-green-800': order.status === 'CONFIRMED',
-                    'bg-red-100 text-red-800': order.status === 'CANCELED'
+                    'bg-red-100 text-red-800': order.status === 'CANCELED',
                   }"
                 >
                   {{ getStatusText(order.status) }}
@@ -186,7 +236,8 @@
                 {{ parseComment(order.comment) }}
               </p>
               <p v-if="order.approvedBy" class="text-xs text-gray-400">
-                {{ order.status === 'CONFIRMED' ? 'Approved' : 'Rejected' }} by: {{ order.approvedBy.username }}
+                {{ order.status === 'CONFIRMED' ? 'Approved' : 'Rejected' }} by:
+                {{ order.approvedBy.username }}
               </p>
               <p v-if="order.decisionTime" class="text-xs text-gray-400">
                 Decision: {{ formatDate(order.decisionTime) }}
@@ -200,12 +251,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, onBeforeUnmount } from 'vue'
 import { StatusBar, DateTimePicker, MultiProductSelect } from '@/components/common'
 import { useErrorStore } from '@/stores/errors.js'
 import { useNotifier } from '@/stores/notifier.js'
+import { useOrdersStore } from '@/stores/orders.js'
 import { api } from '@/services/api'
-import {formatDate} from "../utils/index.js";
+import { formatDate } from '../utils/index.js'
+import {useRouter } from 'vue-router'
 
 function parseComment(comment) {
   try {
@@ -217,7 +270,9 @@ function parseComment(comment) {
 }
 
 // Stores
+const ordersStore = useOrdersStore()
 const errorStore = useErrorStore()
+const $router = useRouter()
 const $notifier = useNotifier()
 
 // State
@@ -240,6 +295,7 @@ const orderType = ref('SELL')
 const showCommentField = ref(false)
 const prevCommentValue = ref('')
 const isAnimating = ref(false)
+const isEditing = ref(false)
 
 // Computed
 const totalPrice = computed(() => {
@@ -260,43 +316,45 @@ const orderTimeError = computed(() => {
 })
 
 const isValid = computed(() => {
-  return selectedProducts.value.length > 0 &&
-         !orderTimeError.value
+  return selectedProducts.value.length > 0 && !orderTimeError.value
 })
 
 const filteredRecentOrders = computed(() => {
-  return recentOrders.value
-    .filter(order => order.orderType === orderType.value)
+  return recentOrders.value.filter((order) => order.orderType === orderType.value)
 })
 
 // Methods
 const formatPrice = (price) => {
   // Convert to string and split by decimal point
-  const str = String(price);
-  const parts = str.split('.');
+  const str = String(price)
+  const parts = str.split('.')
 
   // If there's no decimal part, add .00
   if (parts.length === 1) {
-    return `${parts[0]}.00`;
+    return `${parts[0]}.00`
   }
 
   // Get the decimal part and truncate to 2 places (no rounding)
-  let decimal = parts[1];
+  let decimal = parts[1]
   if (decimal.length > 2) {
-    decimal = decimal.substring(0, 2);
+    decimal = decimal.substring(0, 2)
   } else if (decimal.length === 1) {
-    decimal = decimal + '0';
+    decimal = decimal + '0'
   }
 
-  return `${parts[0]}.${decimal}`;
+  return `${parts[0]}.${decimal}`
 }
 
 const getStatusText = (status) => {
   switch (status) {
-    case 'PENDING': return 'pending'
-    case 'CONFIRMED': return 'confirmed'
-    case 'CANCELED': return 'canceled'
-    default: return status
+    case 'PENDING':
+      return 'pending'
+    case 'CONFIRMED':
+      return 'confirmed'
+    case 'CANCELED':
+      return 'canceled'
+    default:
+      return status
   }
 }
 
@@ -332,13 +390,13 @@ const checkStock = async () => {
 
   try {
     const response = await api.get('/inventory')
-    const inventoryItems = response.data.filter(
-      item => selectedProducts.value.some(product => product.id === item.product.id)
+    const inventoryItems = response.data.filter((item) =>
+      selectedProducts.value.some((product) => product.id === item.product.id),
     )
     currentStock.value = inventoryItems.reduce((total, item) => total + item.quantity, 0)
   } catch (err) {
     errorStore.handle(err)
-    currentStock.value = 0  // Set to 0 on error, not null
+    currentStock.value = 0 // Set to 0 on error, not null
   }
 }
 
@@ -347,24 +405,19 @@ const createOrder = async () => {
 
   loading.value = true
 
-  console.log(selectedProducts.value)
-
-
-  const computedIds = selectedProducts.value.map(product => {
+  const computedIds = selectedProducts.value.map((product) => {
     return {
       quantity: product.quantity,
-      id: product.id
+      id: product.id,
     }
   })
 
   try {
-    const response = await api.post('/orders', {
+    await api.post('/orders', {
       products: computedIds,
       orderType: orderType.value,
-      comment: comment.value
+      comment: comment.value,
     })
-
-    console.log("RES: ", response.data)
 
     // Reset form
     selectedProducts.value = []
@@ -381,6 +434,52 @@ const createOrder = async () => {
   }
 }
 
+async function editOrder() {
+
+  if (!isValid.value) return
+
+  loading.value = true
+
+  const computedIds = selectedProducts.value.map((product) => {
+    return {
+      quantity: product.quantity,
+      id: product.id,
+    }
+  })
+  const id = ordersStore.order.id
+
+  try {
+    await api.put(`/orders/${id}`, {
+      products: computedIds,
+      orderType: orderType.value,
+      comment: comment.value,
+    })
+
+    // Reset form
+    selectedProducts.value = []
+    comment.value = ''
+    orderTime.value = createFutureDate()
+
+    $notifier.success(`Order with id ${id} was successfully edited`)
+
+    await $router.push({path: '/workflow'})
+  } catch (err) {
+    errorStore.handle(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+function cancelEdit() {
+  selectedProducts.value = []
+  currentStock.value = null
+  orderTime.value = createFutureDate()
+  orderType.value = 'SELL'
+  ordersStore.order = null
+
+  $router.push({path: '/workflow'})
+}
+
 const handleCommentBlur = () => {
   // Only hide if not already animating
   if (!isAnimating.value) {
@@ -388,8 +487,10 @@ const handleCommentBlur = () => {
     showCommentField.value = false
 
     // Check if comment changed and show notification if needed
-    if ((prevCommentValue.value.trim() !== '' || comment.value.trim() !== '') &&
-        prevCommentValue.value !== comment.value) {
+    if (
+      (prevCommentValue.value.trim() !== '' || comment.value.trim() !== '') &&
+      prevCommentValue.value !== comment.value
+    ) {
       if (comment.value.trim() === '') {
         $notifier.info('Comment has been removed', 'Comment Updated')
       } else if (prevCommentValue.value.trim() === '') {
@@ -409,17 +510,34 @@ watch(selectedProducts, async () => {
 
 // Lifecycle
 onMounted(async () => {
-  await Promise.all([
-    fetchProducts(),
-    fetchRecentOrders()
-  ])
+  await Promise.all([fetchProducts(), fetchRecentOrders()])
+
+  if (ordersStore.order !== null) {
+    isEditing.value = true
+
+    if (Array.isArray(ordersStore.order.orderItems) && ordersStore.order.orderItems.length > 0) {
+      selectedProducts.value = ordersStore.order.orderItems.map((selectedOrder) => {
+        return {
+          ...selectedOrder.inventoryItem.product,
+          quantity: selectedOrder.quantity
+        }
+      })
+    }
+
+    comment.value = ordersStore.order.comment
+    orderType.value = ordersStore.order.orderType
+  }
+})
+
+onBeforeUnmount(async () => {
+  ordersStore.order = null
 })
 </script>
 
 <style scoped>
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -431,7 +549,7 @@ onMounted(async () => {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #CBD5E1;
+  background-color: #cbd5e1;
   border-radius: 20px;
 }
 
@@ -491,12 +609,12 @@ button:active {
   transform: scale(0.95);
 }
 
-[class*="bg-gradient-to-r"] {
+[class*='bg-gradient-to-r'] {
   background-size: 200% auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-[class*="bg-gradient-to-r"]:hover {
+[class*='bg-gradient-to-r']:hover {
   background-position: right center;
 }
 
