@@ -29,11 +29,12 @@ public class DataLoader implements CommandLineRunner {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderService orderService;
+    private final ProductCategoryRepository productCategoryRepository;
 
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
                       PermissionRepository permissionRepository, PasswordSecurity encoder,
                       ProductRepository productRepository, InventoryRepository inventoryRepository,
-                      OrderRepository orderRepository, OrderItemRepository orderItemRepository, OrderService orderService) {
+                      OrderRepository orderRepository, OrderItemRepository orderItemRepository, OrderService orderService, ProductCategoryRepository productCategoryRepository) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
@@ -43,6 +44,7 @@ public class DataLoader implements CommandLineRunner {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.orderService = orderService;
+        this.productCategoryRepository = productCategoryRepository;
     }
 
     @Override
@@ -77,32 +79,35 @@ public class DataLoader implements CommandLineRunner {
                 Set.of(userRole)
         );
 
+        createProductCategoryIfNotExists("default", "default");
+        ProductCategory defaultCategory = productCategoryRepository.findByName("default").get();
+
         // Create sample products
-        createProductIfNotExists("Milka Chocolate 200g", 52.2, 52.2, "Milk chocolate bar");
-        createProductIfNotExists("Black Tea", 22.2, 22.2, "Premium black tea");
-        createProductIfNotExists("Semi-skimmed Milk", 19.90, 19.90, "Fresh dairy milk");
-        createProductIfNotExists("Rye Bread", 34.5, 34.5, "Fresh baked bread");
-        createProductIfNotExists("Butter 250g", 49.9, 49.9, "Farm butter");
-        createProductIfNotExists("Apples 1kg", 29.99, 29.99, "Fresh local apples");
-        createProductIfNotExists("Bananas 1kg", 26.5, 26.5, "Ripe bananas");
-        createProductIfNotExists("Beef Steak 300g", 159.0, 159.0, "Premium beef");
-        createProductIfNotExists("Chicken Breast 500g", 89.9, 89.9, "Fresh chicken");
-        createProductIfNotExists("Bread Roll", 3.5, 3.5, "Crispy roll");
-        createProductIfNotExists("Edam Cheese 100g", 24.0, 24.0, "Mild cheese");
-        createProductIfNotExists("Ham 100g", 32.9, 32.9, "Quality ham");
-        createProductIfNotExists("Oranges 1kg", 45.0, 45.0, "Juicy oranges");
-        createProductIfNotExists("Coffee Beans 250g", 149.0, 149.0, "Strong coffee");
-        createProductIfNotExists("Spaghetti 500g", 32.5, 32.5, "Italian pasta");
-        createProductIfNotExists("Basmati Rice 1kg", 69.0, 69.0, "Aromatic rice");
-        createProductIfNotExists("Olive Oil 500ml", 129.0, 129.0, "Extra virgin");
-        createProductIfNotExists("Ketchup 500g", 39.9, 39.9, "Tomato ketchup");
-        createProductIfNotExists("Mustard 200g", 19.9, 19.9, "Traditional mustard");
-        createProductIfNotExists("Chocolate Bar", 14.5, 14.5, "Sweet treat");
-        createProductIfNotExists("Potatoes 2kg", 49.9, 49.9, "Local potatoes");
-        createProductIfNotExists("Onions 1kg", 22.9, 22.9, "Quality onions");
-        createProductIfNotExists("Garlic 200g", 29.5, 29.5, "Aromatic garlic");
-        createProductIfNotExists("Strawberry Yogurt 150g", 15.9, 15.9, "Creamy yogurt");
-        createProductIfNotExists("Toilet Paper 8pcs", 89.9, 89.9, "Soft and strong");
+        createProductIfNotExists("Milka Chocolate 200g", 52.2, 52.2, "Milk chocolate bar", defaultCategory);
+        createProductIfNotExists("Black Tea", 22.2, 22.2, "Premium black tea", defaultCategory);
+        createProductIfNotExists("Semi-skimmed Milk", 19.90, 19.90, "Fresh dairy milk", defaultCategory);
+        createProductIfNotExists("Rye Bread", 34.5, 34.5, "Fresh baked bread", defaultCategory);
+        createProductIfNotExists("Butter 250g", 49.9, 49.9, "Farm butter", defaultCategory);
+        createProductIfNotExists("Apples 1kg", 29.99, 29.99, "Fresh local apples", defaultCategory);
+        createProductIfNotExists("Bananas 1kg", 26.5, 26.5, "Ripe bananas", defaultCategory);
+        createProductIfNotExists("Beef Steak 300g", 159.0, 159.0, "Premium beef", defaultCategory);
+        createProductIfNotExists("Chicken Breast 500g", 89.9, 89.9, "Fresh chicken", defaultCategory);
+        createProductIfNotExists("Bread Roll", 3.5, 3.5, "Crispy roll", defaultCategory);
+        createProductIfNotExists("Edam Cheese 100g", 24.0, 24.0, "Mild cheese", defaultCategory);
+        createProductIfNotExists("Ham 100g", 32.9, 32.9, "Quality ham", defaultCategory);
+        createProductIfNotExists("Oranges 1kg", 45.0, 45.0, "Juicy oranges", defaultCategory);
+        createProductIfNotExists("Coffee Beans 250g", 149.0, 149.0, "Strong coffee", defaultCategory);
+        createProductIfNotExists("Spaghetti 500g", 32.5, 32.5, "Italian pasta", defaultCategory);
+        createProductIfNotExists("Basmati Rice 1kg", 69.0, 69.0, "Aromatic rice", defaultCategory);
+        createProductIfNotExists("Olive Oil 500ml", 129.0, 129.0, "Extra virgin", defaultCategory);
+        createProductIfNotExists("Ketchup 500g", 39.9, 39.9, "Tomato ketchup", defaultCategory);
+        createProductIfNotExists("Mustard 200g", 19.9, 19.9, "Traditional mustard", defaultCategory);
+        createProductIfNotExists("Chocolate Bar", 14.5, 14.5, "Sweet treat", defaultCategory);
+        createProductIfNotExists("Potatoes 2kg", 49.9, 49.9, "Local potatoes", defaultCategory);
+        createProductIfNotExists("Onions 1kg", 22.9, 22.9, "Quality onions", defaultCategory);
+        createProductIfNotExists("Garlic 200g", 29.5, 29.5, "Aromatic garlic",defaultCategory);
+        createProductIfNotExists("Strawberry Yogurt 150g", 15.9, 15.9, "Creamy yogurt", defaultCategory);
+        createProductIfNotExists("Toilet Paper 8pcs", 89.9, 89.9, "Soft and strong", defaultCategory);
 
 
         // Create inventory items for sample products
@@ -285,7 +290,19 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    private void createProductIfNotExists(String name, double buyoutPrice, double purchasePrice, String description) {
+    private void createProductCategoryIfNotExists(String categoryName, String description) {
+        //create product category
+        Optional<ProductCategory> productCategoryFromDb = productCategoryRepository.findByName(categoryName);
+        if (productCategoryFromDb.isEmpty()) {
+            productCategoryRepository.save(ProductCategory.builder()
+                    .name(categoryName)
+                    .description(description)
+                    .build());
+        }
+    }
+
+    private void createProductIfNotExists(String name, double buyoutPrice, double purchasePrice, String description, ProductCategory productCategory) {
+
         Optional<Product> productFromDB = productRepository.findByName(name);
         if (productFromDB.isEmpty()) {
             productRepository.save(
@@ -294,6 +311,7 @@ public class DataLoader implements CommandLineRunner {
                     .purchasePrice(purchasePrice)
                     .buyoutPrice(buyoutPrice)
                     .description(description)
+                    .productCategory(productCategory)
                     .build()
             );
         }
