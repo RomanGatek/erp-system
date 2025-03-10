@@ -195,7 +195,7 @@ public class OrderServiceImpl implements OrderService {
                 } else if (order.getOrderType() == Order.OrderType.PURCHASE) {
                     inventoryService.receiveStock(item.getInventoryItem().getId(), item.getQuantity());
                 }
-            };
+            }
         }
         order.setStatus(Order.Status.CONFIRMED);
         order.setComment(comment);
