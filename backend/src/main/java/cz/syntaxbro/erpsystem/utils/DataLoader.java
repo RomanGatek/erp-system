@@ -237,9 +237,6 @@ public class DataLoader implements CommandLineRunner {
             
             // Update the order with its items
             orderRepository.save(order);
-            
-            ErpSystemApplication.getLogger().info("[DATA LOADER] Created order for {} x{}, status: {}", 
-                    product.getName(), amount, order.getStatus());
         }
     }
 
