@@ -3,11 +3,9 @@ package cz.syntaxbro.erpsystem.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.ProductCategory;
-import cz.syntaxbro.erpsystem.repositories.ProductCategoryRepository;
 import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import cz.syntaxbro.erpsystem.services.ProductCategoryService;
 import cz.syntaxbro.erpsystem.services.ProductService;
-import cz.syntaxbro.erpsystem.services.impl.ProductCategoryServiceImpl;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,13 +51,12 @@ class ProductControllerTest {
 
     private Product testProduct;
     private ProductRequest testProductRequest;
-    private ProductCategory testProductCategory;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
         //Create Product category
-        this.testProductCategory = ProductCategory.builder()
+        ProductCategory testProductCategory = ProductCategory.builder()
                 .name("test")
                 .description("Sample product category description")
                 .build();

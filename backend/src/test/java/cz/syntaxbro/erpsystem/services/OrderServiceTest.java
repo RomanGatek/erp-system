@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +24,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @Slf4j
@@ -32,6 +33,9 @@ public class OrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+    
+    @Mock
+    private InventoryService inventoryService;
 
     @Mock
     private SecurityContext securityContext;
@@ -45,6 +49,7 @@ public class OrderServiceTest {
 
     private Order testOrder;
     private User testUser;
+    private InventoryItem testItem;
 
     @BeforeEach
     public void setUp() {
@@ -76,7 +81,7 @@ public class OrderServiceTest {
                 .build();
 
         // Create test inventory item
-        InventoryItem testItem = InventoryItem.builder()
+        this.testItem = InventoryItem.builder()
                 .id(1L)
                 .product(testProduct)
                 .stockedAmount(10)
@@ -109,6 +114,9 @@ public class OrderServiceTest {
         doReturn(authentication).when(securityContext).getAuthentication();
         doReturn(customUserDetails).when(authentication).getPrincipal();
         SecurityContextHolder.setContext(securityContext);
+        
+        // Mock the inventoryService to avoid NullPointerException
+        doNothing().when(inventoryService).releaseStock(anyLong(), anyInt());
     }
 
     @Test
@@ -175,6 +183,9 @@ public class OrderServiceTest {
         
         // Directly mock the getCurrentUser method to bypass security checks
         doReturn(testUser).when(orderService).getCurrentUser();
+        
+        // Mock the inventoryService.releaseStock method for the specific inventory item
+        doNothing().when(inventoryService).releaseStock(testItem.getId(), 10);
 
         Order confirmedOrder = orderService.confirmOrder(orderId, comment);
 
@@ -185,6 +196,8 @@ public class OrderServiceTest {
         verify(orderRepository, times(1)).findById(orderId);
         // Adjust verification to match actual implementation
         verify(orderRepository, times(2)).save(any(Order.class));
+        // Verify that inventoryService.releaseStock was called
+        verify(inventoryService, times(1)).releaseStock(testItem.getId(), 10);
     }
 
     @Test
