@@ -37,6 +37,6 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
-    @NotNull(message = "Category can be null or empty")
+    @NotNull(message = "Category can't be null or empty")
     private ProductCategory productCategory;
 }
