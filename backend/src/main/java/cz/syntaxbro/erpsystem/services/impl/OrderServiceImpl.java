@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.exceptions.ResourceNotFoundException;
 import cz.syntaxbro.erpsystem.models.*;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
@@ -11,6 +12,7 @@ import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
 import cz.syntaxbro.erpsystem.services.*;
+import cz.syntaxbro.erpsystem.utils.ConsoleColors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,14 +106,28 @@ public class OrderServiceImpl implements OrderService {
                     ? inventoryItem.getProduct().getPurchasePrice()
                     : inventoryItem.getProduct().getBuyoutPrice();
 
-            OrderItem orderItem = OrderItem.builder()
-                    .inventoryItem(inventoryItem)
-                    .quantity(orderItemRequest.getQuantity())
-                    .order(order)
-                    .build();
+            Optional<OrderItem> existingOrderItem = orderItems.stream()
+                    .filter(orderItem -> orderItem.getInventoryItem().getProduct().equals(product))
+                    .findFirst();
 
-            orderItemService.createOrderItem(orderItem);
-            orderItems.add(orderItem);
+            Order finalOrder = order;
+
+            existingOrderItem.map(item -> {
+                item.setQuantity(item.getQuantity() + orderItemRequest.getQuantity());
+                return item;
+            }).orElseGet(() -> {
+                OrderItem newOrderItem = OrderItem.builder()
+                        .inventoryItem(inventoryItem)
+                        .quantity(orderItemRequest.getQuantity())
+                        .order(finalOrder)
+                        .build();
+
+                orderItemService.createOrderItem(newOrderItem);
+                orderItems.add(newOrderItem);
+
+                return newOrderItem;
+            });
+
             totalCost += orderItemRequest.getQuantity() * productPrice;
         }
 
@@ -142,30 +159,30 @@ public class OrderServiceImpl implements OrderService {
 
         order.setOrderItems(orderRequest.getProducts()
                 .stream().map(product -> {
-                            Product productFromDb = productRepository.findById(product.getId())
-                                    .orElseThrow(() -> new ResourceNotFoundException("Product with id " + product.getId() + " not found"));
+                    Product productFromDb = productRepository.findById(product.getId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Product with id " + product.getId() + " not found"));
 
-                            var optionalInventoryItem = inventoryService.findItemByProductForOrder(productFromDb);
+                    var optionalInventoryItem = inventoryService.findItemByProductForOrder(productFromDb);
 
-                            InventoryItem inventoryItem;
+                    InventoryItem inventoryItem;
 
-                            if (optionalInventoryItem.isEmpty()) {
-                                inventoryService.addItem(InventoryItem.builder()
-                                        .stockedAmount(0)
-                                        .product(productFromDb)
-                                        .build());
+                    if (optionalInventoryItem.isEmpty()) {
+                        inventoryService.addItem(InventoryItem.builder()
+                                .stockedAmount(0)
+                                .product(productFromDb)
+                                .build());
 
-                                inventoryItem = inventoryService.findItemByProduct(productFromDb);
-                            } else {
-                                inventoryItem = optionalInventoryItem.get();
-                            }
+                        inventoryItem = inventoryService.findItemByProduct(productFromDb);
+                    } else {
+                        inventoryItem = optionalInventoryItem.get();
+                    }
 
-                            return OrderItem.builder()
-                                    .order(order)
-                                    .inventoryItem(inventoryItem)
-                                    .quantity(product.getQuantity())
-                                    .build();
-                        }).toList()
+                    return OrderItem.builder()
+                            .order(order)
+                            .inventoryItem(inventoryItem)
+                            .quantity(product.getQuantity())
+                            .build();
+                }).toList()
         );
 
         return orderRepository.save(order);
