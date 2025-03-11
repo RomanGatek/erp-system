@@ -2,6 +2,8 @@ package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.*;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
+import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
 import cz.syntaxbro.erpsystem.services.impl.OrderServiceImpl;
@@ -34,6 +36,9 @@ public class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
+    private ProductRepository productRepository;
+
+    @Mock
     private InventoryService inventoryService;
     
     @Mock
@@ -48,6 +53,7 @@ public class OrderServiceTest {
 
     private Order testOrder;
     private User testUser;
+    private Product testProduct;
 
     @BeforeEach
     public void setUp() {
@@ -70,7 +76,7 @@ public class OrderServiceTest {
         CustomUserDetails customUserDetails = new CustomUserDetails(testUser);
 
         // Create test product
-        Product testProduct = Product.builder()
+        this.testProduct = Product.builder()
                 .id(1L)
                 .name("Test Product")
                 .description("Sample product description")
@@ -205,4 +211,99 @@ public class OrderServiceTest {
         verify(orderRepository, times(1)).findById(orderId);
         verify(orderRepository, times(1)).save(any(Order.class));
     }
+
+    @Test
+    void testGetOrdersByProduct(){
+        //Arrest
+        long id = 1L;
+        when(productRepository.findById(id)).thenReturn(Optional.of(this.testProduct));
+        when(orderRepository.findByProduct(this.testProduct)).thenReturn(List.of(testOrder));
+        //Act
+        List<Order> result  = orderService.getOrdersByProduct(id);
+        //Assert
+        assertNotNull(result );
+        assertEquals(1, result .size());
+    }
+
+    @Test
+    void testGetOrdersByStatus(){
+        //Arrest
+        when(orderRepository.findByStatus(Order.Status.PENDING)).thenReturn(List.of(testOrder));
+        //Act
+        List<Order> result  = orderService.getOrdersByStatus(Order.Status.PENDING);
+        //Assert
+        assertNotNull(result );
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testUpdateOrder_WithNotNullsInOrder() {
+        //Arrest
+        OrderItem orderItem = new OrderItem();
+
+        LocalDateTime now = LocalDateTime.now();
+        Order order = Order.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .status(Order.Status.PENDING)
+                .decisionTime(now.plusDays(1))
+                .comment("Test comment")
+                .approvedBy(testUser)
+                .cost(100.0)
+                .build();
+
+        OrderRequest orderDto = OrderRequest.builder()
+                .cost(100.0)
+                .approvedBy(testUser)
+                .decisionTime(now.plusDays(1))
+                .status(Order.Status.PENDING)
+                .orderItems(List.of(orderItem))
+                .comment("Test comment")
+                .build();
+        long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(orderService.getOrderById(id)).thenReturn(order);
+        when(orderRepository.save(order)).thenReturn(order);
+        //Act
+        orderService.updateOrder(id, orderDto);
+        //Assert
+        assertEquals(List.of(orderItem), order.getOrderItems());
+    }
+
+    @Test
+    void testUpdateOrder_WithNullsInOrder() {
+        //Arrest
+        OrderItem orderItem = new OrderItem();
+
+        LocalDateTime now = LocalDateTime.now();
+        Order order = Order.builder()
+                .orderTime(now)
+                .orderType(Order.OrderType.SELL)
+                .decisionTime(now.plusDays(1))
+                .build();
+
+        OrderRequest orderDto = OrderRequest.builder()
+                .cost(100.0)
+                .approvedBy(testUser)
+                .decisionTime(now.plusDays(1))
+                .status(Order.Status.PENDING)
+                .orderItems(List.of(orderItem))
+                .comment("Test comment")
+                .build();
+        long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(orderService.getOrderById(id)).thenReturn(order);
+        when(orderRepository.save(order)).thenReturn(order);
+        //Act
+        orderService.updateOrder(id, orderDto);
+        //Assert
+        assertEquals(100.0, order.getCost());
+        assertEquals(this.testUser, order.getApprovedBy());
+        assertEquals(now.plusDays(1), order.getDecisionTime());
+        assertEquals(Order.Status.PENDING, order.getStatus());
+        assertEquals(List.of(orderItem), order.getOrderItems());
+        assertEquals("Test comment", order.getComment());
+    }
+
+
 }
