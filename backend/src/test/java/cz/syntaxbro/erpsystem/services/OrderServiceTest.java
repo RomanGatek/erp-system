@@ -47,6 +47,10 @@ public class OrderServiceTest {
     @Mock
     private Authentication authentication;
 
+    @Mock
+    private CustomUserDetails customUserDetails;
+
+
     @Spy
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -58,6 +62,7 @@ public class OrderServiceTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+
         LocalDateTime now = LocalDateTime.now();
 
         // First, create all test objects
@@ -305,5 +310,22 @@ public class OrderServiceTest {
         assertEquals("Test comment", order.getComment());
     }
 
+    @Test
+    void testGetCurrentUser_successful() {
+        // Arrange
+        when(authentication.getPrincipal()).thenReturn(customUserDetails);
+        when(customUserDetails.getUser()).thenReturn(this.testUser);
 
+        // Act
+        User result = orderService.getCurrentUser();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(result, this.testUser);
+
+        // Verify calls
+        verify(securityContext).getAuthentication();
+        verify(authentication).getPrincipal();
+        verify(customUserDetails).getUser();
+    }
 }
