@@ -13,6 +13,6 @@ public class EntityNotifier<T> extends EntityObservable<T> {
     }
     
     public void notifyEntityDeleted(T entity) {
-        notifyObservers(entity, ObserveActions.UPDATE);
+        notifyObservers(entity, ObserveActions.DELETE);
     }
 } 
