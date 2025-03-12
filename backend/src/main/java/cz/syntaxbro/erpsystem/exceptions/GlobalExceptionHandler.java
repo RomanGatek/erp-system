@@ -60,6 +60,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorEntity> handleGlobalException(Exception ex) {
         ErpSystemApplication.getLogger().warn(ex.getMessage());
         ErpSystemApplication.getLogger().warn(ex.getClass().getName());
+        ex.printStackTrace();
         var entity = new ErrorEntity("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
     }

@@ -1,14 +1,12 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import cz.syntaxbro.erpsystem.observables.ProductEntityListener;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "products")
@@ -16,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(ProductEntityListener.class)
 public class Product {
 
     @Id
@@ -40,5 +39,6 @@ public class Product {
     @JoinColumn(name = "category_id")
     @NotNull(message = "Category can't be null or empty")
     @JsonManagedReference
+    @ToString.Exclude
     private ProductCategory productCategory;
 }
