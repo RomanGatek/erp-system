@@ -4,7 +4,6 @@ import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.models.ProductCategory;
 import cz.syntaxbro.erpsystem.repositories.ProductCategoryRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
-import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
@@ -122,8 +120,12 @@ class ProductServiceImplTest {
                 .name("Updated Product")
                 .description("Updated product description")
                 .purchasePrice(129.99)
+                .productCategory("default")
                 .build();
 
+        ProductCategory productCategory = category;
+
+        when(productCategoryRepository.findByName(anyString())).thenReturn(Optional.of(productCategory));
         when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

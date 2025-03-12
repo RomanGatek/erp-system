@@ -7,7 +7,9 @@ import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -52,6 +54,9 @@ public class DataLoader implements CommandLineRunner {
         this.orderItemRepository = orderItemRepository;
         this.productCategoryRepository = productCategoryRepository;
     }
+
+    @Value("${database.triggers.enabled:true}")
+    private boolean triggersEnabled;
 
     @Override
     @Transactional
@@ -136,11 +141,18 @@ public class DataLoader implements CommandLineRunner {
         createInventoryItemIfNotExists(toiledPaperProduct, 500);
 
         createSampleOrders();
+
         createProductTriggers();
     }
 
+    @Profile("!test")
     @Transactional
     public void createProductTriggers() {
+        if (!triggersEnabled) {
+            ErpSystemApplication.getLogger().info("Trigger creation skipped due to configuration");
+            return;
+        }
+
         // 1️⃣ Vytvoření logovací tabulky
         entityManager.createNativeQuery("""
             CREATE TABLE IF NOT EXISTS trigger_logs (
