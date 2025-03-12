@@ -82,7 +82,7 @@
                   'bg-red-100 text-red-800': item.status === 'CANCELED',
                 }"
               >
-                {{ getStatusText(item.status) }}
+                {{ item.status }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
@@ -274,7 +274,7 @@
                   'bg-red-100 text-red-800': selectedOrder.status === 'CANCELED',
                 }"
               >
-                {{ getStatusText(selectedOrder.status) }}
+                {{ selectedOrder.status }}
               </span>
             </div>
           </div>
@@ -366,7 +366,7 @@
                       selectedOrder.status === 'CANCELED',
                   }"
                 >
-                  {{ getStatusText(selectedOrder.status) }}
+                  {{ selectedOrder.status }}
                 </span>
               </div>
 
@@ -410,19 +410,22 @@ import {
   EmptyState,
   BaseInput,
   DataTable,
-  Pagination
+  Pagination,
 } from '@/components'
-import { useErrorStore } from '@/stores/errors.js'
-import { useNotifier } from '@/stores/notifier.js'
-import { useWorkflowStore } from '@/stores/workflow.store.js'
-import { useOrdersStore } from '@/stores/orders.js'
+
+import { useErrorStore, useNotifier, useWorkflowStore, useOrdersStore } from '@/stores'
+
 import { useRouter } from 'vue-router'
+import { formatDate, formatPrice } from '@/utils'
 
-import { $reactive, formatDate } from '@/utils/index.js'
+defineOptions({ name: 'WorkflowView' })
 
-defineOptions({
-  name: 'WorkflowView'
-})
+const $stores = {
+  errors: useErrorStore(),
+  notifier: useNotifier(),
+  workflow: useWorkflowStore(),
+  orders: useOrdersStore(),
+}
 
 // Stores
 const errorStore = useErrorStore()
@@ -436,8 +439,7 @@ const selectedOrder = computed(() => workflowStore.selectedOrder)
 const parsedComment = computed(() => {
   try {
     return selectedOrder.value?.comment ? JSON.parse(selectedOrder.value.comment) : ''
-    // eslint-disable-next-line no-unused-vars
-  } catch (_) {
+  } catch {
     return selectedOrder.value?.comment || ''
   }
 })
@@ -453,7 +455,7 @@ const modelComment = computed({
   },
   set: (value) => {
     approvalComment.value = JSON.stringify(value)
-  }
+  },
 })
 
 // State
@@ -469,7 +471,7 @@ watch(searchQuery, (newValue) => {
 })
 watch(currentFilter, (newValue) => {
   workflowStore.type = newValue
-  workflowStore.pagination.currentPage = 1  // Reset to first page when filter changes
+  workflowStore.pagination.currentPage = 1 // Reset to first page when filter changes
 })
 
 const tableHeaders = [
@@ -479,14 +481,14 @@ const tableHeaders = [
   { field: 'cost', label: 'Amount', sortable: true },
   { field: 'orderType', label: 'Type', sortable: true },
   { field: 'status', label: 'Status', sortable: true },
-  { field: 'actions', label: '', sortable: false, class: 'text-right' }
+  { field: 'actions', label: '', sortable: false, class: 'text-right' },
 ]
 
 const filters = [
   { label: 'All', value: 'all' },
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'confirmed' },
-  { label: 'Rejected', value: 'canceled' }
+  { label: 'Rejected', value: 'canceled' },
 ]
 
 onMounted(async () => {
@@ -496,19 +498,6 @@ onMounted(async () => {
     errorStore.handle(err)
   }
 })
-
-const getStatusText = (status) => {
-  switch (status) {
-    case 'PENDING':
-      return 'Pending'
-    case 'CONFIRMED':
-      return 'Approved'
-    case 'CANCELED':
-      return 'Rejected'
-    default:
-      return status
-  }
-}
 
 // Detail objednávky
 const openOrderDetail = async (order) => {
@@ -531,21 +520,14 @@ const openOrderEdit = async (order) => {
   if (order.status !== 'PENDING') {
     return $notifier.warning('You can edit only order with status PENDING.')
   }
-
   try {
-    // Fetch fresh order data from API
     const orderFromApi = await workflowStore.getOrderById(order.id)
     ordersStore.loadOrderForEdit(orderFromApi)
 
-    $router.push({path: '/orders'})
+    $router.push({ path: '/orders' })
   } catch (err) {
     errorStore.handle(err)
   }
-}
-
-// Update price formatting to 2 decimal places without rounding
-const formatPrice = (price) => {
-  return (Math.floor(price * 100) / 100).toFixed(2)
 }
 
 const confirmDelete = async (order) => {
@@ -600,120 +582,4 @@ const toggleRow = (id) => {
 }
 </script>
 
-<style scoped>
-/* Base transitions */
-.transition {
-  transition: all 0.2s ease;
-}
-
-/* Button hover effect */
-button:hover {
-  transform: translateY(-1px);
-}
-
-/* Table styles */
-.orders-table {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* Status tag enhancement */
-span[class*='bg-'] {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-/* Modal enhancement */
-:deep(.modal-content) {
-  max-width: 700px;
-}
-
-/* Modern expand animation */
-.animate-expand-content {
-  animation: expandContent 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: top;
-  will-change: transform, opacity;
-}
-
-@keyframes expandContent {
-  0% {
-    opacity: 0;
-    transform: scaleY(0.97) translateY(-4px);
-  }
-  100% {
-    opacity: 1;
-    transform: scaleY(1) translateY(0);
-  }
-}
-
-/* Table row hover and transitions */
-tr {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-tr:hover td {
-  background-color: rgba(59, 130, 246, 0.05);
-}
-
-/* Expanded row specific styles */
-tr[class*='bg-blue-50'] td {
-  position: relative;
-  background-color: rgba(59, 130, 246, 0.08);
-}
-
-tr[class*='bg-blue-50'] td::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: rgb(59, 130, 246);
-  transform: scaleX(0);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-tr[class*='bg-blue-50']:hover td::after {
-  transform: scaleX(1);
-}
-
-/* Scrollbar styling */
-.overflow-y-auto {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  border-radius: 2px;
-  transition: background-color 0.2s ease;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.7);
-}
-
-/* Sticky header */
-thead {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-thead::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-bottom: 1px solid rgb(229, 231, 235);
-}
-</style>
+<style scoped src="@/assets/WorkflowView.css" />

@@ -137,7 +137,7 @@ export default {
 
 <style scoped>
 .h-full {
-  min-height: calc(100vh - 4rem); /* Upravíme výšku */
+  min-height: calc(100dvh - 15rem); /* Upravíme výšku */
 }
 
 .text-gradient {
@@ -154,7 +154,6 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
 }
 
 .gradient-text {
@@ -167,7 +166,6 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
 }
 
 @keyframes gradient {

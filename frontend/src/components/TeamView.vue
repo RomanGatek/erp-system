@@ -17,7 +17,7 @@
       </button>
     </div>
 
-    <h2 class="text-5xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
+    <h2 class="text-6xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
       Our Development Team
     </h2>
     <p class="text-xl text-gray-600 text-center mb-16 max-w-3xl mx-auto leading-relaxed">
@@ -30,9 +30,9 @@
       >
         <div class="relative z-10 flex flex-col items-center">
           <!-- Avatar Container -->
-          <div class="relative w-16 h-16 mb-4">
+          <div class="relative w-14 h-14 mb-4">
             <!-- Default Avatar -->
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-400 rounded-2xl rotate-45 flex items-center justify-center transform group-hover:rotate-0 transition-transform duration-500">
+            <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-400 rounded-2xl rotate-45 flex items-center justify-center transform group-hover:rotate-0 transition-transform duration-500">
               <span class="text-lg font-bold text-white -rotate-45 transform group-hover:rotate-0 transition-transform duration-500">
                 {{ getInitials(member.name) }}
               </span>
@@ -43,7 +43,7 @@
               v-if="member.github"
               :src="`${member.github}.png`"
               :alt="`${member.name}'s GitHub avatar`"
-              class="absolute inset-0 w-full h-full rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 object-cover transform scale-95 group-hover:scale-100"
+              class="absolute inset-0 w-full h-full rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 object-cover transform scale-65 group-hover:scale-100"
               @error="handleImageError"
             />
           </div>
@@ -51,14 +51,6 @@
           <!-- Info -->
           <h3 class="text-base font-semibold text-gray-800 mb-1 text-center">{{ member.name }}</h3>
           <p class="text-sm text-gray-500 text-center mb-2">{{ member.role }}</p>
-          <p v-if="member.description || memberBios[member.name]"
-             :class="[
-               'text-sm text-gray-500 text-center mb-4 line-clamp-2',
-               { 'animate-pulse': isLoading[member.name] }
-             ]"
-          >
-            {{ member.description || memberBios[member.name] }}
-          </p>
 
           <!-- GitHub Link -->
           <a v-if="member.github"
@@ -87,16 +79,7 @@ const props = defineProps({
   teamMembers: {
     type: Array,
     required: true,
-    default: () => [
-      {
-        name: 'Jiří',
-        role: 'Lead Developer',
-        github: 'https://github.com/cooffeeRequired',
-        linkedin: null,
-        email: null,
-        description: 'Backend Developer with 2 years Java, 3 years JS/TS, 7 years PHP experience'
-      }
-    ]
+    default: () => []
   }
 })
 

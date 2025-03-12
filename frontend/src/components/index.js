@@ -20,6 +20,7 @@ export { default as StatusBar } from './common/StatusBar.vue'
 export { default as SearchSelect } from './common/SearchSelect.vue'
 export { default as DateTimePicker } from './common/DateTimePicker.vue'
 export { default as MultiProductSelect } from './common/MultiProductSelect.vue'
+export { default as ColorPicker } from './ColorPicker.vue'
 
 // Icons
 export * from './common/rawIcons'

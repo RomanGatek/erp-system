@@ -81,6 +81,18 @@ export const useErrorStore = defineStore('errorStore', {
           })
         } else {
           const { field: errorField, message: errorMessage } = rsp
+
+          if (errorField === 'error' && errorMessage.includes('org.hibernate.TransientObjectException')) {
+              notify({
+                text: 'Cannot delete item, because it is used in another entity',
+                title: 'An unexpected error occurred',
+                type: 'error',
+                duration: 5000,
+                speed: 500
+              })
+
+              return;
+          }
           if (['database', 'argument', 'resource', 'error'].includes(errorField)) {
             // Zvláštní zacházení s některými "typy" chyb
             this.errors.general = errorMessage + " More information you can read on backend stacktrace"

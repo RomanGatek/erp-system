@@ -33,7 +33,6 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) {
-
         ErpSystemApplication.getLogger().info("\u001B[32mCreating product: {}\u001B[0m", productRequest);
         Product createdProduct = productService.createProduct(productRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
@@ -55,7 +54,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product product) {
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest product) {
         ErpSystemApplication.getLogger().debug("\n\t> Products > Update: {}", product);
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }

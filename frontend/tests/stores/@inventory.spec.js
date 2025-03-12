@@ -4,12 +4,12 @@ import { useInventoryStore } from '@/stores/storage.store.js'
 import { api as user } from '@/services/api'
 
 // Stub external utilities so our tests are isolated
-vi.mock('@/utils/table-utils.js', () => ({
+vi.mock('@/utils'
   filter: (state, predicate) => state.items.filter(predicate),
   setupSort: (defaultField) => ({ field: defaultField, direction: 'asc' })
 }))
 
-vi.mock('@/utils/pagination.js', () => ({
+vi.mock('@/utils', () => ({
   __paginate: (state) => {
     const start = (state.pagination.currentPage - 1) * state.pagination.perPage
     return state.items.slice(start, start + state.pagination.perPage)

@@ -89,4 +89,14 @@ public class Order {
         }
         return BigDecimal.valueOf(total);
     }
+
+    public void recalculateTotal() {
+        this.cost = this.orderItems.stream()
+                .mapToDouble(item -> item.getQuantity() * (
+                        this.orderType == OrderType.SELL
+                                ? item.getInventoryItem().getProduct().getBuyoutPrice()
+                                : item.getInventoryItem().getProduct().getPurchasePrice()))
+                .sum();
+    }
+
 }

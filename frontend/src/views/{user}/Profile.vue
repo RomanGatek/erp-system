@@ -155,7 +155,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useMeStore } from '@/stores/me'
+import { useMeStore } from '@/stores/me.store.js'
 import { notify } from '@kyvg/vue3-notification'
 import {
   BaseInput,

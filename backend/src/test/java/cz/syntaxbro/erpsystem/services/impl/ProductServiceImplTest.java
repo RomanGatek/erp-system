@@ -117,10 +117,12 @@ class ProductServiceImplTest {
      */
     @Test
     void updateProduct_shouldReturnUpdatedProduct() {
-        Product updatedProduct = new Product();
-        updatedProduct.setName("Updated Product");
-        updatedProduct.setPurchasePrice(129.99);
-        updatedProduct.setDescription("Updated Description");
+        ProductRequest updatedProduct = ProductRequest
+                .builder()
+                .name("Updated Product")
+                .description("Updated product description")
+                .purchasePrice(129.99)
+                .build();
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));

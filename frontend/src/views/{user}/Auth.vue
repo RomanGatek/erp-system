@@ -137,10 +137,10 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { auth } from '@/services/auth'
-import { useMeStore } from '../stores/me'
+import api from '@/services/api'
+import { useMeStore } from '@/stores/me.store.js'
 import { notify } from '@kyvg/vue3-notification'
-import PasswordInput from '../components/common/PasswordInput.vue'
+import PasswordInput from '@/components/common/PasswordInput.vue'
 
 const router = useRouter()
 const isLogin = ref(true)
@@ -197,7 +197,7 @@ const toggleForm = () => {
 const handleLogin = async () => {
   try {
     clearServerErrors()
-    const token = await auth.login({email: email.value, password: password.value})
+    const token = await api.auth().login({email: email.value, password: password.value})
     if (!token) {
       serverErrors.value.general = 'Invalid authentication token'
       return
@@ -224,7 +224,11 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   try {
     clearServerErrors()
-    await auth.register(email.value, password.value, confirmPassword.value)
+    await api.auth().register({
+      email: email.value,
+      password: password.value,
+      confirmPassword: confirmPassword.value
+    })
     notify({
       type: 'success',
       text: 'Successfully registered! Please sign in.',

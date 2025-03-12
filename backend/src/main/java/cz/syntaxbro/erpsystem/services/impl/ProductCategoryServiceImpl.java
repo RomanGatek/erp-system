@@ -2,6 +2,7 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.ProductCategory;
 import cz.syntaxbro.erpsystem.repositories.ProductCategoryRepository;
+import cz.syntaxbro.erpsystem.requests.ProductCategoryRequest;
 import cz.syntaxbro.erpsystem.services.ProductCategoryService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,22 +24,32 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
 
     @Override
-    public ProductCategory createProductCategory(ProductCategory productCategory) {
+    public ProductCategory createProductCategory(ProductCategoryRequest productCategory) {
 
         Optional<ProductCategory> existingProductCategory = productCategoryRepository.findByName(productCategory.getName());
         if(existingProductCategory.isEmpty()) {
-            return productCategoryRepository.save(productCategory);
+            return productCategoryRepository.save(
+                    ProductCategory
+                            .builder()
+                            .name(productCategory.getName())
+                            .description(productCategory.getDescription())
+                            .products(List.of())
+                            .color(productCategory.getColor())
+                            .build()
+            );
         } else {
             throw new EntityExistsException(String.format("Category with name %s exist", productCategory.getName()));
         }
     }
 
     @Override
-    public ProductCategory updateProductCategory(Long categoryId, ProductCategory productCategory) {
+    public ProductCategory updateProductCategory(Long categoryId, ProductCategoryRequest productCategory) {
         ProductCategory productCategoryFromDb = getProductCategory(categoryId);
         if(getProductCategory(categoryId) != null) {
-            productCategory.setId(productCategoryFromDb.getId());
-            return productCategoryRepository.save(productCategory);
+            productCategoryFromDb.setName(productCategory.getName());
+            productCategoryFromDb.setDescription(productCategory.getDescription());
+            productCategoryFromDb.setColor(productCategory.getColor());
+            return productCategoryRepository.save(productCategoryFromDb);
         } return null;
     }
 

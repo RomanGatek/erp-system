@@ -2,15 +2,15 @@ import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useUserStore } from '@/stores/user.store.js'
 import { api } from '@/services/api'
-import { useMeStore } from '@/stores/me'
+import { useMeStore } from '@/stores/me.store.js'
 
 // Stub external utilities so our tests are isolated
-vi.mock('@/utils/table-utils.js', () => ({
+vi.mock('@/utils'
   filter: (state, predicate) => state.items.filter(predicate),
   setupSort: (defaultField) => ({ field: defaultField, direction: 'asc' })
 }))
 
-vi.mock('@/utils/pagination.js', () => ({
+vi.mock('@/utils', () => ({
   __paginate: (state) => {
     const start = (state.pagination.currentPage - 1) * state.pagination.perPage
     return state.items.slice(start, start + state.pagination.perPage)

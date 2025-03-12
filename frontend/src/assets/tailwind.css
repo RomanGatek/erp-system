@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../");
+
 
 /* Ensure consistent utility classes are used across components */
 

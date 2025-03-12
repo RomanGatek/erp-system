@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useErrorStore } from '@/stores/errors'
+import { useErrorStore } from '@/stores/errors.store.js'
 import { AxiosError } from 'axios'
 import { notify } from '@kyvg/vue3-notification'
 

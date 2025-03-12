@@ -52,13 +52,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) {
+    public Product updateProduct(Long id, ProductRequest product) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
                     existingProduct.setName(product.getName());
                     existingProduct.setDescription(product.getDescription());
                     existingProduct.setPurchasePrice(product.getPurchasePrice());
                     existingProduct.setBuyoutPrice(product.getBuyoutPrice());
+                    existingProduct.setProductCategory(productCategoryRepository.findByName(product.getProductCategory()).orElseThrow(
+                            () -> new RuntimeException("Category not found with name: " + product.getProductCategory())));
                     return productRepository.save(existingProduct);
                 }).orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
     }

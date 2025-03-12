@@ -4,13 +4,15 @@ import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.*;
 import cz.syntaxbro.erpsystem.repositories.*;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
-import cz.syntaxbro.erpsystem.services.OrderService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * @author steve
@@ -30,10 +32,16 @@ public class DataLoader implements CommandLineRunner {
     private final OrderItemRepository orderItemRepository;
     private final ProductCategoryRepository productCategoryRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+
     public DataLoader(RoleRepository roleRepository, UserRepository userRepository,
                       PermissionRepository permissionRepository, PasswordSecurity encoder,
                       ProductRepository productRepository, InventoryRepository inventoryRepository,
-                      OrderRepository orderRepository, OrderItemRepository orderItemRepository, OrderService orderService, ProductCategoryRepository productCategoryRepository) {
+                      OrderRepository orderRepository, OrderItemRepository orderItemRepository,
+                      ProductCategoryRepository productCategoryRepository
+    ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
@@ -78,7 +86,7 @@ public class DataLoader implements CommandLineRunner {
         );
 
         createProductCategoryIfNotExists();
-        ProductCategory defaultCategory = productCategoryRepository.findByName("default").get();
+        @SuppressWarnings("OptionalGetWithoutIsPresent") ProductCategory defaultCategory = productCategoryRepository.findByName("default").get();
 
         // Create sample products
         createProductIfNotExists("Milka Chocolate 200g", 52.2, 52.2, "Milk chocolate bar", defaultCategory);
@@ -128,6 +136,73 @@ public class DataLoader implements CommandLineRunner {
         createInventoryItemIfNotExists(toiledPaperProduct, 500);
 
         createSampleOrders();
+        createProductTriggers();
+    }
+
+    @Transactional
+    public void createProductTriggers() {
+        // 1️⃣ Vytvoření logovací tabulky
+        entityManager.createNativeQuery("""
+            CREATE TABLE IF NOT EXISTS trigger_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                trigger_name VARCHAR(100),
+                executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                message VARCHAR(255)
+            );
+        """).executeUpdate();
+
+        // 2️⃣ Odstranění starého triggeru before_product_delete
+        entityManager.createNativeQuery("DROP TRIGGER IF EXISTS before_product_delete;").executeUpdate();
+
+        // 3️⃣ Vytvoření triggeru before_product_delete
+        entityManager.createNativeQuery("""
+            CREATE TRIGGER before_product_delete
+            BEFORE DELETE ON products FOR EACH ROW
+            BEGIN
+                UPDATE orders o
+                SET cost = (
+                    SELECT IFNULL(SUM(oi.quantity *
+                                      IF(o.order_type = 'SELL', p.buyout_price, p.purchase_price)), 0)
+                    FROM order_items oi
+                             JOIN inventory_items ii ON oi.inventory_item = ii.id
+                             JOIN products p ON ii.product_id = p.id
+                    WHERE oi.order_id = o.id AND p.id <> OLD.id
+                )
+                WHERE o.id IN (
+                    SELECT DISTINCT oi.order_id
+                    FROM order_items oi
+                             JOIN inventory_items ii ON oi.inventory_item = ii.id
+                    WHERE ii.product_id = OLD.id
+                );
+
+                INSERT INTO trigger_logs (trigger_name, message, executed_at)
+                VALUES ('before_product_delete', CONCAT('Trigger executed before deleting product id=', OLD.id), NOW());
+            END;
+        """).executeUpdate();
+
+        // 4️⃣ Odstranění starého triggeru after_order_item_delete
+        entityManager.createNativeQuery("DROP TRIGGER IF EXISTS after_order_item_delete;").executeUpdate();
+
+        // 5️⃣ Vytvoření triggeru after_order_item_delete
+        entityManager.createNativeQuery("""
+            CREATE TRIGGER after_order_item_delete
+            AFTER DELETE ON order_items FOR EACH ROW
+            BEGIN
+                UPDATE orders o
+                SET cost = (
+                    SELECT IFNULL(SUM(oi.quantity *
+                                      IF(o.order_type = 'SELL', p.buyout_price, p.purchase_price)), 0)
+                    FROM order_items oi
+                             JOIN inventory_items ii ON oi.inventory_item = ii.id
+                             JOIN products p ON ii.product_id = p.id
+                    WHERE oi.order_id = OLD.order_id
+                )
+                WHERE o.id = OLD.order_id;
+
+                INSERT INTO trigger_logs (trigger_name, message, executed_at)
+                VALUES ('after_order_item_delete', CONCAT('Trigger executed for order_id=', OLD.order_id), NOW());
+            END;
+        """).executeUpdate();
     }
 
     /**
@@ -147,7 +222,7 @@ public class DataLoader implements CommandLineRunner {
 
         Random random = new Random();
         LocalDateTime now = LocalDateTime.now();
-        
+
         User admin = userRepository.findByUsername("administrator")
                 .orElseThrow(() -> new RuntimeException("Admin user not found"));
         User manager = userRepository.findByUsername("manager")
@@ -155,92 +230,92 @@ public class DataLoader implements CommandLineRunner {
 
         List<InventoryItem> allItems = inventoryRepository.findAll();
 
-        // Create 20 different orders
-        for (int i = 0; i < 20; i++) {
-            Product product = allProducts.get(random.nextInt(allProducts.size()));
-            int amount = random.nextInt(15) + 1;
-
-            double cost = product.getBuyoutPrice() * amount;
-            LocalDateTime orderTime = now.minusDays(random.nextInt(30));
-
-            Order order = Order.builder()
-                    .orderItems(new ArrayList<>())  // Initialize with empty list
-                    .cost(cost)
-                    .orderTime(orderTime)
+        IntStream.range(0, 20).forEach(i -> {
+            var order = Order.builder()
+                    .orderItems(new ArrayList<>())
+                    .orderTime(now.minusDays(random.nextInt(30)))
                     .status(Order.Status.PENDING)
                     .comment("Test")
-                    .approvedBy(admin)  // Default approver
-                    .decisionTime(orderTime.plusDays(39))
+                    .approvedBy(admin)
+                    .decisionTime(now.minusDays(39))
                     .build();
-            
-            int statusRandom = random.nextInt(10);
-            
-            if (statusRandom < 4) {  // 40% pending
-                order.setStatus(Order.Status.PENDING);
-                order.setComment("Pending approval");
-                order.setDecisionTime(null);
-                order.setOrderType(Order.OrderType.SELL);
-                
-            } else if (statusRandom < 8) {  // 40% confirmed
-                order.setStatus(Order.Status.CONFIRMED);
-                order.setComment("Order approved, product is in stock.");
-                order.setApprovedBy(admin);
-                order.setOrderType(Order.OrderType.PURCHASE);
-                order.setDecisionTime(orderTime.plusHours(random.nextInt(24) + 1));
-                
-            } else {  // 20% canceled
-                order.setStatus(Order.Status.CANCELED);
-                order.setComment("Order rejected due to low stock levels.");
-                order.setApprovedBy(manager);
-                order.setOrderType(Order.OrderType.SELL);
-                order.setDecisionTime(orderTime.plusHours(random.nextInt(12) + 1));
+
+            int itemCount = random.nextInt(4) + 2; // 2 až 5 položek na objednávku
+            double totalCost = 0;
+            List<OrderItem> orderItems = new ArrayList<>();
+
+            for (int x = 0; x < itemCount; x++) {
+                var inventoryItem = allItems.get(random.nextInt(allItems.size()));
+                int quantity = random.nextInt(10) + 1;
+                double itemCost = inventoryItem.getProduct().getBuyoutPrice() * quantity;
+                totalCost += itemCost;
+
+                OrderItem orderItem = OrderItem.builder()
+                        .order(order)
+                        .inventoryItem(inventoryItem)
+                        .quantity(quantity)
+                        .build();
+
+                orderItems.add(orderItemRepository.save(orderItem));
             }
-            
-            // Special cases for better testing
-            if (i == 0) {  // First order always pending (new)
-                order.setStatus(Order.Status.PENDING);
-                order.setOrderTime(now.minusHours(1));
-                order.setComment("New order awaiting approval");
-                order.setDecisionTime(null);
-            } else if (i == 1) {  // Second order just approved
-                order.setStatus(Order.Status.CONFIRMED);
-                order.setOrderTime(now.minusHours(5));
-                order.setComment("Ship immediately, priority customer.");
-                order.setApprovedBy(admin);
-                order.setDecisionTime(now.minusMinutes(30));
-            } else if (i == 2) {  // Third order just rejected
-                order.setStatus(Order.Status.CANCELED);
-                order.setOrderTime(now.minusHours(8));
-                order.setComment("Product currently not available in stock.");
-                order.setApprovedBy(manager);
-                order.setDecisionTime(now.minusMinutes(15));
+
+            order.setCost(totalCost);
+            order.getOrderItems().addAll(orderItems);
+
+            switch (random.nextInt(10)) {
+                case 0, 1, 2, 3 -> {
+                    order.setStatus(Order.Status.PENDING);
+                    order.setComment("Pending approval");
+                    order.setDecisionTime(null);
+                    order.setOrderType(Order.OrderType.SELL);
+                }
+                case 4, 5, 6, 7 -> {
+                    order.setStatus(Order.Status.CONFIRMED);
+                    order.setComment("Order approved, product is in stock.");
+                    order.setApprovedBy(admin);
+                    order.setOrderType(Order.OrderType.PURCHASE);
+                    order.setDecisionTime(order.getOrderTime().plusHours(random.nextInt(24) + 1));
+                }
+                default -> {
+                    order.setStatus(Order.Status.CANCELED);
+                    order.setComment("Order rejected due to low stock levels.");
+                    order.setApprovedBy(manager);
+                    order.setOrderType(Order.OrderType.SELL);
+                    order.setDecisionTime(order.getOrderTime().plusHours(random.nextInt(12) + 1));
+                }
             }
-            
-            // Large orders set to PEND to be noticeable
-            if (amount > 10) {
+
+            switch (i) {
+                case 0 -> {
+                    order.setStatus(Order.Status.PENDING);
+                    order.setOrderTime(now.minusHours(1));
+                    order.setComment("New order awaiting approval");
+                    order.setDecisionTime(null);
+                }
+                case 1 -> {
+                    order.setStatus(Order.Status.CONFIRMED);
+                    order.setOrderTime(now.minusHours(5));
+                    order.setComment("Ship immediately, priority customer.");
+                    order.setApprovedBy(admin);
+                    order.setDecisionTime(now.minusMinutes(30));
+                }
+                case 2 -> {
+                    order.setStatus(Order.Status.CANCELED);
+                    order.setOrderTime(now.minusHours(8));
+                    order.setComment("Product currently not available in stock.");
+                    order.setApprovedBy(manager);
+                    order.setDecisionTime(now.minusMinutes(15));
+                }
+            }
+
+            if (totalCost > 1000) {
                 order.setStatus(Order.Status.PENDING);
                 order.setComment("Large order pending approval");
                 order.setDecisionTime(null);
             }
 
-            // Save the order first
-            order = orderRepository.save(order);
-            
-            // Now create and save order items
-            for (int x = 0; x < 5; x++) {
-                InventoryItem inventoryItem = allItems.get(random.nextInt(allItems.size()));
-                OrderItem orderItem = OrderItem.builder()
-                        .order(order)  // Use the saved order
-                        .inventoryItem(inventoryItem)
-                        .quantity(random.nextInt(10) + 1)
-                        .build();
-                orderItem = orderItemRepository.save(orderItem);
-                order.getOrderItems().add(orderItem);
-            }
-            
-            // Update the order with its items
             orderRepository.save(order);
-        }
+        });
     }
 
     private void createInventoryItemIfNotExists(Product product, int quantity) {

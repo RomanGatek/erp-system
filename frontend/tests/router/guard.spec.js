@@ -27,11 +27,11 @@ vi.mock('@/stores/me', () => ({
   useMeStore: () => meStoreMock
 }));
 
-vi.mock('@/stores/errors.js', () => ({
+vi.mock('@/stores/errors.store.js', () => ({
   useErrorStore: () => errorStoreMock
 }));
 
-vi.mock('@/stores/notifier.js', () => ({
+vi.mock('@/stores/notifier.store.js', () => ({
   useNotifier: () => notifierMock
 }));
 

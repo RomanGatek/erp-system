@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Entity
-@Table(name = "product_category")
+@Table(name = "product_categories")
 @Builder
 @Data
 @NoArgsConstructor
@@ -25,6 +26,8 @@ public class ProductCategory {
     private String description;
     
     @JsonBackReference
-    @OneToMany(mappedBy = "productCategory", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "productCategory", cascade = CascadeType.REMOVE)
     private List<Product> products;
+
+    private String color;
 }

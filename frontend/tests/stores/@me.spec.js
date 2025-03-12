@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useMeStore } from '@/stores/me'
+import { useMeStore } from '@/stores/me.store.js'
 import { api } from '@/services/api'
 
 // Mock the API service

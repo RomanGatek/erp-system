@@ -11,7 +11,9 @@
         />
 
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">{{ isEditing ? 'Edit' : 'Create New' }} Order</h2>
+          <h2 class="text-2xl font-bold text-gray-800">
+            {{ isEditing ? 'Edit' : 'Create New' }} Order
+          </h2>
           <p class="text-sm text-gray-500 mt-1 mb-2">Select order type</p>
           <div class="flex gap-2">
             <button
@@ -253,12 +255,12 @@
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted, onBeforeUnmount } from 'vue'
 import { StatusBar, DateTimePicker, MultiProductSelect } from '@/components'
-import { useErrorStore } from '@/stores/errors.js'
-import { useNotifier } from '@/stores/notifier.js'
-import { useOrdersStore } from '@/stores/orders.js'
-import { api } from '@/services/api'
-import { formatDate } from '../utils/index.js'
-import {useRouter } from 'vue-router'
+import { useErrorStore } from '@/stores/errors.store.js'
+import { useNotifier } from '@/stores/notifier.store.js'
+import { useOrdersStore } from '@/stores/orders.store.js'
+import api from '@/services/api'
+import { formatDate } from '../../utils/index.js'
+import { useRouter } from 'vue-router'
 
 function parseComment(comment) {
   try {
@@ -365,21 +367,15 @@ const getTotalItemCount = () => {
 }
 
 const fetchProducts = async () => {
-  try {
-    const response = await api.get('/products')
-    products.value = response.data
-  } catch (err) {
-    errorStore.handle(err)
-  }
+  const [response, err] = await api.products().getAll()
+  products.value = response
+  if (err) errorStore.handle(err)
 }
 
 const fetchRecentOrders = async () => {
-  try {
-    const response = await api.get('/orders')
-    recentOrders.value = response.data
-  } catch (err) {
-    errorStore.handle(err)
-  }
+  const [response, err] = await api.orders().getAll()
+  recentOrders.value = response
+  if (err) errorStore.handle(err)
 }
 
 const checkStock = async () => {
@@ -389,11 +385,12 @@ const checkStock = async () => {
   }
 
   try {
-    const response = await api.get('/inventory')
-    const inventoryItems = response.data.filter((item) =>
+    const [data, err] = await api.inventory().getAll()
+    const inventoryItems = data.filter((item) =>
       selectedProducts.value.some((product) => product.id === item.product.id),
     )
     currentStock.value = inventoryItems.reduce((total, item) => total + item.quantity, 0)
+    if (err) errorStore.handle(err)
   } catch (err) {
     errorStore.handle(err)
     currentStock.value = 0 // Set to 0 on error, not null
@@ -413,7 +410,7 @@ const createOrder = async () => {
   })
 
   try {
-    await api.post('/orders', {
+    await api.orders().create({
       products: computedIds,
       orderType: orderType.value,
       comment: comment.value,
@@ -435,7 +432,6 @@ const createOrder = async () => {
 }
 
 async function editOrder() {
-
   if (!isValid.value) return
 
   loading.value = true
@@ -449,7 +445,7 @@ async function editOrder() {
   const id = ordersStore.order.id
 
   try {
-    await api.put(`/orders/${id}`, {
+    await api.orders().update(id, {
       products: computedIds,
       orderType: orderType.value,
       comment: comment.value,
@@ -462,7 +458,7 @@ async function editOrder() {
 
     $notifier.success(`Order with id ${id} was successfully edited`)
 
-    await $router.push({path: '/workflow'})
+    await $router.push({ path: '/workflow' })
   } catch (err) {
     errorStore.handle(err)
   } finally {
@@ -477,7 +473,7 @@ function cancelEdit() {
   orderType.value = 'SELL'
   ordersStore.order = null
 
-  $router.push({path: '/workflow'})
+  $router.push({ path: '/workflow' })
 }
 
 const handleCommentBlur = () => {
@@ -519,7 +515,7 @@ onMounted(async () => {
       selectedProducts.value = ordersStore.order.orderItems.map((selectedOrder) => {
         return {
           ...selectedOrder.inventoryItem.product,
-          quantity: selectedOrder.quantity
+          quantity: selectedOrder.quantity,
         }
       })
     }

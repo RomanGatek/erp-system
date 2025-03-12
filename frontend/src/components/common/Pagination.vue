@@ -1,5 +1,5 @@
 <script setup>
-import { getPaginationInfo } from '@/utils/pagination.js'
+import { getPaginationInfo } from '@/utils'
 import { computed } from 'vue'
 
 // 1. We define that 'store' is a function (e.g. useProductsStore).

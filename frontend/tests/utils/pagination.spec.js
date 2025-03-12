@@ -1,4 +1,4 @@
-import { paginate, getPaginationInfo, __paginate } from '@/utils/pagination'; // adjust the path as needed
+import { paginate, getPaginationInfo, paginateViaState } from '@/utils/pagination'; // adjust the path as needed
 import { describe, it, expect } from 'vitest';
 
 describe('Pagination helpers', () => {
@@ -64,7 +64,7 @@ describe('Pagination helpers', () => {
         pagination: { currentPage: 1, perPage: 4 },
         filtered: items
       };
-      expect(__paginate(state)).toEqual([1, 2, 3, 4]);
+      expect(paginateViaState(state)).toEqual([1, 2, 3, 4]);
     });
 
     it('should return the correct page of items for the second page', () => {
@@ -72,7 +72,7 @@ describe('Pagination helpers', () => {
         pagination: { currentPage: 2, perPage: 4 },
         filtered: items
       };
-      expect(__paginate(state)).toEqual([5, 6, 7, 8]);
+      expect(paginateViaState(state)).toEqual([5, 6, 7, 8]);
     });
 
     it('should return the correct items when the last page is incomplete', () => {
@@ -80,7 +80,7 @@ describe('Pagination helpers', () => {
         pagination: { currentPage: 3, perPage: 4 },
         filtered: items
       };
-      expect(__paginate(state)).toEqual([9, 10]);
+      expect(paginateViaState(state)).toEqual([9, 10]);
     });
   });
 });

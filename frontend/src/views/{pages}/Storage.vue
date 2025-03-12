@@ -2,8 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useInventoryStore } from '@/stores/storage.store.js'
 import { $reactive } from '@/utils/index.js'
-import { useNotifier } from '@/stores/notifier.js'
-import { useErrorStore } from '@/stores/errors.js'
+import { useNotifier } from '@/stores/notifier.store.js'
+import { useErrorStore } from '@/stores/errors.store.js'
 
 import {
   DataTable,
@@ -15,7 +15,7 @@ import {
   BaseInput,
 } from '@/components'
 import {SearchSelect} from '@/components'
-import { useProductsStore } from '@/stores/products.js'
+import { useProductsStore } from '@/stores/products.store.js'
 
 
 defineOptions({

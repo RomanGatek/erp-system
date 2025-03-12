@@ -3,6 +3,8 @@ package cz.syntaxbro.erpsystem.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "order_items")
@@ -17,6 +19,7 @@ public class OrderItem {
     private Long id;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "inventory_item", nullable = false)
     private InventoryItem inventoryItem;
 

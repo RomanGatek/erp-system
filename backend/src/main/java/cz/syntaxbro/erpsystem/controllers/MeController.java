@@ -42,7 +42,6 @@ public class MeController {
     // Fetching the current user
     public ResponseEntity<User> getCurrentUser() {
         User currentUser = authService.getCurrentUser();
-        logger.info("get me user: {}", currentUser);
         return ResponseEntity.ok(currentUser);
     }
 

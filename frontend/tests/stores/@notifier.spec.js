@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useNotifier } from '@/stores/notifier'
+import { useNotifier } from '@/stores/notifier.store.js'
 import { notify } from '@kyvg/vue3-notification'
 
 // Mock the notify function so we can spy on its calls

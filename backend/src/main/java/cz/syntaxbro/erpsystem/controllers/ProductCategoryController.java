@@ -1,9 +1,8 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.ProductCategory;
+import cz.syntaxbro.erpsystem.requests.ProductCategoryRequest;
 import cz.syntaxbro.erpsystem.services.ProductCategoryService;
-import cz.syntaxbro.erpsystem.services.ProductService;
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/category")
+@RequestMapping("/api/categories")
 @EnableMethodSecurity()
 @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
 public class ProductCategoryController {
@@ -34,13 +33,11 @@ public class ProductCategoryController {
 
     @GetMapping
     public ResponseEntity<List<ProductCategory>> findAll() {
-        return ResponseEntity.ok(
-                productCategoryService.getProductCategories()
-        );
+        return ResponseEntity.ok(productCategoryService.getProductCategories());
     }
 
     @PostMapping()
-    public ResponseEntity<ProductCategory> create(@RequestBody ProductCategory productCategory) {
+    public ResponseEntity<ProductCategory> create(@RequestBody ProductCategoryRequest productCategory) {
         ProductCategory savedProductCategory =  productCategoryService.createProductCategory(productCategory);
         return ResponseEntity.ok(savedProductCategory);
     }
@@ -48,11 +45,8 @@ public class ProductCategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductCategory> update(
             @PathVariable long id,
-            @RequestBody ProductCategory productCategory) {
-
-        return ResponseEntity.ok(
-                productCategoryService.updateProductCategory(id, productCategory)
-        );
+            @RequestBody ProductCategoryRequest productCategory) {
+        return ResponseEntity.ok(productCategoryService.updateProductCategory(id, productCategory));
     }
 
     @DeleteMapping("/{id}")

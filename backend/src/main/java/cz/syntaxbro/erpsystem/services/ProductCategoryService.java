@@ -1,14 +1,15 @@
 package cz.syntaxbro.erpsystem.services;
 
 import cz.syntaxbro.erpsystem.models.ProductCategory;
+import cz.syntaxbro.erpsystem.requests.ProductCategoryRequest;
 
 import java.util.List;
 
 public interface ProductCategoryService {
 
-    ProductCategory createProductCategory(ProductCategory productCategory);
+    ProductCategory createProductCategory(ProductCategoryRequest productCategory);
 
-    ProductCategory updateProductCategory(Long categoryId, ProductCategory productCategory);
+    ProductCategory updateProductCategory(Long categoryId, ProductCategoryRequest productCategory);
 
     void deleteProductCategory(long id);
 

@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { api as user } from '@/services/api'
+import api from '@/services/api'
 import {
   filter,
   setupSort
-} from '@/utils/table-utils.js'
-import { __paginate } from '@/utils/pagination.js'
+} from '@/utils'
+import { paginateViaState } from '@/utils'
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -12,6 +12,7 @@ export const useInventoryStore = defineStore('inventory', {
     loading: false,
     error: null,
     searchQuery: '',
+    currentFilter: 'all',
     sorting: setupSort('product.name'),
     pagination: { currentPage: 1, perPage: 10 },
   }),
@@ -22,55 +23,31 @@ export const useInventoryStore = defineStore('inventory', {
         item.product.description.toLocaleLowerCase().includes(search)
       }
     ),
-    paginateItems: (state) => __paginate(state)
+    paginateItems: (state) => paginateViaState(state)
   },
   actions: {
     async fetchItems() {
-      try {
-        const response = await user.get('/inventory')
-        this.items = response.data
-        this.error = null
-      } catch (err) {
-        this.error = err.message
-      }
+      [this.items, this.error] = await api.inventory().getAll()
     },
     async addItem(Item) {
-      try {
-        await user.post('/inventory', Item)
-        await this.fetchItems()
-        this.error = null
-      } catch (err) {
-        this.error = err
-      }
+      [this.items, this.error] = await api.inventory().add(Item)
     },
     async updateItem(ItemData) {
+      [_, this.error] = await api.inventory().update(ItemData)
 
-      console.log("Updating item with data:", ItemData);
-
-      try {
-        await user.put(`/inventory/${ItemData.id}`, ItemData)
-        const index = this.items.findIndex(p => p.id === ItemData.id)
-        if (index !== -1) {
-          this.items[index] = {
-            ...this.items[index],
-            ...ItemData,
-            id: ItemData.id,
-            stockedAmount: ItemData.stockedAmount ?? 0,
-          }
+      const index = this.items.findIndex(p => p.id === ItemData.id)
+      if (index !== -1) {
+        this.items[index] = {
+          ...this.items[index],
+          ...ItemData,
+          id: ItemData.id,
+          stockedAmount: ItemData.stockedAmount ?? 0,
         }
-        this.error = null
-      } catch (err) {
-        this.error = err
       }
     },
     async deleteItem(itemId) {
-      try {
-        await user.delete(`/inventory/${itemId}`)
-        await this.fetchItems()
-        this.error = null
-      } catch (err) {
-        this.error = err
-      }
+      [_, this.error] = await api.inventory().delete(itemId)
+      await this.fetchItems()
     },
     setSearch(query) {
       this.searchQuery = query

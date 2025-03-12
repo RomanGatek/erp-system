@@ -67,9 +67,9 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
-import { useMeStore } from '@/stores/me'
-import { navLinks } from '@/router/links'
-import { isLoggedIn, initMeStore } from '@/utils/user-utils'
+import { useMeStore } from '@/stores/me.store.js'
+import { navLinks } from '@/links'
+import { isLoggedIn, initMeStore } from '@/utils'
 import {
   NavBarLink,
   NavBarLinkDropdown

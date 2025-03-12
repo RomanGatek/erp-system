@@ -76,7 +76,7 @@
           />
 
           <!-- Order Summary -->
-          <div v-if="selectedProduct && isValid" 
+          <div v-if="selectedProduct && isValid"
             class="bg-gray-50 p-4 rounded-lg space-y-2">
             <p class="text-sm text-gray-600">
               Current stock: <span class="font-medium">{{ currentStock }}</span>
@@ -103,7 +103,7 @@
       <div class="w-96 bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
         <h3 class="text-lg font-medium text-gray-800 mb-4">Recent Stock Orders</h3>
         <div class="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-          <div v-for="order in recentStockOrders.slice(0, 5)" :key="order.id" 
+          <div v-for="order in recentStockOrders.slice(0, 5)" :key="order.id"
             class="p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200">
             <div class="flex justify-between items-start mb-2">
               <span class="text-sm font-medium text-gray-900">#{{ order.id }}</span>
@@ -148,8 +148,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { StatusBar, SearchSelect, BaseInput, DateTimePicker } from '@/components'
-import { useErrorStore } from '@/stores/errors.js'
-import { useNotifier } from '@/stores/notifier.js'
+import { useErrorStore } from '@/stores/errors.store.js'
+import { useNotifier } from '@/stores/notifier.store.js'
 import { api } from '@/services/api'
 import { useInventoryStore } from '@/stores/inventory.store'
 
@@ -202,10 +202,10 @@ const priceError = computed(() => {
 })
 
 const isValid = computed(() => {
-  return selectedProduct.value && 
-         !quantityError.value && 
-         !deliveryDateError.value && 
-         !supplierError.value && 
+  return selectedProduct.value &&
+         !quantityError.value &&
+         !deliveryDateError.value &&
+         !supplierError.value &&
          !priceError.value
 })
 
@@ -319,4 +319,4 @@ onMounted(async () => {
   background-color: #CBD5E1;
   border-radius: 20px;
 }
-</style> 
+</style>

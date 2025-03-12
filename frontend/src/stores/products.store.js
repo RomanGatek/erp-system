@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
-import { api } from '@/services/api'
+import api from '@/services/api'
 import {
   filter,
   setupSort
-} from '@/utils/table-utils.js'
-import { __paginate } from '@/utils/pagination.js'
+} from '@/utils'
+import { paginateViaState } from '@/utils'
 
 export const useProductsStore = defineStore('products', {
     state: () => ({
@@ -21,57 +21,29 @@ export const useProductsStore = defineStore('products', {
             return product.name.toLowerCase().includes(search) ||
             product.buyoutPrice.toString().includes(search) || product.purchasePrice.toString().includes(search)
         }),
-        paginateItems: (state) => __paginate(state)
+        paginateItems: (state) => paginateViaState(state)
     },
     actions: {
         async fetchProducts() {
             this.loading = true;
-            try {
-                const response = await api.get('/products');
-
-                console.log(response.data)
-
-                this.items = response.data;
-                this.error = null;
-            } catch (err) {
-                this.error = err;
-            } finally {
-                this.loading = false;
-            }
+            [this.items, this.error] = await api.products().getAll();
+            this.loading = false;
         },
         async addProduct(product) {
-            try {
-                await api.post('/products', product);
-                await this.fetchProducts();
-                this.error = null;
-            } catch (err) {
-                this.error = err;
-            }
+            var _;
+            [_, this.error] = await api.products().add({ ...product, productCategory: product.productCategory.name });
+            await this.fetchProducts();
         },
         async updateProduct(id, productData) {
-            try {
-                await api.put(`/products/${id}`, productData);
-                const index = this.items.findIndex(p => p.id === id);
-                if (index !== -1) {
-                    this.items[index] = {
-                        ...this.items[index],
-                        ...productData,
-                        id
-                    };
-                }
-                this.error = null;
-            } catch (err) {
-                this.error = err;
-            }
+            var item;
+            [item, this.error] = await api.products().update(id, productData);
+            await this.fetchProducts();
+            if (item) this.items[this.items.findIndex((item) => item.id === id)] = item;
         },
         async deleteProduct(productId) {
-            try {
-                await api.delete(`/products/${productId}`);
-                await this.fetchProducts();
-                this.error = null;
-            } catch (err) {
-                this.error = err;
-            }
+            var _;
+            [_, this.error] = await api.products().delete(productId);
+            await this.fetchProducts();
         },
         setSearch(query) {
             this.searchQuery = query;

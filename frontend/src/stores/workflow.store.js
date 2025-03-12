@@ -1,14 +1,18 @@
 import { defineStore } from 'pinia';
-import { useNotifier } from './notifier';
-import { api } from '@/services/api';
-import { setupSort } from '@/utils/table-utils.js';
+import { useNotifier } from './notifier.store.js';
+import api from '@/services/api';
+import { setupSort } from '@/utils'
 
 export const useWorkflowStore = defineStore('workflow', {
   state: () => ({
+    /** @type {import('../../types/index.js').Order[]} */
     items: [],
     loading: false,
     error: null,
+    /** @type {import('../../types/index.js').Order} */
     selectedOrder: null,
+    /**@type {string} */
+    currentFilter: 'all',
     searchQuery: '',
     sorting: setupSort('orderTime', 'desc'),
     type: 'all',
@@ -25,13 +29,7 @@ export const useWorkflowStore = defineStore('workflow', {
 
         // First check the status filter
         if (state.type.toLowerCase() !== 'all') {
-          const statusMap = {
-            'pending': 'PENDING',
-            'confirmed': 'CONFIRMED',
-            'canceled': 'CANCELED'
-          };
-          const targetStatus = statusMap[state.type.toLowerCase()];
-          if (!targetStatus || order.status !== targetStatus) {
+          if (order.status.toLowerCase() !== state.type.toLowerCase()) {
             return false;
           }
         }
@@ -91,41 +89,39 @@ export const useWorkflowStore = defineStore('workflow', {
   actions: {
     async fetchOrders() {
       this.loading = true;
-      this.error = null;
-      try {
-        const response = await api.get('/orders');
-        if (Array.isArray(response.data)) {
-          this.items = response.data;
-        } else {
-          console.error('Expected array but received:', response);
-          this.items = [];
-          this.error = 'Received invalid data format from server';
-        }
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        this.error = err.response?.data?.message || 'Failed to fetch orders';
-        throw err;
-      } finally {
-        this.loading = false;
-      }
+      [this.items, this.error] = await api.orders().getAll();
+      this.loading = false;
     },
 
     async getOrderById(id) {
       this.loading = true;
-      this.error = null;
+      [this.selectedOrder, this.error] = await api.orders().getById(id);
+      this.loading = false;
+      return this.selectedOrder;
+    },
 
-      try {
-        const response = await api.get(`/orders/${id}`);
-        if (response.data?.id) {
-          this.selectedOrder = response.data;
-          return response.data;
-        }
-      } catch (err) {
-        this.error = err.response?.data?.message || `Failed to fetch order #${id}`;
-        this.selectedOrder = null;
-        throw err;
-      } finally {
-        this.loading = false;
+    /**
+     * Helper for updating order status
+     * @param {number} orderId 
+     * @param {*} data 
+     * @param {string} status 
+     * @param {string} comment 
+     */
+    updateOrderStatus(orderId, data, status, comment) {
+      const index = this.items.findIndex(o => o.id === orderId);
+      const updateData = {
+        ...data,
+        status,
+        comment,
+        decisionTime: new Date().toISOString()
+      };
+
+      if (index !== -1) {
+        this.items[index] = { ...this.items[index], ...updateData };
+      }
+
+      if (this.selectedOrder?.id === orderId) {
+        this.selectedOrder = { ...this.selectedOrder, ...updateData };
       }
     },
 
@@ -134,128 +130,72 @@ export const useWorkflowStore = defineStore('workflow', {
       this.error = null;
       const notifier = useNotifier();
 
-      try {
-        // Get the order with its items
-        const order = this.items.find(o => o.id === orderId);
+      const order = this.items.find(o => o.id === orderId);
 
-        var response;
-
-        if (order.orderType === 'SELL') {
-          if (!order?.orderItems?.length) {
-            throw new Error('Order or order items not found');
-          }
-          // Check inventory directly from order data
-          for (const orderItem of order.orderItems) {
-            if (orderItem.stockedQuantity < orderItem.needQuantity) {
-              notifier.error(`Insufficient stock for item: ${orderItem.name}`);
-              return false;
-            }
-          }
-
-          console.log("Comment: ", comment)
-
-          response = await api.put(`/orders/${orderId}/confirm`, comment);
-        } else if (order.orderType === 'PURCHASE') {
-          response = await api.put(`/orders/${orderId}/confirm`, comment);
+      if (order.orderType === 'SELL') {
+        if (!order?.orderItems?.length) {
+          this.error = 'Order or order items not found';
+          this.loading = false;
+          return false;
         }
-        if (response.data) {
-          const index = this.items.findIndex(o => o.id === orderId);
-          if (index !== -1) {
-            this.items[index] = {
-              ...this.items[index],
-              ...response.data,
-              status: 'CONFIRMED',
-              comment: comment,
-              decisionTime: new Date().toISOString()
-            };
+        // Check inventory directly from order data
+        for (const orderItem of order.orderItems) {
+          if (orderItem.stockedQuantity < orderItem.needQuantity) {
+            notifier.error(`Insufficient stock for item: ${orderItem.name}`);
+            this.loading = false;
+            return false;
           }
-
-          if (this.selectedOrder?.id === orderId) {
-            this.selectedOrder = {
-              ...this.selectedOrder,
-              ...response.data,
-              status: 'CONFIRMED',
-              comment: comment,
-              decisionTime: new Date().toISOString()
-            };
-          }
-
-          return true;
         }
-        return false;
-      } catch (err) {
-        this.error = err.response?.data?.message || 'Failed to approve order';
-        throw err;
-      } finally {
-        this.loading = false;
       }
+
+      const [data, error] = await api.orders().confirm(orderId, comment);
+      this.error = error;
+
+      if (data) {
+        this.updateOrderStatus(orderId, data, 'CONFIRMED', comment);
+        this.loading = false;
+        return true;
+      }
+      
+      this.loading = false;
+      return false;
     },
 
     async rejectOrder(orderId, comment) {
       this.loading = true;
       this.error = null;
 
-      try {
-        // Get the order
-        const order = this.items.find(o => o.id === orderId);
-        if (!order) {
-          throw new Error('Order not found');
-        }
+      const [data, error] = await api.orders().cancel(orderId, comment);
+      this.error = error;
 
-        const response = await api.put(`/orders/${orderId}/cancel`, comment);
-
-        if (response.data) {
-          // Update local state
-          const index = this.items.findIndex(o => o.id === orderId);
-          if (index !== -1) {
-            this.items[index] = {
-              ...this.items[index],
-              ...response.data,
-              status: 'CANCELED',
-              comment: comment,
-              decisionTime: new Date().toISOString()
-            };
-          }
-
-          if (this.selectedOrder?.id === orderId) {
-            this.selectedOrder = {
-              ...this.selectedOrder,
-              ...response.data,
-              status: 'CANCELED',
-              comment: comment,
-              decisionTime: new Date().toISOString()
-            };
-          }
-
-          return true;
-        }
-        return false;
-      } catch (err) {
-        this.error = err.response?.data?.message || 'Failed to reject order';
-        throw err;
-      } finally {
+      if (data) {
+        this.updateOrderStatus(orderId, data, 'CANCELED', comment);
         this.loading = false;
+        return true;
       }
+
+      this.loading = false;
+      return false;
     },
 
     async deleteOrder(orderId) {
       this.loading = true;
       this.error = null;
 
-      try {
-        await api.delete(`/orders/${orderId}`);
-        this.items = this.items.filter(o => o.id !== orderId);
+      const [data, error] = await api.orders().delete(orderId);
+      this.error = error;
 
+      if (data) {
+        this.items = this.items.filter(o => o.id !== orderId);
         if (this.selectedOrder?.id === orderId) {
           this.selectedOrder = null;
         }
-        return true;
-      } catch (err) {
-        this.error = err.response?.data?.message || 'Failed to delete order';
-        throw err;
-      } finally {
         this.loading = false;
+        return true;
       }
+
+      this.loading = false;
+      return false;
     },
 
     setSearch(query) {
