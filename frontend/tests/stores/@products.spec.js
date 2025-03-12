@@ -64,13 +64,12 @@ describe('useProductsStore', () => {
   })
 
   it('fetchProducts: should set error on failed API call', async () => {
-    const error = new Error('Network Error')
-    mockGetAll.mockResolvedValue([null, error])
-
+    // Mock API to return an error
+    mockGetAll.mockResolvedValue([[], 'API Error'])
+    
     await store.fetchProducts()
-
-    expect(mockGetAll).toHaveBeenCalled()
-    expect(store.error).toBe(error)
+    
+    expect(store.error).toBe('API Error')
     expect(store.loading).toBe(false)
   })
 

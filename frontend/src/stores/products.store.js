@@ -27,9 +27,7 @@ export const useProductsStore = defineStore('products', {
     actions: {
         async fetchProducts() {
             this.loading = true;
-            const [newItems, error] = await api.products().getAll();
-            this.items = [...newItems]; // Tím změníš referenci
-            this.error = error;
+            [this.items, this.error] = await api.products().getAll();
             this.loading = false;
             return this.items;
         },
