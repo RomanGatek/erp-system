@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.observer;
+package cz.syntaxbro.live.observer;
 
 import lombok.Setter;
 

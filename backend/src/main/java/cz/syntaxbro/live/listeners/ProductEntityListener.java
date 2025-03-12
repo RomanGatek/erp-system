@@ -1,8 +1,8 @@
-package cz.syntaxbro.erpsystem.observables;
+package cz.syntaxbro.live.listeners;
 
 import cz.syntaxbro.erpsystem.models.Product;
-import cz.syntaxbro.erpsystem.observer.EntityListener;
-import cz.syntaxbro.erpsystem.observer.EntityNotifier;
+import cz.syntaxbro.live.observer.EntityListener;
+import cz.syntaxbro.live.observer.EntityNotifier;
 import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -22,17 +22,20 @@ public class ProductEntityListener extends EntityListener<Product, EntityNotifie
     @PostRemove
     @Transactional
     public void afterDelete(Product entity) {
+        if (this.notifier == null) return;
         this.notifier.notifyEntityDeleted(entity);
     }
     @PostPersist
     @Transactional
     public void afterCreate(Product entity) {
-       this.notifier.notifyEntityCreated(entity);
+        if (this.notifier == null) return;
+        this.notifier.notifyEntityCreated(entity);
     }
 
     @PostUpdate
     @Transactional
     public void afterUpdate(Product entity) {
+        if (this.notifier == null) return;
         this.notifier.notifyEntityUpdated(entity);
     }
 }

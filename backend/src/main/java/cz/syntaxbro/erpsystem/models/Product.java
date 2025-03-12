@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import cz.syntaxbro.erpsystem.observables.ProductEntityListener;
+import cz.syntaxbro.live.listeners.ProductEntityListener;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

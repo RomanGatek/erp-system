@@ -14,6 +14,7 @@ import {
   SearchSelect,
 } from '@/components'
 import { useErrorStore } from '@/stores/errors.store.js'
+import { useSocketStore } from '@/stores/socket.store.js'
 
 defineOptions({
   name: 'ProductsView',
@@ -152,6 +153,16 @@ watch(
     }
   },
 )
+
+import { watchEffect, computed } from 'vue'
+
+const forceRerender = ref(0)
+
+watchEffect(async () => {
+  await productsStore.fetchProducts()
+  forceRerender.value++ // Tímto donutíš Vue přegenerovat DataTable
+})
+const products = computed(() => [...productsStore.paginateItems])
 </script>
 
 <template>
@@ -192,18 +203,19 @@ watch(
       </div>
 
       <!-- Empty state -->
-      <EmptyState v-if="!productsStore.paginateItems.length" message="No products to display" />
+      <EmptyState v-if="!products.length" message="No products to display" />
 
       <!-- Data table -->
       <template v-else>
         <div class="flex-1 overflow-hidden">
           <DataTable
             :headers="tableHeaders"
-            :items="productsStore.paginateItems"
+            :items="products"
             :sort-by="productsStore.setSorting"
             :sorting="productsStore.sorting"
             :on-edit="openEditModal"
             :on-delete="deleteProduct"
+            :key="forceRerender"
           >
             <template #row="{ item }">
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">

@@ -1,6 +1,7 @@
 <script>
 import CustomNavbar from '@/components/CustomNavbar.vue'
 import CustomFooter from '@/components/CustomFooter.vue'
+import WebSocketStatus from '@/components/WebSocketStatus.vue'
 import { computed } from 'vue'
 import { useMeStore } from './stores/me.store.js'
 import { NotificationWrapper } from '@/components'
@@ -29,6 +30,7 @@ export default {
     <!-- Ambientní pozadí -->
     <div class="fixed inset-0 bg-gradient-pattern opacity-5"></div>
     <div class="fixed inset-0 bg-mesh opacity-10"></div>
+
 
     <!-- Hlavní obsah -->
     <div class="relative z-10 flex flex-col min-h-screen">

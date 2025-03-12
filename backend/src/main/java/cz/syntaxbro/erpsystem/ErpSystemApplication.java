@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import org.slf4j.Logger;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"cz.syntaxbro"})
 public class ErpSystemApplication {
 
     public static void main(String[] args) {

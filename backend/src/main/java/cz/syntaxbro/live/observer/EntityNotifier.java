@@ -1,9 +1,7 @@
-package cz.syntaxbro.erpsystem.observer;
+package cz.syntaxbro.live.observer;
 
 import cz.syntaxbro.erpsystem.constants.ObserveActions;
-import org.springframework.stereotype.Component;
 
-@Component
 public class EntityNotifier<T> extends EntityObservable<T> {
     
     public void notifyEntityCreated(T entity) {
