@@ -109,30 +109,11 @@ export const useSocketStore = defineStore('socket', () => {
   }
 
   /**
-   * Handler pro příchozí WebSocket zprávy
-   * @param {MessageEvent} event - WebSocket onmessage event
-   * 
-   * Očekávaný formát zprávy ze serveru:
-   * {
-   *   type: string,
-   *   message: string,
-   *   timestamp: string,
-   *   clientId: string,
-   *   serverSessionId: string
-   * }
+   * Parses the incoming WebSocket message data
+   * @param {any} rawData - Raw data from WebSocket message
+   * @returns {Object} Parsed message data
    */
-  async function SOCKET_ONMESSAGE(event) {
-    
-    let rawData = null;
-    
-    if (event && event.data !== undefined) {
-      rawData = event.data;
-    } else {
-      rawData = event;
-    }
-    
-    message.value = rawData;
-    
+  function parseMessageData(rawData) {
     try {
       let parsedData;
       
@@ -152,79 +133,123 @@ export const useSocketStore = defineStore('socket', () => {
         parsedData.timestamp = new Date();
       }
       
+      return parsedData;
+    } catch (error) {
+      console.error('Failed to parse WebSocket message:', error);
+      return { 
+        type: 'warning',
+        message: typeof rawData === 'string' ? rawData : 'Received non-text message',
+        timestamp: new Date()
+      };
+    }
+  }
+
+  /**
+   * Processes the parsed WebSocket message and updates relevant stores
+   * @param {Object} parsedData - Parsed message data
+   */
+  async function processMessage(parsedData) {
+    try {
       if (parsedData.type === 'update') {
-          try {
-            const json = JSON.parse(parsedData.message);
-            console.log('🛜 Received update:', json);
-            
-            // Generate a unique update ID
-            const baseUpdateId = `update-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-            
-            // Process the update based on entity type
-            if (json.entityType) {
-              // Při aktualizaci produktu aktualizujeme všechny související části
-              if (json.entityType === 'products' || json.entityType === 'product') {
-                // Aktualizace produktů
-                await $products.updateSelf({ 
-                  updateId: `${baseUpdateId}-products`, 
-                  entity: json.entityType 
-                });
-                
-                // Aktualizace objednávek, protože obsahují produkty
-                // Přidáme zpoždění, aby se nejprve aktualizovaly produkty
-                setTimeout(async () => {
-                  await $workflow.updateSelf({
-                    updateId: `${baseUpdateId}-workflow`,
-                    entity: 'orders' // Použijeme 'orders' jako typ entity pro workflow
-                  });
-                }, 500);
-                
-                $notifier.info(
-                  `System updated`, 
-                  `Products and related data have been updated via WebSocket`
-                );
-              } 
-              // Pokud přijde specifická aktualizace pro objednávky
-              else if (json.entityType === 'orders' || json.entityType === 'order' || json.entityType === 'workflow') {
+        try {
+          const json = JSON.parse(parsedData.message);
+          console.log('🛜 Received update:', json);
+          
+          // Generate a unique update ID
+          const baseUpdateId = `update-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          
+          // Process the update based on entity type
+          if (json.entityType) {
+            // Při aktualizaci produktu aktualizujeme všechny související části
+            if (json.entityType === 'products' || json.entityType === 'product') {
+              // Aktualizace produktů
+              await $products.updateSelf({ 
+                updateId: `${baseUpdateId}-products`, 
+                entity: json.entityType 
+              });
+              
+              // Aktualizace objednávek, protože obsahují produkty
+              // Přidáme zpoždění, aby se nejprve aktualizovaly produkty
+              setTimeout(async () => {
                 await $workflow.updateSelf({
                   updateId: `${baseUpdateId}-workflow`,
-                  entity: json.entityType
+                  entity: 'orders' // Použijeme 'orders' jako typ entity pro workflow
                 });
-                
-                $notifier.info(
-                  `Orders updated`, 
-                  `Orders have been updated via WebSocket`
-                );
-              }
-              // Pokud přijde jakákoliv jiná aktualizace, zalogujeme ji
-              else {
-                console.log(`Received update for entity type: ${json.entityType}`);
-                $notifier.info(
-                  `Update received`,
-                  `Received update for ${json.entityType}`
-                );
-              }
+              }, 500);
+              
+              $notifier.info(
+                `System updated`, 
+                `Products and related data have been updated via WebSocket`
+              );
+            } 
+            // Pokud přijde specifická aktualizace pro objednávky
+            else if (json.entityType === 'orders' || json.entityType === 'order' || json.entityType === 'workflow') {
+              await $workflow.updateSelf({
+                updateId: `${baseUpdateId}-workflow`,
+                entity: json.entityType
+              });
+              
+              $notifier.info(
+                `Orders updated`, 
+                `Orders have been updated via WebSocket`
+              );
             }
-          } catch (error) {
-            console.error('Error processing update message:', error);
-            $notifier.error('Update Error', 'Failed to process update message');
+            // Pokud přijde jakákoliv jiná aktualizace, zalogujeme ji
+            else {
+              console.log(`Received update for entity type: ${json.entityType}`);
+              $notifier.info(
+                `Update received`,
+                `Received update for ${json.entityType}`
+              );
+            }
           }
+        } catch (error) {
+          console.error('Error processing update message:', error);
+          $notifier.error('Update Error', 'Failed to process update message');
+        }
       }
 
+      // Add the message to notifications
       notifications.value.unshift({
         ...parsedData,
         timestamp: parsedData.timestamp ? new Date(parsedData.timestamp) : new Date()
       });
-      
     } catch (error) {
       console.error('Failed to process WebSocket message:', error);
-      
       notifications.value.unshift({
-        type: 'warning',
-        message: typeof rawData === 'string' ? rawData : 'Received non-text message',
+        type: 'error',
+        message: 'Failed to process message: ' + error.message,
         timestamp: new Date()
       });
     }
+  }
+
+  /**
+   * Handler pro příchozí WebSocket zprávy
+   * @param {MessageEvent} event - WebSocket onmessage event
+   * 
+   * Očekávaný formát zprávy ze serveru:
+   * {
+   *   type: string,
+   *   message: string,
+   *   timestamp: string,
+   *   clientId: string,
+   *   serverSessionId: string
+   * }
+   */
+  async function SOCKET_ONMESSAGE(event) {
+    let rawData = null;
+    
+    if (event && event.data !== undefined) {
+      rawData = event.data;
+    } else {
+      rawData = event;
+    }
+    
+    message.value = rawData;
+    
+    const parsedData = parseMessageData(rawData);
+    await processMessage(parsedData);
   }
 
   /**
@@ -338,6 +363,8 @@ export const useSocketStore = defineStore('socket', () => {
     SOCKET_ONCLOSE,
     SOCKET_ONERROR,
     SOCKET_ONMESSAGE,
+    parseMessageData,
+    processMessage,
     SOCKET_RECONNECT,
     SOCKET_RECONNECT_ERROR,
     sendMessage,
