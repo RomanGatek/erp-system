@@ -1,16 +1,26 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useMeStore } from '@/stores/me.store.js'
-import { api } from '@/services/api'
+
+// Mock API functions
+const mockCurrent = vi.fn()
+const mockUpdateProfile = vi.fn()
+const mockUpdatePassword = vi.fn()
+const mockUpdateAvatar = vi.fn()
 
 // Mock the API service
-vi.mock('@/services/api', () => ({
-  api: {
-    get: vi.fn(),
-    put: vi.fn(),
-    post: vi.fn()
+vi.mock('@/services/api', () => {
+  return {
+    default: {
+      me: () => ({
+        current: mockCurrent,
+        updateProfile: mockUpdateProfile,
+        updatePassword: mockUpdatePassword,
+        updateAvatar: mockUpdateAvatar
+      })
+    }
   }
-}))
+})
 
 describe('useMeStore', () => {
   let store
@@ -18,31 +28,35 @@ describe('useMeStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     store = useMeStore()
+    
     // Reset store state
     store.user = null
     store.error = null
+    
     // Clear localStorage
     localStorage.clear()
+    
     // Reset all mock function calls
     vi.clearAllMocks()
   })
 
   it('fetchMe: should set user on success', async () => {
     const mockUser = { id: 1, name: 'Test User' }
-    api.get.mockResolvedValue({ data: mockUser })
+    mockCurrent.mockResolvedValue([mockUser, null])
 
     await store.fetchMe()
-    expect(api.get).toHaveBeenCalledWith('/me')
+    expect(mockCurrent).toHaveBeenCalled()
     expect(store.user).toEqual(mockUser)
     expect(store.error).toBeNull()
   })
 
   it('fetchMe: should set error on failure', async () => {
     const mockError = new Error('Failed to fetch')
-    api.get.mockRejectedValue(mockError)
+    mockCurrent.mockResolvedValue([null, mockError])
 
     await store.fetchMe()
-    expect(api.get).toHaveBeenCalledWith('/me')
+    expect(mockCurrent).toHaveBeenCalled()
+    expect(store.user).toBeNull()
     expect(store.error).toBe(mockError)
   })
 
@@ -68,39 +82,35 @@ describe('useMeStore', () => {
   it('updateProfile: should update user and return updated data', async () => {
     const profileData = { name: 'Updated Name' }
     const mockResponseData = { id: 1, name: 'Updated Name' }
-    api.put.mockResolvedValue({ data: mockResponseData })
+    mockUpdateProfile.mockResolvedValue([mockResponseData, null])
 
     const result = await store.updateProfile(profileData)
-    expect(api.put).toHaveBeenCalledWith('/me', profileData)
+    expect(mockUpdateProfile).toHaveBeenCalledWith(profileData)
     expect(store.user).toEqual(mockResponseData)
     expect(result).toEqual(mockResponseData)
   })
 
-  it('updatePassword: should update user with new password while retaining other properties', async () => {
+  it('updatePassword: should update user password and return updated data', async () => {
     // Set initial user data
     store.user = { id: 1, name: 'Test User', email: 'test@example.com' }
     const newPassword = 'newpassword'
-    const mockResponseData = 'hashed_new_password'
-    api.post.mockResolvedValue({ data: mockResponseData })
+    const mockResponseData = { id: 1, name: 'Test User', email: 'test@example.com' }
+    mockUpdatePassword.mockResolvedValue([mockResponseData, null])
 
-    await store.updatePassword(newPassword)
-    expect(api.post).toHaveBeenCalledWith('/me/change-password', { password: newPassword })
-    expect(store.user).toEqual({
-      id: 1,
-      name: 'Test User',
-      email: 'test@example.com',
-      password: mockResponseData
-    })
+    const result = await store.updatePassword(newPassword)
+    expect(mockUpdatePassword).toHaveBeenCalledWith(newPassword)
+    expect(store.user).toEqual(mockResponseData)
+    expect(result).toEqual(mockResponseData)
   })
 
   it('updateAvatar: should update user with new avatar data and return it', async () => {
     const formData = new FormData()
     formData.append('avatar', 'dummy_avatar')
     const mockResponseData = { id: 1, name: 'Test User', avatar: 'new_avatar_url' }
-    api.post.mockResolvedValue({ data: mockResponseData })
+    mockUpdateAvatar.mockResolvedValue([mockResponseData, null])
 
     const result = await store.updateAvatar(formData)
-    expect(api.post).toHaveBeenCalledWith('/me/avatar', formData)
+    expect(mockUpdateAvatar).toHaveBeenCalledWith(formData)
     expect(store.user).toEqual(mockResponseData)
     expect(result).toEqual(mockResponseData)
   })

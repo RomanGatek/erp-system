@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
 import App from '@/App.vue';
 
 // Create a persistent mock for the me store
@@ -7,12 +8,16 @@ const meStoreMock = {
   user: null,
 };
 
-vi.mock('@/stores/me', () => ({
+vi.mock('@/stores/me.store.js', () => ({
   useMeStore: () => meStoreMock,
 }));
 
 describe('App.vue', () => {
   beforeEach(() => {
+    // Create and set active pinia for each test
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    
     // Reset the user to unauthenticated state before each test
     meStoreMock.user = null;
   });
@@ -20,6 +25,7 @@ describe('App.vue', () => {
   it('should always render NotificationWrapper and CustomFooter', () => {
     const wrapper = mount(App, {
       global: {
+        plugins: [createPinia()],
         stubs: ['router-view', 'CustomNavbar', 'CustomFooter', 'NotificationWrapper']
       }
     });
@@ -37,6 +43,7 @@ describe('App.vue', () => {
 
     const wrapper = mount(App, {
       global: {
+        plugins: [createPinia()],
         stubs: ['router-view', 'CustomNavbar', 'CustomFooter', 'NotificationWrapper']
       }
     });
@@ -50,6 +57,7 @@ describe('App.vue', () => {
 
     const wrapper = mount(App, {
       global: {
+        plugins: [createPinia()],
         stubs: ['router-view', 'CustomNavbar', 'CustomFooter', 'NotificationWrapper']
       }
     });

@@ -1,4 +1,4 @@
-import { $reactive } from '@/utils'; // adjust the path as needed
+import { $reactive } from '@/utils/'; // adjust the path as needed
 import { describe, it, expect } from 'vitest';
 
 describe('$reactive helper', () => {

@@ -33,6 +33,7 @@ export const useInventoryStore = defineStore('inventory', {
       [this.items, this.error] = await api.inventory().add(Item)
     },
     async updateItem(ItemData) {
+      var _;
       [_, this.error] = await api.inventory().update(ItemData)
 
       const index = this.items.findIndex(p => p.id === ItemData.id)
@@ -46,6 +47,7 @@ export const useInventoryStore = defineStore('inventory', {
       }
     },
     async deleteItem(itemId) {
+      var _;
       [_, this.error] = await api.inventory().delete(itemId)
       await this.fetchItems()
     },

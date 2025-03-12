@@ -60,7 +60,8 @@ export const useUserStore = defineStore('user', {
     },
     async addUser(user) {
       const payload = { ...user, roles: user.roles.map(role => role.name.replace('ROLE_', '')) }
-      [_, this.this.error] = await api.users().add(payload)
+      const [_, error] = await api.users().add(payload)
+      this.error = error
       await this.fetchUsers()
     },
     async updateUser(user) {
@@ -73,6 +74,7 @@ export const useUserStore = defineStore('user', {
         active: user.active,
         password: user.password
       }
+      var _;
       [_, this.error] = await api.users().update(user.id, payload)
       if (!this.error) {
         await this.fetchUsers()
@@ -80,6 +82,7 @@ export const useUserStore = defineStore('user', {
       }
     },
     async deleteUser(userId) {
+      var _;
       [_, this.error] = await api.users().delete(userId)
       await this.fetchUsers()
     },

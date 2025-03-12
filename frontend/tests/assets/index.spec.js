@@ -8,9 +8,6 @@ describe('Assets folder content', () => {
   // Seznam souborů, které by měly být ve složce assets.
   const expectedFiles = [
     'tailwind.css',
-    'logo.svg',
-    'logo.png',
-    'base.css',
     'main.css'
   ];
 

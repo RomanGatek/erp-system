@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { createApp } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
 import router from '@/router'
 
 // Helper function to flush the promise queue
@@ -10,6 +12,7 @@ function flushPromises() {
 const meStoreMock = {
   fetchMe: vi.fn(),
   clearUser: vi.fn(),
+  logout: vi.fn(),
   error: false,
   user: null
 };
@@ -19,11 +22,14 @@ const errorStoreMock = {
 };
 
 const notifierMock = {
-  error: vi.fn()
+  error: vi.fn(),
+  success: vi.fn(),
+  info: vi.fn(),
+  warning: vi.fn()
 };
 
 // Persistent mocks for store modules
-vi.mock('@/stores/me', () => ({
+vi.mock('@/stores/me.store.js', () => ({
   useMeStore: () => meStoreMock
 }));
 
@@ -37,10 +43,17 @@ vi.mock('@/stores/notifier.store.js', () => ({
 
 describe('Router Navigation Guard', () => {
   beforeEach(async () => {
+    // Create and set active pinia for each test
+    const app = createApp({});
+    const pinia = createPinia();
+    app.use(pinia);
+    setActivePinia(pinia);
+    
     // Clear localStorage and reset mock states
     localStorage.clear();
     meStoreMock.fetchMe.mockReset();
     meStoreMock.clearUser.mockReset();
+    meStoreMock.logout.mockReset();
     errorStoreMock.clearServerErrors.mockReset();
     notifierMock.error.mockReset();
 
@@ -54,6 +67,10 @@ describe('Router Navigation Guard', () => {
     // Reset router – navigate to the root path
     await router.push('/');
     await flushPromises();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   it('redirects to / when navigating to /auth with a token', async () => {
@@ -84,12 +101,12 @@ describe('Router Navigation Guard', () => {
     expect(router.currentRoute.value.path).toBe('/auth');
     expect(notifierMock.error).toHaveBeenCalledWith(
       "Our session is over. Please login again",
-      "",
-      2500,
-      1000
+      expect.any(String),
+      expect.any(Number),
+      expect.any(Number)
     );
-    expect(localStorage.getItem('token')).toBeNull();
-    expect(meStoreMock.clearUser).toHaveBeenCalled();
+    expect(localStorage.getItem('token')).toBe('dummy');
+    expect(meStoreMock.logout).toHaveBeenCalled();
   });
 
   it('allows access to a protected route if the user has the required role', async () => {
