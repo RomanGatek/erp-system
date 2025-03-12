@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-// Configure MockitoExtension to use LENIENT strictness to avoid stubbing argument mismatch issues
 @ExtendWith(MockitoExtension.class)
 class ProductServiceImplTest {
 
