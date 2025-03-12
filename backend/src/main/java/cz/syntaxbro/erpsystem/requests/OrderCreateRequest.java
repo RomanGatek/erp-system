@@ -21,6 +21,7 @@ public class OrderCreateRequest {
     List<ProductRequest> products;
 
     @Data
+    @Builder
     public static class ProductRequest {
         @Min(value = 1, message = "Id must be a number")
         @NotNull(message = "Id cannot be null")
