@@ -326,6 +326,35 @@ public class DataLoader implements CommandLineRunner {
                 order.setDecisionTime(null);
             }
 
+            // Save the order first
+            order = orderRepository.save(order);
+
+            //List<OrderItem> orderItems = new ArrayList<>();
+
+            // Now create and save order items
+            for (int x = 0; x < 5; x++) {
+                InventoryItem inventoryItem = allItems.get(random.nextInt(allItems.size()));
+                OrderItem orderItem = OrderItem.builder()
+                        .order(order)  // Use the saved order
+                        .inventoryItem(inventoryItem)
+                        .quantity(random.nextInt(10) + 1)
+                        .build();
+
+                OrderItem finalOrderItem = orderItem;
+                boolean exists = orderItems.stream()
+                        .anyMatch(
+                                orderItemFromList -> orderItemFromList.getInventoryItem()
+                                        .equals(finalOrderItem.getInventoryItem())
+                        );
+                if (exists) break;
+
+                orderItem = orderItemRepository.save(orderItem);
+
+                orderItems.add(orderItem);
+//                order.getOrderItems().add(orderItem);
+            }
+            order.setOrderItems(orderItems);
+            // Update the order with its items
             orderRepository.save(order);
         });
     }
