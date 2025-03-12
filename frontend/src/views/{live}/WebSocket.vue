@@ -89,7 +89,7 @@
 <script setup>
 import { useSocketStore } from '@/stores/socket.store'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, watch, ref, defineComponent, computed } from 'vue'
+import { onMounted, onUnmounted, ref, defineComponent, computed } from 'vue'
 
 // Komponenta pro zobrazení JSON stromu
 const JsonTree = defineComponent({

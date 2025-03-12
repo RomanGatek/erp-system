@@ -4,26 +4,26 @@
       <span class="status-dot" :class="{ 'connected': isConnected, 'disconnected': !isConnected }"></span>
       WebSocket status: {{ isConnected ? 'Connected' : 'Disconnected' }}
     </div>
-    
+
     <div class="actions">
-      <button 
-        v-if="!isConnected" 
-        @click="reconnect" 
+      <button
+        v-if="!isConnected"
+        @click="reconnect"
         class="px-2 py-1 bg-blue-500 text-white rounded text-xs"
       >
         Reconnect
       </button>
-      
-      <button 
-        v-if="isConnected" 
-        @click="sendTestMessage" 
+
+      <button
+        v-if="isConnected"
+        @click="sendTestMessage"
         class="px-2 py-1 bg-green-500 text-white rounded text-xs ml-2"
       >
         Test Message
       </button>
     </div>
   </div>
-  
+
   <div v-if="notifications.length > 0" class="notifications-container">
     <div class="notification-count">
       {{ notifications.length }} {{ notifications.length === 1 ? 'notification' : 'notifications' }}
@@ -41,7 +41,7 @@
 <script setup>
 import { useSocketStore } from '@/stores/socket.store'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, watch, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 // Použití Pinia store s reaktivními referencemi
 const socketStore = useSocketStore()
@@ -59,7 +59,7 @@ const formatTime = (timestamp) => {
 const formatNotification = (notification) => {
   if (typeof notification === 'string') return notification
   if (notification.message) return notification.message
-  
+
   // Pokud nemá message, vrátíme celý objekt jako JSON
   const { timestamp, ...rest } = notification
   return JSON.stringify(rest)
@@ -103,7 +103,7 @@ onMounted(() => {
     // Zkontrolujeme stav připojení
     const connectionStatus = socketStore.checkConnection()
     console.log('🛜 Initial connection check:', connectionStatus)
-    
+
     // Pokud nejsme připojeni a je povoleno automatické připojení, zkusíme se připojit
     if (!connectionStatus && autoReconnectEnabled.value) {
       console.log('🛜 Not connected, attempting to reconnect...')
@@ -196,4 +196,4 @@ onUnmounted(() => {
   margin-top: 4px;
   word-break: break-all;
 }
-</style> 
+</style>
