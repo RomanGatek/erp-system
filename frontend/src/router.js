@@ -13,6 +13,7 @@ import { useErrorStore } from '@/stores/errors.store.js'
 import Workflow from '@/views/{pages}/Workflow.vue'
 import Orders from '@/views/{pages}/Orders.vue'
 import Categories from './views/{pages}/Categories.vue'
+import ProductCatalog from './views/{user}/ProductCatalog.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -24,7 +25,9 @@ const routes = [
   { path: '/workflow', component: Workflow, meta: { requiresAuth: true, role: "ADMIN" } },
   { path: '/orders', component: Orders, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/products/categories', component: Categories, meta: { requiresAuth: true, role: "MANAGER" } },
+  { path: '/catalog', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
   { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
+
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 ]
 
