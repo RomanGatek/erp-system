@@ -1,8 +1,12 @@
 package cz.syntaxbro.erpsystem.services;
 
+import cz.syntaxbro.erpsystem.exceptions.ResourceNotFoundException;
 import cz.syntaxbro.erpsystem.models.*;
+import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
+import cz.syntaxbro.erpsystem.repositories.OrderItemRepository;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
@@ -19,13 +23,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -40,6 +42,15 @@ public class OrderServiceTest {
 
     @Mock
     private InventoryService inventoryService;
+
+    @Mock
+    private InventoryRepository inventoryRepository;
+
+    @Mock
+    OrderItemService orderItemService;
+
+    @Mock
+    OrderItemRepository orderItemRepository;
     
     @Mock
     private SecurityContext securityContext;
@@ -179,6 +190,19 @@ public class OrderServiceTest {
     }
 
     @Test
+    void testCancelOrder_StatusNotPendingNotSuccessfully(){
+        //Arrert
+        this.testOrder.setStatus(Order.Status.CONFIRMED);
+        long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(this.testOrder));
+        //Act
+        IllegalStateException exceptionResult = assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(id, "bud order"));
+        //Assert
+        assertEquals("Only pending orders can be canceled", exceptionResult.getMessage());
+        verify(orderService, times(1)).cancelOrder(id, "bud order");
+    }
+
+    @Test
     void testConfirmOrder() {
         Long orderId = 1L;
         String comment = "Confirmation comment";
@@ -199,6 +223,18 @@ public class OrderServiceTest {
         verify(orderRepository, times(1)).findById(orderId);
         // Adjust verification to match actual implementation
         verify(orderRepository, times(2)).save(any(Order.class));
+    }
+    @Test
+    void confirmOrder_StatusNotPendingNotSuccessfully() {
+        //Arrest
+        this.testOrder.setStatus(Order.Status.CONFIRMED);
+        long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(this.testOrder));
+        //Act
+        IllegalStateException exceptionResult = assertThrows(IllegalStateException.class, () -> orderService.confirmOrder(id, "bud order"));
+        //Assert
+        assertEquals("Only pending orders can be confirmed", exceptionResult.getMessage());
+        verify(orderService, times(1)).confirmOrder(id, "bud order");
     }
 
     @Test
@@ -327,5 +363,231 @@ public class OrderServiceTest {
         verify(securityContext).getAuthentication();
         verify(authentication).getPrincipal();
         verify(customUserDetails).getUser();
+    }
+
+    @Test
+    void testDeleteOrder_DeleteSuccessfuly(){
+        //Arrest
+        long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(testOrder));
+        //Act
+        orderService.deleteOrder(id);
+        //Assert
+        assertEquals(0, orderRepository.findAll().size());
+        verify(orderRepository, times(1)).delete(testOrder);
+    }
+
+    @Test
+    void testAddWorkflowComment_SuccessfullyAddCommand(){
+        //Arrest
+        long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(testOrder));
+        //Act
+        orderService.addWorkflowComment(id, "workflow comment");
+        //Assert
+        assertEquals("workflow comment", this.testOrder.getComment());
+        verify(orderService, times(1)).addWorkflowComment(id, "workflow comment");
+    }
+
+    @Test
+    void testCreatedOrder_successfulWithOrderTypePURCHASE(){
+        long productId = 1L;
+        long inventoryItemId = 1L;
+        long orderId = 1L;
+
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .product(this.testProduct)
+                .build();
+
+        Order order = Order.builder()
+                .orderTime(LocalDateTime.now())
+                .approvedBy(this.testUser)
+                .status(Order.Status.PENDING)
+                .build();
+
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        OrderCreateRequest.ProductRequest productRequest = OrderCreateRequest.ProductRequest.builder()
+                .id(productId)
+                .quantity(10)
+                .build();
+
+        OrderCreateRequest orderRequest = OrderCreateRequest.builder()
+                .orderType(Order.OrderType.PURCHASE)
+                .comment("request comment")
+                .products(List.of(productRequest))
+                .build();
+
+        OrderItem orderItem = OrderItem.builder()
+                .inventoryItem(inventoryItem)
+                .order(order)
+                .build();
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        when(inventoryRepository.findByProduct(this.testProduct)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryService.findItemByProductForOrder(this.testProduct)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryRepository.save(inventoryItem)).thenReturn(inventoryItem);
+        when(inventoryRepository.findById(inventoryItemId)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryService.addItem(inventoryItem)).thenReturn(inventoryItem);
+        when(orderItemRepository.save(orderItem)).thenReturn(orderItem);
+        when(orderRepository.save(order)).thenReturn(order);
+
+        System.out.println(order);
+        System.out.println(orderRequest);
+        System.out.println(productRepository.findById(productId));
+        System.out.println(orderRepository.findById(orderId));
+
+        //Act
+        Order result = orderService.createdOrder(orderRequest);
+        //Assert
+        assertNotNull(result);
+        assertEquals(Order.OrderType.PURCHASE, result.getOrderType());
+        assertEquals("request comment", result.getComment());
+        assertEquals(productRequest.getQuantity() * this.testProduct.getBuyoutPrice(), result.getCost());
+    }
+
+    @Test
+    void testCreatedOrder_successfulWithOrderTypeSELL(){
+        long productId = 1L;
+        long inventoryItemId = 1L;
+        long orderId = 1L;
+
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .product(this.testProduct)
+                .build();
+
+        Order order = Order.builder()
+                .orderTime(LocalDateTime.now())
+                .approvedBy(this.testUser)
+                .status(Order.Status.PENDING)
+                .build();
+
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        OrderCreateRequest.ProductRequest productRequest = OrderCreateRequest.ProductRequest.builder()
+                .id(productId)
+                .quantity(10)
+                .build();
+
+        OrderCreateRequest orderRequest = OrderCreateRequest.builder()
+                .orderType(Order.OrderType.SELL)
+                .comment("request comment")
+                .products(List.of(productRequest))
+                .build();
+
+        OrderItem orderItem = OrderItem.builder()
+                .inventoryItem(inventoryItem)
+                .order(order)
+                .build();
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        when(inventoryRepository.findByProduct(this.testProduct)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryService.findItemByProductForOrder(this.testProduct)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryRepository.save(inventoryItem)).thenReturn(inventoryItem);
+        when(inventoryRepository.findById(inventoryItemId)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryService.addItem(inventoryItem)).thenReturn(inventoryItem);
+        when(orderItemRepository.save(orderItem)).thenReturn(orderItem);
+        when(orderRepository.save(order)).thenReturn(order);
+
+        System.out.println(order);
+        System.out.println(orderRequest);
+        System.out.println(productRepository.findById(productId));
+        System.out.println(orderRepository.findById(orderId));
+
+        //Act
+        Order result = orderService.createdOrder(orderRequest);
+        //Assert
+        assertNotNull(result);
+        assertEquals(Order.OrderType.SELL, result.getOrderType());
+        assertEquals("request comment", result.getComment());
+        assertEquals(productRequest.getQuantity() * this.testProduct.getPurchasePrice(), result.getCost());
+
+
+    }
+
+    @Test
+    void testCreatedOrder_successfulWithEmptyInventoryItem(){
+        long productId = 1L;
+        long inventoryItemId = 1L;
+        long orderId = 1L;
+
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .product(this.testProduct)
+                .build();
+
+        Order order = Order.builder()
+                .orderTime(LocalDateTime.now())
+                .approvedBy(this.testUser)
+                .status(Order.Status.PENDING)
+                .build();
+
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        OrderCreateRequest.ProductRequest productRequest = OrderCreateRequest.ProductRequest.builder()
+                .id(productId)
+                .quantity(10)
+                .build();
+
+        OrderCreateRequest orderRequest = OrderCreateRequest.builder()
+                .orderType(Order.OrderType.SELL)
+                .comment("request comment")
+                .products(List.of(productRequest))
+                .build();
+
+        OrderItem orderItem = OrderItem.builder()
+                .inventoryItem(inventoryItem)
+                .order(order)
+                .build();
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        when(inventoryRepository.findByProduct(this.testProduct)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryService.findItemByProductForOrder(this.testProduct)).thenReturn(Optional.of(inventoryItem));
+        when(inventoryRepository.save(inventoryItem)).thenReturn(inventoryItem);
+        when(inventoryRepository.findById(inventoryItemId)).thenReturn(Optional.empty());
+        when(inventoryService.addItem(inventoryItem)).thenReturn(inventoryItem);
+        when(orderItemRepository.save(orderItem)).thenReturn(orderItem);
+        when(orderRepository.save(order)).thenReturn(order);
+
+        System.out.println(order);
+        System.out.println(orderRequest);
+        System.out.println(productRepository.findById(productId));
+        System.out.println(orderRepository.findById(orderId));
+
+        //Act
+        Order result = orderService.createdOrder(orderRequest);
+        //Assert
+        assertNotNull(result);
+        assertEquals(Order.OrderType.SELL, result.getOrderType());
+        assertEquals("request comment", result.getComment());
+        assertEquals(0, inventoryItem.getStockedAmount());
+    }
+
+    @Test
+    void testCreatedOrder_WithNotFoundProduct() {
+        long productId = 1L;
+
+        // Arrange: Product is not found in the repository
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // Set up request data
+        OrderCreateRequest.ProductRequest productRequest = OrderCreateRequest.ProductRequest.builder()
+                .id(productId)
+                .quantity(10)
+                .build();
+
+        OrderCreateRequest orderRequest = OrderCreateRequest.builder()
+                .orderType(Order.OrderType.PURCHASE)
+                .comment("request comment")
+                .products(List.of(productRequest))
+                .build();
+
+        // Act & Assert: Exception should be thrown when the product is not found
+        ResourceNotFoundException resultException = assertThrows(ResourceNotFoundException.class, () -> orderService.createdOrder(orderRequest));
+
+        // Assert: The exception message should match
+        assertEquals("Product with id " + productId + " not found", resultException.getMessage());
     }
 }
