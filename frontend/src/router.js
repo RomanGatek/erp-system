@@ -13,6 +13,7 @@ import { useErrorStore } from '@/stores/errors.store.js'
 import Workflow from '@/views/{pages}/Workflow.vue'
 import Orders from '@/views/{pages}/Orders.vue'
 import Categories from './views/{pages}/Categories.vue'
+import WebSocket from './views/{live}/WebSocket.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -25,6 +26,7 @@ const routes = [
   { path: '/orders', component: Orders, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/products/categories', component: Categories, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
+  { path: '/socket', name: 'Test', component: WebSocket, role: "USER" },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 ]
 

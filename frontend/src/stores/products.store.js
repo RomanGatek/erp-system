@@ -14,6 +14,7 @@ export const useProductsStore = defineStore('products', {
         pagination: { currentPage: 1, perPage: 10 },
         sorting: setupSort('name'),
         searchQuery: '',
+        pendingUpdates: [],
     }),
     getters: {
         filtered: (state) => filter(state, (product) => {
@@ -28,6 +29,7 @@ export const useProductsStore = defineStore('products', {
             this.loading = true;
             [this.items, this.error] = await api.products().getAll();
             this.loading = false;
+            return this.items;
         },
         async addProduct(product) {
             var _;
@@ -59,6 +61,21 @@ export const useProductsStore = defineStore('products', {
         },
         setPage(page) {
             this.pagination.currentPage = page;
+        },
+        async updateSelf({ updateId, entity }) {
+            // Only add the update if it's not already in the pending updates
+            if (!this.pendingUpdates.some(update => update.updateId === updateId)) {
+                // Create a new array to ensure reactivity
+                this.pendingUpdates = [...this.pendingUpdates, { updateId, entity, timestamp: Date.now() }];
+                // If the entity type matches products, refresh the data
+                if (entity === 'products' || entity === 'product') {
+                    console.log('Refreshing products due to WebSocket update');
+                    await this.fetchProducts();
+                    
+                    // Remove this update from pending updates after processing
+                    this.pendingUpdates = this.pendingUpdates.filter(update => update.updateId !== updateId);
+                }
+            }
         }
     }
 })

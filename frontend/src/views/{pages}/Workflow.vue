@@ -35,19 +35,20 @@
       </div>
 
       <!-- Empty state -->
-      <EmptyState v-if="!workflowStore.filtered.length" message="No orders to display" />
+      <EmptyState v-if="!orders.length" message="No orders to display" />
 
       <!-- Data table -->
       <template v-else>
         <DataTable
           :headers="tableHeaders"
-          :items="workflowStore.paginatedOrders"
+          :items="orders"
           :sorting="workflowStore.sorting"
           :sortBy="workflowStore.setSorting"
           :onEdit="openOrderDetail"
           :onDelete="confirmDelete"
           :expandedRows="expandedRows"
           :onRowClick="toggleRow"
+          :key="forceRerender"
         >
           <template #row="{ item }">
             <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
@@ -60,7 +61,7 @@
               {{ formatDate(item.orderTime) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ formatPrice(item.cost) }} Kč
+              {{ formatOrderAmount(item) }} Kč
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span
@@ -141,7 +142,7 @@
             </td>
           </template>
 
-          <template #expanded-content="{ item }">
+          <template :key="forceRerender" #expanded-content="{ item }">
             <div class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
               <div class="p-4">
                 <div class="flex items-center justify-between mb-3">
@@ -202,7 +203,7 @@
                           {{ formatPrice(orderItem.buyoutPrice) }} Kč
                         </td>
                         <td class="px-4 py-2 w-[20%] font-medium text-gray-900">
-                          {{ formatPrice(orderItem.buyoutPrice * orderItem.needQuantity) }} Kč
+                          {{ formatPrice(calculateItemTotal(orderItem)) }} Kč
                         </td>
                       </tr>
                     </tbody>
@@ -215,7 +216,7 @@
                           Total:
                         </td>
                         <td class="px-4 py-2 text-sm font-bold text-gray-900">
-                          {{ formatPrice(item.cost) }} Kč
+                          {{ formatPrice(calculateOrderTotal(item.orderItems)) }} Kč
                         </td>
                       </tr>
                     </tfoot>
@@ -299,7 +300,7 @@
             <div class="space-y-1">
               <p class="text-sm font-medium text-gray-500">Total Amount</p>
               <p class="text-lg font-bold text-gray-900">
-                {{ formatPrice(selectedOrder.cost) }} Kč
+                {{ formatPrice(calculateOrderTotal(selectedOrder.orderItems)) }} Kč
               </p>
             </div>
           </div>
@@ -402,7 +403,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import {
   SearchBar,
   Modal,
@@ -434,6 +435,52 @@ const $notifier = useNotifier()
 const workflowStore = useWorkflowStore()
 const $router = useRouter()
 
+// State
+const searchQuery = ref('')
+const currentFilter = ref('all')
+const isDetailModalOpen = ref(false)
+const approvalComment = ref('')
+const expandedRows = ref(new Set())
+const forceRerender = ref(0)
+
+// Sledování změn v pendingUpdates - vylepšená verze
+watch(
+  () => workflowStore.pendingUpdates,
+  async (newUpdates, oldUpdates) => {
+    if (newUpdates.length > oldUpdates.length) {
+      console.log('Detected new pending updates in workflow, refreshing orders...')
+      // Počkáme na dokončení fetchOrders, které je voláno v updateSelf
+      setTimeout(() => {
+        forceRerender.value++ // Vynutí překreslení DataTable
+        console.log('Forcing rerender of workflow table, new value:', forceRerender.value)
+      }, 100)
+    }
+  },
+  { deep: true },
+) // Sledujeme hluboké změny v poli
+
+// Přidáme sledování změn v expandedRows, abychom aktualizovali data při rozbalení řádku
+watch(
+  expandedRows,
+  async (newValue) => {
+    // Pokud byl přidán nový řádek (rozbalení)
+    if (newValue.size > 0) {
+      const lastAddedId = Array.from(newValue).pop()
+      console.log('Row expanded, fetching fresh data for order:', lastAddedId)
+
+      // Načteme aktuální data pro tuto objednávku
+      try {
+        await workflowStore.getOrderById(lastAddedId)
+        // Vynutíme překreslení
+        forceRerender.value++
+      } catch (err) {
+        console.error('Error refreshing order data:', err)
+      }
+    }
+  },
+  { deep: true },
+)
+
 // Computed
 const selectedOrder = computed(() => workflowStore.selectedOrder)
 const parsedComment = computed(() => {
@@ -457,13 +504,6 @@ const modelComment = computed({
     approvalComment.value = JSON.stringify(value)
   },
 })
-
-// State
-const searchQuery = ref('')
-const currentFilter = ref('all')
-const isDetailModalOpen = ref(false)
-const approvalComment = ref('')
-const expandedRows = ref(new Set())
 
 // Watch search query
 watch(searchQuery, (newValue) => {
@@ -580,6 +620,74 @@ const toggleRow = (id) => {
     expandedRows.value.add(id)
   }
 }
+
+// Pomocná funkce pro výpočet celkové ceny položky
+const calculateItemTotal = (orderItem) => {
+  if (!orderItem) return 0
+
+  // Zajistíme, že máme čísla, ne stringy
+  const price =
+    typeof orderItem.buyoutPrice === 'string'
+      ? parseFloat(orderItem.buyoutPrice)
+      : orderItem.buyoutPrice || 0
+
+  const quantity =
+    typeof orderItem.needQuantity === 'string'
+      ? parseInt(orderItem.needQuantity)
+      : orderItem.needQuantity || 0
+
+  // Zalogujeme hodnoty pro debugging
+  console.log(
+    `Calculating item total for ${orderItem.name}: price=${price}, quantity=${quantity}, total=${price * quantity}`,
+  )
+
+  return price * quantity
+}
+
+// Vylepšená pomocná funkce pro výpočet celkové ceny objednávky
+const calculateOrderTotal = (orderItems) => {
+  if (!orderItems || !orderItems.length) return 0
+
+  const total = orderItems.reduce((total, item) => {
+    const itemTotal = calculateItemTotal(item)
+    return total + itemTotal
+  }, 0)
+
+  // Zalogujeme celkovou cenu pro debugging
+  console.log(`Calculated order total: ${total} from ${orderItems.length} items`)
+
+  return total
+}
+
+// Upravíme zobrazení v hlavní tabulce
+const formatOrderAmount = (order) => {
+  // Pokud máme k dispozici orderItems, vypočítáme celkovou cenu z nich
+  if (order.orderItems && order.orderItems.length > 0) {
+    const calculatedTotal = calculateOrderTotal(order.orderItems)
+    console.log(
+      `Order ${order.id} calculated total: ${calculatedTotal}, stored cost: ${order.cost}`,
+    )
+    return formatPrice(calculatedTotal)
+  }
+  // Jinak použijeme hodnotu cost z objednávky
+  return formatPrice(order.cost)
+}
+
+// Funkce pro aktualizaci dat objednávky
+const refreshOrderData = async (orderId) => {
+  try {
+    await workflowStore.getOrderById(orderId)
+    forceRerender.value++
+  } catch (err) {
+    console.error('Error refreshing order data:', err)
+  }
+}
+
+// Použití computed pro zajištění reaktivity
+const orders = computed(() => {
+  console.log('Computing orders, forceRerender:', forceRerender.value)
+  return workflowStore.paginatedOrders
+})
 </script>
 
 <style scoped src="@/assets/WorkflowView.css" />

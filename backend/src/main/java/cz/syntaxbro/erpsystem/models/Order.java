@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.models;
 
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
+import cz.syntaxbro.live.listeners.OrderEntityListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(OrderEntityListener.class)
 public class Order {
 
     @Id

@@ -3,14 +3,18 @@ package cz.syntaxbro.erpsystem.requests;
 import cz.syntaxbro.erpsystem.models.Order;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderUpdateRequest {
 
     private Order.OrderType orderType;

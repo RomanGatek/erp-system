@@ -170,7 +170,7 @@ describe('Workflow Store', () => {
       await store.fetchOrders()
 
       expect(mockGetAll).toHaveBeenCalled()
-      expect(store.items).toEqual(null)
+      expect(store.items).toEqual([])
       expect(store.loading).toBe(false)
       expect(store.error).toBe(error)
     })
