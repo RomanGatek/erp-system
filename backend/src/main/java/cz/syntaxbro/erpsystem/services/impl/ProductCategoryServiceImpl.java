@@ -45,19 +45,17 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     @Override
     public ProductCategory updateProductCategory(Long categoryId, ProductCategoryRequest productCategory) {
         ProductCategory productCategoryFromDb = getProductCategory(categoryId);
-        if(getProductCategory(categoryId) != null) {
-            productCategoryFromDb.setName(productCategory.getName());
-            productCategoryFromDb.setDescription(productCategory.getDescription());
-            productCategoryFromDb.setColor(productCategory.getColor());
-            return productCategoryRepository.save(productCategoryFromDb);
-        } return null;
+        productCategoryFromDb.setName(productCategory.getName());
+        productCategoryFromDb.setDescription(productCategory.getDescription());
+        productCategoryFromDb.setColor(productCategory.getColor());
+        return productCategoryRepository.save(productCategoryFromDb);
     }
 
     @Override
     public void deleteProductCategory(long id) {
-        if(getProductCategory(id) != null) {
-            productCategoryRepository.deleteById(id);
-        }
+        ProductCategory productCategoryFromDb = getProductCategory(id);
+        productCategoryRepository.deleteById(productCategoryFromDb.getId());
+
     }
 
     @Override
