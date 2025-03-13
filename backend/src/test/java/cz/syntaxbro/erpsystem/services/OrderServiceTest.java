@@ -7,7 +7,6 @@ import cz.syntaxbro.erpsystem.repositories.OrderItemRepository;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
-import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.requests.OrderUpdateRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
@@ -122,7 +121,6 @@ public class OrderServiceTest {
 
         // Create order item with reference to the order
         this.testOrderItem = OrderItem.builder()
-                .id(1L)
                 .quantity(10)
                 .order(this.testOrder)
                 .inventoryItem(testItem)
@@ -281,78 +279,82 @@ public class OrderServiceTest {
     @Test
     void testUpdateOrder_WithNotNullsInOrder() {
         //Arrest
-        OrderItem orderItem = new OrderItem();
-
         LocalDateTime now = LocalDateTime.now();
-        OrderUpdateRequest.ProductRequest = OrderUpdateRequest.ProductRequest.
-
-        Order order = Order.builder()
-                .orderTime(now)
-                .orderType(Order.OrderType.SELL)
-                .status(Order.Status.PENDING)
-                .decisionTime(now.plusDays(1))
-                .comment("Test comment")
-                .approvedBy(testUser)
-                .cost(100.0)
+        OrderUpdateRequest.ProductRequest productRequest = OrderUpdateRequest.ProductRequest.builder()
+                .quantity(10)
+                .id(1L)
                 .build();
 
-        OrderUpdateRequest orderDto = OrderUpdateRequest.builder()
-                .products(List.of())
+        OrderUpdateRequest orderRequest = OrderUpdateRequest.builder()
+                .products(List.of(productRequest))
                 .orderType(Order.OrderType.SELL)
                 .comment("Test comment")
                 .build();
 
-//                OrderRequest.builder()
-//                .cost(100.0)
-//                .approvedBy(testUser)
-//                .decisionTime(now.plusDays(1))
-//                .status(Order.Status.PENDING)
-//                .orderItems(List.of(orderItem))
-//                .comment("Test comment")
-//                .build();
         long id = 1L;
-        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
-        when(orderService.getOrderById(id)).thenReturn(order);
-        when(orderRepository.save(order)).thenReturn(order);
+        long productId = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.of(this.testOrder));
+        when(orderService.getOrderById(id)).thenReturn(this.testOrder);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(this.testProduct));
+        when(inventoryRepository.findByProduct(this.testProduct)).thenReturn(Optional.of(this.testItem));
+        when(inventoryService.findItemByProductForOrder(this.testProduct)).thenReturn(Optional.of(this.testItem));
+        System.out.println(this.testItem);
+        when(orderRepository.save(this.testOrder)).thenReturn(this.testOrder);
         //Act
-        orderService.updateOrder(id, orderDto);
+        orderService.updateOrder(id, orderRequest);
         //Assert
-        assertEquals(List.of(orderItem), order.getOrderItems());
+        assertEquals(List.of(this.testOrderItem), this.testOrder.getOrderItems());
     }
 
     @Test
-    void testUpdateOrder_WithNullsInOrder() {
-        //Arrest
+    void updateOrder_OrderStatusNotPending(){
+
         OrderItem orderItem = new OrderItem();
 
         LocalDateTime now = LocalDateTime.now();
+        long id = 1L;
+        OrderUpdateRequest.ProductRequest productRequest = OrderUpdateRequest.ProductRequest.builder()
+                .quantity(10)
+                .id(id)
+                .build();
+
         Order order = Order.builder()
                 .orderTime(now)
                 .orderType(Order.OrderType.SELL)
+                .status(Order.Status.CONFIRMED)
                 .decisionTime(now.plusDays(1))
+                .comment("Test comment")
+                .approvedBy(testUser)
+                .cost(100.0)
+                .orderItems(List.of(orderItem))
                 .build();
 
-        OrderRequest orderDto = OrderRequest.builder()
-                .cost(100.0)
-                .approvedBy(testUser)
-                .decisionTime(now.plusDays(1))
-                .status(Order.Status.PENDING)
-                .orderItems(List.of(orderItem))
+        Product product = Product.builder()
+                .name("testProduct")
+                .description("testDescription")
+                .buyoutPrice(100.0)
+                .purchasePrice(90.0)
+                .productCategory(new ProductCategory())
+                .build();
+
+        OrderUpdateRequest orderRequest = OrderUpdateRequest.builder()
+                .products(List.of(productRequest))
+                .orderType(Order.OrderType.SELL)
                 .comment("Test comment")
                 .build();
-        long id = 1L;
+
+        InventoryItem inventoryItem = InventoryItem.builder()
+                .createdAt(now)
+                .product(product)
+                .stockedAmount(10)
+                .build();
         when(orderRepository.findById(id)).thenReturn(Optional.of(order));
-        when(orderService.getOrderById(id)).thenReturn(order);
-        when(orderRepository.save(order)).thenReturn(order);
-        //Act
-        orderService.updateOrder(id, orderDto);
+        //ACT
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                orderService.updateOrder(id, orderRequest));
         //Assert
-        assertEquals(100.0, order.getCost());
-        assertEquals(this.testUser, order.getApprovedBy());
-        assertEquals(now.plusDays(1), order.getDecisionTime());
-        assertEquals(Order.Status.PENDING, order.getStatus());
-        assertEquals(List.of(orderItem), order.getOrderItems());
-        assertEquals("Test comment", order.getComment());
+        assertEquals("You can edit only order with status PENDING.", exception.getMessage());
+        verify(orderService, times(1)).updateOrder(id, orderRequest);
     }
 
     @Test
@@ -599,4 +601,5 @@ public class OrderServiceTest {
         // Assert: The exception message should match
         assertEquals("Product with id " + productId + " not found", resultException.getMessage());
     }
+
 }
