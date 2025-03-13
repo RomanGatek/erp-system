@@ -86,6 +86,7 @@ public class User {
         this.avatar = partial.getAvatar();
         this.active = partial.isActive();
         this.username = partial.getUsername();
+        this.email = partial.getEmail();
     }
 
     public User(Long id, String username, String password, String firstName, String lastName, String email, String avatar, boolean active, Set<Role> roles) {

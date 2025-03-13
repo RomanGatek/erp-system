@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.exceptions.GlobalExceptionHandler;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.User;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
@@ -68,10 +69,10 @@ class AuthServiceImplTest {
     void authenticateUser_shouldThrowException_whenInvalidUsername() {
         when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.empty());
 
-        UsernameNotFoundException exception = assertThrows(UsernameNotFoundException.class,
+        GlobalExceptionHandler.UserNotFoundException exception = assertThrows(GlobalExceptionHandler.UserNotFoundException.class,
                 () -> authServiceImpl.authenticateUser(new LoginRequest("email@email.com", "1!Password")));
 
-        assertEquals("User not found", exception.getMessage());
+        assertEquals("Invalid email or password", exception.getMessage());
     }
 
     @Test
@@ -79,10 +80,10 @@ class AuthServiceImplTest {
         when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.of(user));
         when(passwordSecurity.matches("1!Password", "hashedPassword")).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> authServiceImpl.authenticateUser(new LoginRequest("email@email.com", "1!Password")));
 
-        assertEquals("Invalid username or password", exception.getMessage());
+        assertEquals("[password];Invalid email or password", exception.getMessage());
     }
 
     @Test

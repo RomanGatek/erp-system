@@ -52,7 +52,7 @@ export const useMeStore = defineStore('me', {
         username: profileData.username,
         firstName: profileData.firstName,
         lastName: profileData.lastName,
-        roles: profileData.roles.map(role => role.name),
+        roles: profileData.roles?.map(role => role.name),
         avatar: profileData.avatar
       })
 
