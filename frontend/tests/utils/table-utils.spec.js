@@ -1,4 +1,4 @@
-import { setupSort, sort, filter } from '@/utils/table-utils.js'; // adjust the path as necessary
+import { setupSort, sort, filter } from '@/utils'
 import { describe, it, expect } from 'vitest';
 
 describe('Sorting and Filtering Helpers', () => {

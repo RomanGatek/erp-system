@@ -20,14 +20,16 @@ class OrderRepositoryTest {
     private final InventoryRepository inventoryRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
+    private final ProductCategoryRepository productCategoryRepository;
 
     @Autowired
-    OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository, InventoryRepository inventoryRepository, OrderItemRepository orderItemRepository, UserRepository userRepository) {
+    OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository, InventoryRepository inventoryRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductCategoryRepository productCategoryRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
+        this.productCategoryRepository = productCategoryRepository;
     }
 
     private Product productOne;
@@ -55,14 +57,24 @@ class OrderRepositoryTest {
         assertNotNull(testUser.getId(), "User ID should be generated");
 
         // Creating products
-        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne");
-        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo");
+        ProductCategory productCategoryOne = productCategoryRepository.save(ProductCategory.builder()
+                .name("firstCategory")
+                .description("test products")
+                .build());
+
+        ProductCategory productCategoryTwo = productCategoryRepository.save(ProductCategory.builder()
+                .name("secondCategory")
+                .description("test products")
+                .build());
+
+        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne);
+        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo);
         productOne = productRepository.save(productOne);
         productTwo = productRepository.save(productTwo);
 
         // Create inventory items from products
-        InventoryItem inventoryItemOne = new InventoryItem(null, productOne, 100);
-        InventoryItem inventoryItemTwo = new InventoryItem(null, productTwo, 200);
+        InventoryItem inventoryItemOne = new InventoryItem(null, productOne, 100, LocalDateTime.now());
+        InventoryItem inventoryItemTwo = new InventoryItem(null, productTwo, 200, LocalDateTime.now());
         inventoryItemOne = inventoryRepository.save(inventoryItemOne);
         inventoryItemTwo = inventoryRepository.save(inventoryItemTwo);
 

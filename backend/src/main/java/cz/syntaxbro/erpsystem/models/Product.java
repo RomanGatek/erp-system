@@ -1,8 +1,9 @@
 package cz.syntaxbro.erpsystem.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,4 +35,10 @@ public class Product {
     private double purchasePrice;
 
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    @NotNull(message = "Category can't be null or empty")
+    @JsonManagedReference
+    private ProductCategory productCategory;
 }

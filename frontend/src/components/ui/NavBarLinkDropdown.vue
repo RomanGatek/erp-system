@@ -36,7 +36,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { hasPermission } from '@/utils/user-utils.js'
+import { hasPermission } from '@/utils'
 
 defineProps({
   text: String,

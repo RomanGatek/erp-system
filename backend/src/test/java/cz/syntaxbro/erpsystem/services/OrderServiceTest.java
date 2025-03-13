@@ -4,6 +4,7 @@ import cz.syntaxbro.erpsystem.models.*;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
+import cz.syntaxbro.erpsystem.requests.OrderUpdateRequest;
 import cz.syntaxbro.erpsystem.responses.OrderResponse;
 import cz.syntaxbro.erpsystem.security.services.CustomUserDetails;
 import cz.syntaxbro.erpsystem.services.impl.OrderServiceImpl;
@@ -36,9 +37,6 @@ public class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
-    private ProductRepository productRepository;
-
-    @Mock
     private InventoryService inventoryService;
     
     @Mock
@@ -48,8 +46,10 @@ public class OrderServiceTest {
     private Authentication authentication;
 
     @Mock
-    private CustomUserDetails customUserDetails;
+    private ProductRepository productRepository;
 
+    @Mock
+    private CustomUserDetails customUserDetails;
 
     @Spy
     @InjectMocks
@@ -58,11 +58,12 @@ public class OrderServiceTest {
     private Order testOrder;
     private User testUser;
     private Product testProduct;
+    private InventoryItem testItem;
+    private OrderItem testOrderItem;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-
         LocalDateTime now = LocalDateTime.now();
 
         // First, create all test objects
@@ -90,9 +91,9 @@ public class OrderServiceTest {
                 .build();
 
         // Create test inventory item
-        InventoryItem testItem = InventoryItem.builder()
+        this.testItem = InventoryItem.builder()
                 .id(1L)
-                .product(testProduct)
+                .product(this.testProduct)
                 .stockedAmount(10)
                 .build();
 
@@ -109,7 +110,7 @@ public class OrderServiceTest {
                 .build();
 
         // Create order item with reference to the order
-        OrderItem testOrderItem = OrderItem.builder()
+        this.testOrderItem = OrderItem.builder()
                 .id(1L)
                 .quantity(10)
                 .order(this.testOrder)
@@ -247,6 +248,8 @@ public class OrderServiceTest {
         OrderItem orderItem = new OrderItem();
 
         LocalDateTime now = LocalDateTime.now();
+        OrderUpdateRequest.ProductRequest = OrderUpdateRequest.ProductRequest.
+
         Order order = Order.builder()
                 .orderTime(now)
                 .orderType(Order.OrderType.SELL)
@@ -257,14 +260,20 @@ public class OrderServiceTest {
                 .cost(100.0)
                 .build();
 
-        OrderRequest orderDto = OrderRequest.builder()
-                .cost(100.0)
-                .approvedBy(testUser)
-                .decisionTime(now.plusDays(1))
-                .status(Order.Status.PENDING)
-                .orderItems(List.of(orderItem))
+        OrderUpdateRequest orderDto = OrderUpdateRequest.builder()
+                .products(List.of())
+                .orderType(Order.OrderType.SELL)
                 .comment("Test comment")
                 .build();
+
+//                OrderRequest.builder()
+//                .cost(100.0)
+//                .approvedBy(testUser)
+//                .decisionTime(now.plusDays(1))
+//                .status(Order.Status.PENDING)
+//                .orderItems(List.of(orderItem))
+//                .comment("Test comment")
+//                .build();
         long id = 1L;
         when(orderRepository.findById(id)).thenReturn(Optional.of(order));
         when(orderService.getOrderById(id)).thenReturn(order);

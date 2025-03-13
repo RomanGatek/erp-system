@@ -1,31 +1,35 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { useInventoryStore } from '@/stores/inventory.store.js'
-import { api } from '@/services/api.js'
+import { useInventoryStore } from '@/stores'
 
-// Mock the dependencies
-vi.mock('@/services/api', () => ({
-  api: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn()
+// Mock API functions
+const mockGetAll = vi.fn()
+const mockAdd = vi.fn()
+const mockUpdate = vi.fn()
+const mockDelete = vi.fn()
+
+// Mock the API service
+vi.mock('@/services/api', () => {
+  return {
+    default: {
+      inventory: () => ({
+        getAll: mockGetAll,
+        add: mockAdd,
+        update: mockUpdate,
+        delete: mockDelete
+      })
+    }
   }
-}))
+})
 
-vi.mock('../errors', () => ({
-  useErrorStore: () => ({
-    handle: vi.fn()
-  })
-}))
-
-vi.mock('../notifier', () => ({
-  useNotifier: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    warning: vi.fn()
-  })
+// Mock utils
+vi.mock('@/utils', () => ({
+  filter: (state, predicate) => state.items.filter(predicate),
+  setupSort: (defaultField) => ({ field: defaultField, direction: 'asc' }),
+  paginateViaState: (state) => {
+    const start = (state.pagination.currentPage - 1) * state.pagination.perPage
+    return state.items.slice(start, start + state.pagination.perPage)
+  }
 }))
 
 describe('Inventory Store', () => {
@@ -35,6 +39,14 @@ describe('Inventory Store', () => {
     // Create a fresh pinia instance for each test
     setActivePinia(createPinia())
     store = useInventoryStore()
+
+    // Reset store state
+    store.items = []
+    store.loading = false
+    store.error = null
+    store.searchQuery = ''
+    store.pagination = { currentPage: 1, perPage: 10 }
+    store.sorting = { field: 'product.name', direction: 'asc' }
 
     // Clear all mocks before each test
     vi.clearAllMocks()
@@ -47,158 +59,150 @@ describe('Inventory Store', () => {
   describe('state', () => {
     it('should have default state', () => {
       expect(store.loading).toBe(false)
-      expect(store.stockOrders).toEqual([])
-      expect(store.selectedOrder).toBeNull()
+      expect(store.items).toEqual([])
+      expect(store.error).toBeNull()
+      expect(store.searchQuery).toBe('')
+      expect(store.currentFilter).toBe('all')
+      expect(store.sorting).toEqual({ field: 'product.name', direction: 'asc' })
+      expect(store.pagination).toEqual({ currentPage: 1, perPage: 10 })
+    })
+  })
+
+  describe('getters', () => {
+    beforeEach(() => {
+      // Setup test data
+      store.items = [
+        { id: 1, product: { name: 'Product A', description: 'Description A' }, stockedAmount: 10 },
+        { id: 2, product: { name: 'Product B', description: 'Description B' }, stockedAmount: 5 },
+        { id: 3, product: { name: 'Product C', description: 'Description C' }, stockedAmount: 0 }
+      ]
+    })
+
+    it('should filter items by search query', () => {
+      store.searchQuery = 'Product A'
+      expect(store.filtered).toHaveLength(1)
+      expect(store.filtered[0].product.name).toBe('Product A')
+
+      store.searchQuery = 'Description B'
+      expect(store.filtered).toHaveLength(1)
+      expect(store.filtered[0].product.name).toBe('Product B')
+    })
+
+    it('should paginate filtered items', () => {
+      store.pagination.perPage = 2
+      store.pagination.currentPage = 1
+      expect(store.paginateItems).toHaveLength(2)
+      expect(store.paginateItems[0].id).toBe(1)
+      expect(store.paginateItems[1].id).toBe(2)
+
+      store.pagination.currentPage = 2
+      expect(store.paginateItems).toHaveLength(1)
+      expect(store.paginateItems[0].id).toBe(3)
     })
   })
 
   describe('actions', () => {
-    it('should fetch stock orders successfully', async () => {
-      const mockStockOrders = [
-        { id: 1, productId: 101, quantity: 10 },
-        { id: 2, productId: 102, quantity: 5 }
+    it('should fetch items successfully', async () => {
+      const mockItems = [
+        { id: 1, product: { name: 'Product A', description: 'Description A' }, stockedAmount: 10 },
+        { id: 2, product: { name: 'Product B', description: 'Description B' }, stockedAmount: 5 }
       ]
-      api.get.mockResolvedValueOnce({ data: mockStockOrders })
+      mockGetAll.mockResolvedValue([mockItems, null])
 
-      await store.fetchStockOrders()
+      await store.fetchItems()
 
-      expect(api.get).toHaveBeenCalledWith('/inventory/orders')
-      expect(store.stockOrders).toEqual(mockStockOrders)
-      expect(store.loading).toBe(false)
+      expect(mockGetAll).toHaveBeenCalled()
+      expect(store.items).toEqual(mockItems)
+      expect(store.error).toBeNull()
     })
 
-    it('should handle fetch stock orders error', async () => {
+    it('should handle fetch items error', async () => {
       const error = new Error('Network error')
-      api.get.mockRejectedValueOnce(error)
+      mockGetAll.mockResolvedValue([null, error])
 
-      await store.fetchStockOrders()
+      await store.fetchItems()
 
-      expect(api.get).toHaveBeenCalledWith('/inventory/orders')
-      expect(store.stockOrders).toEqual([])
-      expect(store.loading).toBe(false)
-      // We can't directly test error handling since it's using an external store
+      expect(mockGetAll).toHaveBeenCalled()
+      expect(store.items).toEqual(null)
+      expect(store.error).toBe(error)
     })
 
-    it('should create stock order successfully', async () => {
-      const mockOrderData = {
-        productId: '101',
-        quantity: '10',
-        expectedDeliveryDate: '2023-12-31',
-        supplier: 'Test Supplier',
-        purchasePrice: '99.99',
-        notes: 'Test notes'
+    it('should add item successfully', async () => {
+      const newItem = {
+        product: { id: 1, name: 'New Product' },
+        stockedAmount: 10
       }
+      const mockItems = [
+        { id: 1, product: { name: 'Product A' }, stockedAmount: 10 },
+        { id: 2, product: { name: 'New Product' }, stockedAmount: 10 }
+      ]
+      mockAdd.mockResolvedValue([mockItems, null])
 
-      const mockApiResponse = {
+      await store.addItem(newItem)
+
+      expect(mockAdd).toHaveBeenCalledWith(newItem)
+      expect(store.items).toEqual(mockItems)
+      expect(store.error).toBeNull()
+    })
+
+    it('should update item successfully', async () => {
+      // Setup initial state
+      store.items = [
+        { id: 1, product: { name: 'Product A' }, stockedAmount: 10 },
+        { id: 2, product: { name: 'Product B' }, stockedAmount: 5 }
+      ]
+
+      const updatedItem = {
         id: 1,
-        productId: 101,
-        quantity: 10,
-        expectedDeliveryDate: '2023-12-31',
-        supplier: 'Test Supplier',
-        purchasePrice: 99.99,
-        notes: 'Test notes'
+        stockedAmount: 15
       }
+      mockUpdate.mockResolvedValue([{}, null])
 
-      api.post.mockResolvedValueOnce({ data: mockApiResponse })
-      // Mock the fetchStockOrders to avoid additional API calls
-      store.fetchStockOrders = vi.fn()
+      await store.updateItem(updatedItem)
 
-      const result = await store.createStockOrder(mockOrderData)
-
-      expect(api.post).toHaveBeenCalledWith('/inventory/orders', {
-        productId: 101, // Should be converted to number
-        quantity: 10, // Should be converted to number
-        expectedDeliveryDate: '2023-12-31',
-        supplier: 'Test Supplier',
-        purchasePrice: 99.99, // Should be converted to float
-        notes: 'Test notes'
-      })
-
-      expect(store.fetchStockOrders).toHaveBeenCalled()
-      expect(result).toEqual(mockApiResponse)
-      expect(store.loading).toBe(false)
+      expect(mockUpdate).toHaveBeenCalledWith(updatedItem)
+      expect(store.items[0].stockedAmount).toBe(15)
+      expect(store.error).toBeNull()
     })
 
-    it('should handle create stock order error', async () => {
-      const mockOrderData = {
-        productId: '101',
-        quantity: '10',
-        expectedDeliveryDate: '2023-12-31',
-        supplier: 'Test Supplier',
-        purchasePrice: '99.99',
-        notes: 'Test notes'
-      }
+    it('should delete item successfully', async () => {
+      const itemId = 1
+      const mockItems = [
+        { id: 2, product: { name: 'Product B' }, stockedAmount: 5 }
+      ]
+      mockDelete.mockResolvedValue([{}, null])
+      mockGetAll.mockResolvedValue([mockItems, null])
 
-      const error = new Error('API error')
-      api.post.mockRejectedValueOnce(error)
+      await store.deleteItem(itemId)
 
-      const result = await store.createStockOrder(mockOrderData)
-
-      expect(api.post).toHaveBeenCalledWith('/inventory/orders', expect.any(Object))
-      expect(result).toBeNull()
-      expect(store.loading).toBe(false)
+      expect(mockDelete).toHaveBeenCalledWith(itemId)
+      expect(mockGetAll).toHaveBeenCalled()
+      expect(store.items).toEqual(mockItems)
+      expect(store.error).toBeNull()
     })
 
-    it('should update stock order status successfully', async () => {
-      const orderId = 1
-      const newStatus = 'DELIVERED'
-      const mockApiResponse = {
-        id: orderId,
-        status: newStatus
-      }
+    it('should set search query and reset page', () => {
+      store.pagination.currentPage = 3
+      store.setSearch('test query')
 
-      api.put.mockResolvedValueOnce({ data: mockApiResponse })
-      // Mock the fetchStockOrders to avoid additional API calls
-      store.fetchStockOrders = vi.fn()
-
-      const result = await store.updateStockOrderStatus(orderId, newStatus)
-
-      expect(api.put).toHaveBeenCalledWith(`/inventory/orders/${orderId}/status`, { status: newStatus })
-      expect(store.fetchStockOrders).toHaveBeenCalled()
-      expect(result).toEqual(mockApiResponse)
-      expect(store.loading).toBe(false)
+      expect(store.searchQuery).toBe('test query')
+      expect(store.pagination.currentPage).toBe(1)
     })
 
-    it('should handle update stock order status error', async () => {
-      const orderId = 1
-      const newStatus = 'DELIVERED'
-      const error = new Error('API error')
+    it('should set sorting correctly', () => {
+      // Same field should toggle direction
+      store.sorting = { field: 'product.name', direction: 'asc' }
+      store.setSorting('product.name')
+      expect(store.sorting).toEqual({ field: 'product.name', direction: 'desc' })
 
-      api.put.mockRejectedValueOnce(error)
-
-      const result = await store.updateStockOrderStatus(orderId, newStatus)
-
-      expect(api.put).toHaveBeenCalledWith(`/inventory/orders/${orderId}/status`, { status: newStatus })
-      expect(result).toBeNull()
-      expect(store.loading).toBe(false)
+      // Different field should set to asc
+      store.setSorting('stockedAmount')
+      expect(store.sorting).toEqual({ field: 'stockedAmount', direction: 'asc' })
     })
 
-    it('should delete stock order successfully', async () => {
-      const orderId = 1
-
-      api.delete.mockResolvedValueOnce({})
-      // Mock the fetchStockOrders to avoid additional API calls
-      store.fetchStockOrders = vi.fn()
-
-      const result = await store.deleteStockOrder(orderId)
-
-      expect(api.delete).toHaveBeenCalledWith(`/inventory/orders/${orderId}`)
-      expect(store.fetchStockOrders).toHaveBeenCalled()
-      expect(result).toBe(true)
-      expect(store.loading).toBe(false)
-    })
-
-    it('should handle delete stock order error', async () => {
-      const orderId = 1
-      const error = new Error('API error')
-
-      api.delete.mockRejectedValueOnce(error)
-
-      const result = await store.deleteStockOrder(orderId)
-
-      expect(api.delete).toHaveBeenCalledWith(`/inventory/orders/${orderId}`)
-      expect(result).toBe(false)
-      expect(store.loading).toBe(false)
+    it('should set page number', () => {
+      store.setPage(5)
+      expect(store.pagination.currentPage).toBe(5)
     })
   })
 })

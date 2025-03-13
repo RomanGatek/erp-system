@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { hasPermission } from '@/utils/user-utils.js'
+import { hasPermission } from '@/utils'
 
 defineProps({
   to: String,

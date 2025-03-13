@@ -1,7 +1,10 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.Product;
+import cz.syntaxbro.erpsystem.models.ProductCategory;
+import cz.syntaxbro.erpsystem.repositories.ProductCategoryRepository;
 import cz.syntaxbro.erpsystem.repositories.ProductRepository;
+import cz.syntaxbro.erpsystem.requests.ProductRequest;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,10 +28,23 @@ class ProductServiceImplTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
+    @Mock
+    private ProductCategoryRepository productCategoryRepository;
+
     private Product testProduct;
+    private ProductCategory category;
 
     @BeforeEach
     void setUp() {
+        // Configure Mockito to use LENIENT strictness for this test class
+        lenient().when(productCategoryRepository.findByName(anyString())).thenReturn(Optional.empty());
+        
+        this.category = ProductCategory
+                .builder()
+                .name("default")
+                .description("Sample product description")
+                .build();
+
         this.testProduct = Product.builder()
                 .id(1L)
                 .name("Test Product")
@@ -44,13 +60,22 @@ class ProductServiceImplTest {
      */
     @Test
     void createProduct_shouldReturnSavedProduct() {
-        when(productRepository.save(testProduct)).thenReturn(testProduct);
+        doReturn(testProduct).when(productRepository).save(any(Product.class));
+        doReturn(Optional.of(category)).when(productCategoryRepository).findByName("default");
 
-        Product savedProduct = productService.createProduct(testProduct);
+        var request = ProductRequest.builder()
+            .name(testProduct.getName())
+            .description(testProduct.getDescription())
+            .purchasePrice(testProduct.getPurchasePrice())
+            .buyoutPrice(testProduct.getBuyoutPrice())
+            .productCategory("default")
+            .build();
+
+        Product savedProduct = productService.createProduct(request);
 
         assertThat(savedProduct).isNotNull();
         assertThat(savedProduct.getName()).isEqualTo("Test Product");
-        verify(productRepository, times(1)).save(testProduct);
+        verify(productRepository, times(1)).save(any(Product.class));
     }
 
     /**
@@ -89,11 +114,17 @@ class ProductServiceImplTest {
      */
     @Test
     void updateProduct_shouldReturnUpdatedProduct() {
-        Product updatedProduct = new Product();
-        updatedProduct.setName("Updated Product");
-        updatedProduct.setPurchasePrice(129.99);
-        updatedProduct.setDescription("Updated Description");
+        ProductRequest updatedProduct = ProductRequest
+                .builder()
+                .name("Updated Product")
+                .description("Updated product description")
+                .purchasePrice(129.99)
+                .productCategory("default")
+                .build();
 
+        ProductCategory productCategory = category;
+
+        when(productCategoryRepository.findByName(anyString())).thenReturn(Optional.of(productCategory));
         when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

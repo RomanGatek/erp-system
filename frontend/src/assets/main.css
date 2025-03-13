@@ -1,35 +1,135 @@
-@import './base.css';
+html {
+  font-size: 15px;
+  background-color: #f8fafc;
+}
+h1 {
+  font-size: 2rem !important;
+}
 
+h2 {
+  font-size: 1.75rem !important;
+}
+
+.text-lg {
+  font-size: 1.125rem !important;
+}
+
+
+
+/* Ambientní efekty */
+.bg-gradient-pattern {
+  background: linear-gradient(
+    45deg,
+    #3b82f6 0%,
+    #2563eb 25%,
+    #1d4ed8 50%,
+    #1e40af 75%,
+    #1e3a8a 100%
+  );
+  filter: blur(100px);
+  animation: gradientMove 15s ease infinite
+}
+
+.bg-mesh {
+  background-image: radial-gradient(circle at center, #3b82f620 0%, transparent 70%);
+  background-size: 50px 50px;
+  background-position:
+    0 0,
+    25px 25px;
+  animation: meshFloat 20s linear infinite;
+}
+
+/* Animace */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes meshFloat {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Vylepšení stínů a přechodů */
+.shadow-lg {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Globální přechody */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Vylepšení pro karty */
+.bg-white {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Oprava layoutu */
 #app {
-  max-width: 1280px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  position: relative;
+  width: 100%;
+  max-width: 90rem;
   margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* Vylepšení animací */
+.v-enter-active,
+.v-leave-active {
+  transition-property: opacity, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
 }

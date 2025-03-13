@@ -1,4 +1,4 @@
-import { initMeStore, hasPermission, isLoggedIn } from '@/utils/user-utils'; // adjust the path as needed
+import { initMeStore, hasPermission, isLoggedIn } from '@/utils'; // adjust the path as needed
 import { describe, it, expect } from 'vitest';
 
 describe('Me Store Helpers', () => {

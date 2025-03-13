@@ -1,24 +1,41 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { useWorkflowStore } from '@/stores/workflow.store.js'
-import { api } from '@/services/api.js'
 
-// Mock the dependencies
-vi.mock('@/services/api', () => ({
-  api: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn()
+// Mock API functions
+const mockGetAll = vi.fn()
+const mockGetById = vi.fn()
+const mockConfirm = vi.fn()
+const mockCancel = vi.fn()
+const mockDelete = vi.fn()
+
+// Mock the API service
+vi.mock('@/services/api', () => {
+  return {
+    default: {
+      orders: () => ({
+        getAll: mockGetAll,
+        getById: mockGetById,
+        confirm: mockConfirm,
+        cancel: mockCancel,
+        delete: mockDelete
+      })
+    }
   }
-}))
+})
 
-vi.mock('../notifier', () => ({
+// Mock notifier
+const mockSuccess = vi.fn()
+const mockError = vi.fn()
+const mockInfo = vi.fn()
+const mockWarning = vi.fn()
+
+vi.mock('./notifier.store.js', () => ({
   useNotifier: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    warning: vi.fn()
+    success: mockSuccess,
+    error: mockError,
+    info: mockInfo,
+    warning: mockWarning
   })
 }))
 
@@ -136,52 +153,51 @@ describe('Workflow Store', () => {
         { id: 1, status: 'PENDING', orderItems: [] },
         { id: 2, status: 'CONFIRMED', orderItems: [] }
       ]
-      api.get.mockResolvedValueOnce({ data: mockOrders })
+      mockGetAll.mockResolvedValue([mockOrders, null])
 
       await store.fetchOrders()
 
-      expect(api.get).toHaveBeenCalledWith('/orders')
+      expect(mockGetAll).toHaveBeenCalled()
       expect(store.items).toEqual(mockOrders)
       expect(store.loading).toBe(false)
       expect(store.error).toBeNull()
     })
 
     it('should handle fetch orders error', async () => {
-      const errorMessage = 'Network error'
-      api.get.mockRejectedValueOnce({
-        response: { data: { message: errorMessage } }
-      })
+      const error = new Error('Network error')
+      mockGetAll.mockResolvedValue([null, error])
 
-      await expect(store.fetchOrders()).rejects.toThrow()
-      expect(api.get).toHaveBeenCalledWith('/orders')
-      expect(store.items).toEqual([])
+      await store.fetchOrders()
+
+      expect(mockGetAll).toHaveBeenCalled()
+      expect(store.items).toEqual(null)
       expect(store.loading).toBe(false)
-      expect(store.error).toBe(errorMessage)
+      expect(store.error).toBe(error)
     })
 
     it('should get order by id successfully', async () => {
       const mockOrder = { id: 1, status: 'PENDING', orderItems: [] }
-      api.get.mockResolvedValueOnce({ data: mockOrder })
+      mockGetById.mockResolvedValue([mockOrder, null])
 
       const result = await store.getOrderById(1)
 
-      expect(api.get).toHaveBeenCalledWith('/orders/1')
+      expect(mockGetById).toHaveBeenCalledWith(1)
       expect(result).toEqual(mockOrder)
       expect(store.selectedOrder).toEqual(mockOrder)
       expect(store.loading).toBe(false)
     })
 
     it('should handle get order by id error', async () => {
-      const errorMessage = 'Order not found'
-      api.get.mockRejectedValueOnce({
-        response: { data: { message: errorMessage } }
-      })
+      const error = new Error('Order not found')
+      mockGetById.mockResolvedValue([null, error])
 
-      await expect(store.getOrderById(999)).rejects.toThrow()
-      expect(api.get).toHaveBeenCalledWith('/orders/999')
+      const result = await store.getOrderById(999)
+
+      expect(mockGetById).toHaveBeenCalledWith(999)
+      expect(result).toBeNull()
       expect(store.selectedOrder).toBeNull()
       expect(store.loading).toBe(false)
-      expect(store.error).toBe(errorMessage)
+      expect(store.error).toBe(error)
     })
 
     it('should approve a SELL order successfully', async () => {
@@ -200,13 +216,14 @@ describe('Workflow Store', () => {
       store.items = [mockOrder]
 
       // Setup mocks
-      api.put.mockResolvedValueOnce({
-        data: { id: orderId, status: 'CONFIRMED' }
-      })
+      mockConfirm.mockResolvedValue([
+        { id: orderId, status: 'CONFIRMED' },
+        null
+      ])
 
       const result = await store.approveOrder(orderId, comment)
 
-      expect(api.put).toHaveBeenCalledWith(`/orders/${orderId}/confirm`, comment)
+      expect(mockConfirm).toHaveBeenCalledWith(orderId, comment)
       expect(result).toBe(true)
       expect(store.items[0].status).toBe('CONFIRMED')
       expect(store.items[0].comment).toBe(comment)
@@ -230,7 +247,7 @@ describe('Workflow Store', () => {
 
       const result = await store.approveOrder(orderId, comment)
 
-      expect(api.put).not.toHaveBeenCalled()
+      expect(mockConfirm).not.toHaveBeenCalled()
       expect(result).toBe(false)
       expect(store.items[0].status).toBe('PENDING')
       expect(store.loading).toBe(false)
@@ -250,13 +267,14 @@ describe('Workflow Store', () => {
       store.items = [mockOrder]
 
       // Setup mocks
-      api.put.mockResolvedValueOnce({
-        data: { id: orderId, status: 'CONFIRMED' }
-      })
+      mockConfirm.mockResolvedValue([
+        { id: orderId, status: 'CONFIRMED' },
+        null
+      ])
 
       const result = await store.approveOrder(orderId, comment)
 
-      expect(api.put).toHaveBeenCalledWith(`/orders/${orderId}/confirm`, comment)
+      expect(mockConfirm).toHaveBeenCalledWith(orderId, comment)
       expect(result).toBe(true)
       expect(store.items[0].status).toBe('CONFIRMED')
       expect(store.items[0].comment).toBe(comment)
@@ -276,13 +294,14 @@ describe('Workflow Store', () => {
       store.items = [mockOrder]
 
       // Setup mocks
-      api.put.mockResolvedValueOnce({
-        data: { id: orderId, status: 'CANCELED' }
-      })
+      mockCancel.mockResolvedValue([
+        { id: orderId, status: 'CANCELED' },
+        null
+      ])
 
       const result = await store.rejectOrder(orderId, comment)
 
-      expect(api.put).toHaveBeenCalledWith(`/orders/${orderId}/cancel`, comment)
+      expect(mockCancel).toHaveBeenCalledWith(orderId, comment)
       expect(result).toBe(true)
       expect(store.items[0].status).toBe('CANCELED')
       expect(store.items[0].comment).toBe(comment)
@@ -301,11 +320,11 @@ describe('Workflow Store', () => {
       store.items = [mockOrder]
 
       // Setup mocks
-      api.delete.mockResolvedValueOnce({})
+      mockDelete.mockResolvedValue([{}, null])
 
       const result = await store.deleteOrder(orderId)
 
-      expect(api.delete).toHaveBeenCalledWith(`/orders/${orderId}`)
+      expect(mockDelete).toHaveBeenCalledWith(orderId)
       expect(result).toBe(true)
       expect(store.items).toEqual([])
       expect(store.loading).toBe(false)

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useInventoryStore } from '@/stores/storage.store.js'
-import { useNotifier } from '@/stores/notifier.js'
+import { useNotifier } from '@/stores/notifier.store.js'
 
 const props = defineProps({
   items: {

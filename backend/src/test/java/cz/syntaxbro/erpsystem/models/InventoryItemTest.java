@@ -39,7 +39,9 @@ class InventoryItemTest {
     @Test
     void shouldFailValidation_WhenNameIsBlank() {
         // Arrange: Create an InventoryItem with an empty name
-        InventoryItem item = new InventoryItem(null, null, 10);
+        InventoryItem item = InventoryItem.builder()
+                .stockedAmount(10)
+                .build();
 
         // Act: Validate the item
         Set<ConstraintViolation<InventoryItem>> violations = validator.validate(item);
@@ -57,7 +59,10 @@ class InventoryItemTest {
     @Test
     void shouldFailValidation_WhenQuantityIsNegative() {
         // Arrange: Create an InventoryItem with a negative quantity
-        InventoryItem item = new InventoryItem(null, product, -5);
+        InventoryItem item = InventoryItem.builder()
+                .product(product)
+                .stockedAmount(-5)
+                .build();
 
         // Act: Validate the item
         Set<ConstraintViolation<InventoryItem>> violations = validator.validate(item);
@@ -75,7 +80,10 @@ class InventoryItemTest {
     @Test
     void shouldPassValidation_WhenValidData() {
         // Arrange: Create an InventoryItem with valid name and quantity
-        InventoryItem item = new InventoryItem(null, product, 5);
+        InventoryItem item = InventoryItem.builder()
+                .product(product)
+                .stockedAmount(5)
+                .build();
 
         // Act: Validate the item
         Set<ConstraintViolation<InventoryItem>> violations = validator.validate(item);

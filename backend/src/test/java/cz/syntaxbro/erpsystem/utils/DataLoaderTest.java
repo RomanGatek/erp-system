@@ -1,10 +1,8 @@
 package cz.syntaxbro.erpsystem.utils;
 
 import cz.syntaxbro.erpsystem.repositories.*;
-import cz.syntaxbro.erpsystem.responses.OrderItemReponse;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
-import cz.syntaxbro.erpsystem.services.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -35,9 +32,6 @@ class DataLoaderTest {
 
     @Mock
     private PasswordSecurity passwordSecurity;
-    
-    @Mock
-    private OrderService orderService;  // Mock the OrderService instead of autowiring it
 
     @InjectMocks
     private DataLoader dataLoader;
@@ -50,6 +44,7 @@ class DataLoaderTest {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+    private final ProductCategoryRepository productCategoryRepository;
 
     /**
      * Constructor to manually inject required repositories.
@@ -61,7 +56,8 @@ class DataLoaderTest {
                    @Autowired InventoryRepository inventoryRepository,
                    @Autowired ProductRepository productRepository,
                    @Autowired OrderRepository orderRepository,
-                   @Autowired OrderItemRepository orderItemRepository
+                   @Autowired OrderItemRepository orderItemRepository,
+                   @Autowired ProductCategoryRepository productCategoryRepository
     ) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
@@ -70,6 +66,7 @@ class DataLoaderTest {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.productCategoryRepository = productCategoryRepository;
     }
 
     /**
@@ -82,7 +79,7 @@ class DataLoaderTest {
         when(passwordSecurity.encode(anyString())).thenReturn("hashedPassword");
 
         dataLoader = new DataLoader(roleRepository, userRepository, permissionRepository, passwordSecurity, 
-                                    productRepository, inventoryRepository, orderRepository, orderItemRepository, orderService);
+                                    productRepository, inventoryRepository, orderRepository, orderItemRepository, productCategoryRepository);
         dataLoader.run(); // Populates database with initial data.
     }
 
@@ -109,7 +106,7 @@ class DataLoaderTest {
 
         Optional<Role> managerRole = roleRepository.findByName("ROLE_MANAGER");
         assertThat(managerRole).isPresent();
-        assertThat(managerRole.get().getPermissions()).hasSize(1); // Manager should have 1 permissions.
+        assertThat(managerRole.get().getPermissions()).hasSize(1); // Manager should have 1 permission.
 
         Optional<Role> userRole = roleRepository.findByName("ROLE_USER");
         assertThat(userRole).isPresent();

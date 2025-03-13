@@ -7,7 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "inventory_items")
@@ -24,9 +28,12 @@ public class InventoryItem {
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false, unique = true)
     @NotNull(message = "Product is required")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Product product;
 
     @PositiveOrZero(message = "Item quantity must be zero or positive")
     @Column(name = "stocked_amount")
     private int stockedAmount;
+
+    private LocalDateTime createdAt;
 }

@@ -1,18 +1,14 @@
 // stores/user.js
 import { defineStore } from 'pinia'
-import { api } from '@/services/api'
-import { useMeStore } from '@/stores/me'
-import { setupSort, filter } from '@/utils/table-utils.js'
-import { __paginate } from '@/utils/pagination.js'
-
-/**
- * @typedef {{id: number, username: string, firstName: string, lastName: string, email: string, active: boolean, avatar?: string, roles: string[]}} User
- */
-
+import api from '@/services/api'
+import { useMeStore } from '@/stores/me.store.js'
+import { setupSort, filter } from '@/utils'
+import { paginateViaState } from '@/utils'
+import { AxiosError } from 'axios'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    /** @type User[] */
+    /** @type {import('@/services/api').User[]} */
     items: [],
     loading: false,
     error: null,
@@ -45,16 +41,17 @@ export const useUserStore = defineStore('user', {
           .toLowerCase()
           .includes(searchValue)
     }),
-    paginatedUsers: (state) => __paginate(state)
+    paginatedUsers: (state) => paginateViaState(state)
   },
   actions: {
     async fetchUsers() {
       this.loading = true
       try {
-        /**@type {User[]}   */
-        const response = (await api.get('/users')).data
+        /**@type {[User[], AxiosError]}   */
+        const [data, error] = await api.users().getAll()
+        if (error) throw error
         const me = useMeStore().user
-        this.items = response.filter(user => user?.email !== me?.email)
+        this.items = data.filter(user => user?.email !== me?.email)
         this.error = null;
       } catch (error) {
         this.error = error
@@ -62,41 +59,32 @@ export const useUserStore = defineStore('user', {
       }
     },
     async addUser(user) {
-      try {
-        const payload = { ...user, roles: user.roles.map(role => role.name.replace('ROLE_', '')) }
-        await api.post('/users', payload)
-        await this.fetchUsers()
-        this.error = null;
-      } catch (error) {
-        this.error = error
-      }
+      const payload = { ...user, roles: user.roles.map(role => role.name.replace('ROLE_', '')) }
+      const [_, error] = await api.users().add(payload)
+      this.error = error
+      await this.fetchUsers()
     },
     async updateUser(user) {
-      try {
-        await api.put(`/users/${user.id}`, {
-          lastName: user.lastName,
-          firstName: user.firstName,
-          email: user.email,
-          username: user.username,
-          roles: user.roles.map(role => role.name.replace('ROLE_', '')),
-          active: user.active,
-          password: user.password
-        })
+      const payload = {
+        lastName: user.lastName,
+        firstName: user.firstName,
+        email: user.email,
+        username: user.username,
+        roles: user.roles.map(role => role.name.replace('ROLE_', '')),
+        active: user.active,
+        password: user.password
+      }
+      var _;
+      [_, this.error] = await api.users().update(user.id, payload)
+      if (!this.error) {
         await this.fetchUsers()
         this.editedUserIndex = null
-        this.error = null;
-      } catch (error) {
-        this.error = error
       }
     },
     async deleteUser(userId) {
-      try {
-        await api.delete(`/users/${userId}`)
-        await this.fetchUsers()
-        this.error = null;
-      } catch (error) {
-        this.error = error
-      }
+      var _;
+      [_, this.error] = await api.users().delete(userId)
+      await this.fetchUsers()
     },
     setSearch(query) {
       this.searchQuery = query

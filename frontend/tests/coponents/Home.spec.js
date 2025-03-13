@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect } from 'vitest'
-import HomeView from '@/views/Home.vue'
+import HomeView from '@/views/{application}/Home.vue'
 
 // Stub components for TeamView and CourseView
 const TeamViewStub = {
