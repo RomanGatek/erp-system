@@ -3,10 +3,10 @@ import api from '@/services/api'
 
 export const useReportsStore = defineStore('reports', {
   state: () => ({
-    // salesReport: null,
-    // productSalesReports: [],
-    // productPurchaseReports: [],
-    // orderApprovalReports: [],
+    salesReport: null,
+    productSalesReports: [],
+    productPurchaseReports: [],
+    orderApprovalReports: [],
     loading: false,
     error: null,
   }),
@@ -17,10 +17,6 @@ export const useReportsStore = defineStore('reports', {
       const [data, error] = await api.reports().getAll()
 
       this.error = error
-      this.salesReport = data.salesReport
-      this.productSalesReports = data.productSalesReports
-      this.productPurchaseReports = data.productPurchaseReports
-      this.orderApprovalReports = data.orderApprovalReports
 
       this.loading = false
     },
@@ -30,7 +26,7 @@ export const useReportsStore = defineStore('reports', {
       const [data, error] = await api.reports().getSalesReport()
 
       this.error = error
-      // this.salesReport = data
+      this.salesReport = data
 
       this.loading = false
 
@@ -42,7 +38,7 @@ export const useReportsStore = defineStore('reports', {
       const [data, error] = await api.reports().getOrderApprovalReports()
 
       this.error = error
-      // this.orderApprovalReports = data
+      this.orderApprovalReports = data
 
       this.loading = false
       return data
@@ -53,7 +49,7 @@ export const useReportsStore = defineStore('reports', {
       const [data, error] = await api.reports().getProductPurchaseReports()
 
       this.error = error
-      // this.productPurchaseReports = data
+      this.productPurchaseReports = data
 
       this.loading = false
 
@@ -65,7 +61,7 @@ export const useReportsStore = defineStore('reports', {
       const [data, error] = await api.reports().getProductSalesReports()
 
       this.error = error
-      // this.productSalesReports = data
+      this.productSalesReports = data
 
       this.loading = false
 
