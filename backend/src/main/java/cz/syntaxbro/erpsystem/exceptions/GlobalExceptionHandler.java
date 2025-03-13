@@ -111,6 +111,7 @@ public class GlobalExceptionHandler {
         ErpSystemApplication.getLogger().warn(ex.getMessage());
         ErpSystemApplication.getLogger().warn(ex.getClass().getName());
         var entity = new ErrorEntity("error", ex.getMessage());
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
     }
 }

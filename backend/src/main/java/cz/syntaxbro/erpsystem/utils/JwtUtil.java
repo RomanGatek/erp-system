@@ -46,14 +46,14 @@ public class JwtUtil {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     public String generateToken(Map<String, Object> claims, String username) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.add(Calendar.MINUTE, 30);
+        calendar.add(Calendar.MINUTE, 15);
 
         ErpSystemApplication.getLogger().warn("Generated token: {}", calendar.getTime());
 

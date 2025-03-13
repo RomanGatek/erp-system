@@ -118,7 +118,11 @@ const deleteUser = async (userId) => {
   if (confirm('Do you really want to delete this user?')) {
     try {
       await userStore.deleteUser(userId)
-      $notifier.success('User deleted removed successfully!')
+      if (userStore.error) {
+        errors.handle(userStore.error)
+        return;
+      }
+      $notifier.success('User deleted successfully!')
       reactiveUser.$clear()
     } catch (err) {
       console.error('Error deleting user:', err)

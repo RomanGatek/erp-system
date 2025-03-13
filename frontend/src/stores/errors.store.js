@@ -124,8 +124,8 @@ export const useErrorStore = defineStore('errors', {
       this.$clear()
       const parsed = errorParser(error)
       try {
-        parsed.errors.forEach((/**@type {import('@/utils/errors-utils').ErrorItem}*/ e) => {
-          const contains = [...this.errorDefault].includes(e.field)
+        parsed?.errors?.forEach((/**@type {import('@/utils/errors-utils').ErrorItem}*/ e) => {
+          const contains = ([...this.errorDefault].includes(e.field) || [...this.errorDefault].find(key => e.field.toLowerCase().includes(key.toLowerCase())))
           if (contains) {
             this[e.field] = e.message
           } else {

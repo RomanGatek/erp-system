@@ -12,15 +12,18 @@
           </router-link>
           <div class="hidden md:flex space-x-1">
             <template v-for="link in navLinks" :key="link.to">
-              <NavBarLink v-if="!link.dropdown" :to="link.to" :text="link.text" :icon="link.icon" :requiredRole="link.requiredRole" />
-              <NavBarLinkDropdown v-else :text="link.text" :icon="link.icon" :items="link.items" :requiredRole="link.requiredRole" />
+              <NavBarLink v-if="!link.dropdown" :to="link.to" :text="link.text" :icon="link.icon"
+                :requiredRole="link.requiredRole" />
+              <NavBarLinkDropdown v-else :text="link.text" :icon="link.icon" :items="link.items"
+                :requiredRole="link.requiredRole" />
             </template>
           </div>
         </div>
         <div v-if="isLoggedIn" class="flex items-center space-x-6">
           <span class="hidden md:inline text-white/90"></span>
           <div class="relative">
-            <button @click="toggleProfileMenu" class="group px-4 py-2 bg-white/10 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden flex items-center">
+            <button @click="toggleProfileMenu"
+              class="group px-4 py-2 bg-white/10 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden flex items-center">
               <span class="relative z-10 flex items-center">
                 <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mr-2">
                   <img
@@ -31,7 +34,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </span>
-              <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              </div>
             </button>
 
             <div v-if="showProfileMenu"
@@ -74,6 +79,7 @@ import {
   NavBarLink,
   NavBarLinkDropdown
 } from '@/components'
+import { notify } from '@kyvg/vue3-notification'
 
 const router = useRouter()
 const meStore = useMeStore()
@@ -91,18 +97,25 @@ const logout = async () => {
     showProfileMenu.value = false
 
     await Swal.fire({
-      title: 'Odhlašování...',
+      title: 'Logging out...',
+      text: 'Please wait while we log you out.',
       icon: 'info',
       showConfirmButton: false,
-      timer: 1000,
+      timer: 800,
       timerProgressBar: true,
-      didOpen: async () => {
-        await meStore.logout()
+      didOpen: () => {
+        Swal.showLoading()
+        meStore.logout()
+        notify({
+          type: 'info',
+          title: 'Logged out successfully',
+          duration: 3000
+        })
       },
       customClass: {
-        popup: 'swal-modern',
-        title: 'swal-title',
-        timerProgressBar: 'swal-timer'
+        popup: 'rounded-lg bg-white/90 backdrop-blur-lg shadow-lg',
+        title: 'text-xl font-semibold text-gray-800',
+        timerProgressBar: 'bg-blue-500 h-1 rounded-full'
       }
     })
 

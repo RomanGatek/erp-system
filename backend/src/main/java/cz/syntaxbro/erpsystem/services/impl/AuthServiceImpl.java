@@ -80,6 +80,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public String authenticateRefreshToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
+        return jwtUtil.generateRefreshToken(new CustomUserDetails(user));
+    }
+
+    @Override
+    public String authenticateAccessToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
+        return jwtUtil.generateToken(new CustomUserDetails(user));
+    }
+
+    @Override
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {

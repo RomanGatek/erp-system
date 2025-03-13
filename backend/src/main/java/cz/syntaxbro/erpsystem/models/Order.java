@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
@@ -43,7 +45,8 @@ public class Order {
     private String comment;
     
     @ManyToOne
-    @JoinColumn(name = "approved_by", nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "approved_by", nullable = true)
     private User approvedBy;
     
     @Column(name = "decision_time")

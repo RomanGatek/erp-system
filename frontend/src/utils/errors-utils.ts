@@ -42,12 +42,8 @@ export type DefaultResponse = {
 
 export type ReponseErrorEntity = DefaultResponse | ValidationResponse
 
-/**
- * 
- * @param error 
- * @returns {ReponseErrorEntity}
- */
-export const errorParser = (error: RawError) => {
+
+export const errorParser = (error: RawError): ReponseErrorEntity => {
     const errorType = getErrorType(error);
     let response: ReponseErrorEntity = { errors: [] } as ValidationResponse
 

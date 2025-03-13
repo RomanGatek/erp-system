@@ -5,14 +5,14 @@
       label="Email" />
 
     <!-- Username Input -->
-    <BaseInput autocomplete="username" :error="errors.username" v-model="formData.username"
-      placeholder="username" label="Username" />
+    <BaseInput autocomplete="username" :error="errors.username" v-model="formData.username" placeholder="username"
+      label="Username" />
 
     <!-- Password Input -->
     <div class="space-y-1.5">
       <label class="block text-sm text-gray-700">Password</label>
-      <PasswordInput autocomplete="new-password" v-model="formData.password" class="bg-gray-50"
-        :error="errors.password" required />
+      <PasswordInput autocomplete="new-password" v-model="formData.password" class="bg-gray-50" :error="errors.password"
+        required />
       <span v-if="errors.password" class="text-xs text-red-500">{{ errors.password }}</span>
     </div>
 
@@ -43,7 +43,7 @@
 
 <script setup>
 import { watch } from 'vue'
-import api from '@/services/api'
+import api from '@/services/api.js'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import { useNotifier, useErrorStore } from '@/stores'
 import { $reactive } from '@/utils'
@@ -83,7 +83,7 @@ const handleRegister = async () => {
 
     // Emit success event to parent
     emit('success', 'Successfully registered! Please sign in.')
-    
+
     // Reset form
     formData.$clear()
 
@@ -101,4 +101,4 @@ watch(
     if (newConfirmPassword !== oldConfirmPassword) errors.clear('confirmPassword')
   }
 )
-</script> 
+</script>

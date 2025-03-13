@@ -1,18 +1,105 @@
 import axios, { AxiosError } from 'axios'
-
+import { notify } from '@kyvg/vue3-notification'
+import { jwtDecode } from 'jwt-decode'
+import router from '@/router'
 
 class Api {
   #axios
+  #cache = new Map()
+  #healthCheckTimeout = null
+  #pendingRequests = new Map()
+  #isConnected = true
+  #lastHealthCheck = 0
+  
+  // Health check with debouncing (only check once every 30 seconds)
+  async #checkConnection() {
+    const now = Date.now()
+    // Return cached result if checked recently
+    if (now - this.#lastHealthCheck < 30000 && this.#isConnected) {
+      return this.#isConnected
+    }
+    
+    this.#lastHealthCheck = now
+    
+    // Clear existing timeout
+    if (this.#healthCheckTimeout) {
+      clearTimeout(this.#healthCheckTimeout)
+    }
+    
+    try {
+      // Use AbortController for timeout control
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5-second timeout
+      
+      await fetch(this.#axios.defaults.checkHealthURL, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        mode: 'no-cors',
+        method: 'HEAD',
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      this.#isConnected = true
+      return true
+    } catch (error) {
+      this.#isConnected = false
+      
+      console.error('🔴 API connection failed:', error.message)
+      notify({
+        title: 'API connection',
+        text: 'connection to api endpoint failed',
+        type: 'error',
+        duration: 2000,
+        speed: 1000
+      })
+      return false
+    }
+  }
+  
+  // Adds request cancellation functionality
+  #createCancelToken(requestId) {
+    const source = axios.CancelToken.source()
+    this.#pendingRequests.set(requestId, source)
+    return source.token
+  }
+  
+  #removePendingRequest(requestId) {
+    this.#pendingRequests.delete(requestId)
+  }
+  
+  // Cancel a specific pending request
+  cancelRequest(requestId) {
+    const source = this.#pendingRequests.get(requestId)
+    if (source) {
+      source.cancel('Request cancelled')
+      this.#pendingRequests.delete(requestId)
+    }
+  }
+  
+  // Cancel all pending requests
+  cancelAllRequests() {
+    this.#pendingRequests.forEach(source => source.cancel('Operation cancelled'))
+    this.#pendingRequests.clear()
+  }
 
   constructor() {
     this.#axios = axios.create({
       baseURL: 'http://localhost:8080/api',
+      checkHealthURL: 'http://localhost:8080/actuator/health',
       withCredentials: true,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 10000 // Add a default timeout
     })
 
     this.#axios.interceptors.request.use(
-      (config) => {
+      async (config) => {
+        // Only check connection for non-health endpoints
+        if (!await this.#checkConnection()) {
+          throw new Error('API is not available')
+        }
+
         const token = localStorage.getItem('token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
@@ -20,18 +107,92 @@ class Api {
         if (config.data instanceof FormData) {
           delete config.headers['Content-Type']
         }
+        
+        // Add request cancellation support
+        if (config.requestId) {
+          config.cancelToken = this.#createCancelToken(config.requestId)
+        }
+        
         return config
       },
       (error) => Promise.reject(error)
     )
+    
+    // Add response interceptor to handle cache
+    this.#axios.interceptors.response.use(
+      (response) => {
+        // If this is a cacheable request
+        if (response.config.cache) {
+          const cacheKey = `${response.config.method}:${response.config.url}`
+          this.#cache.set(cacheKey, {
+            data: response.data,
+            timestamp: Date.now(),
+            maxAge: response.config.cacheMaxAge || 60000 // Default: 1 minute
+          })
+        }
+        
+        // Clean up pending request
+        if (response.config.requestId) {
+          this.#removePendingRequest(response.config.requestId)
+        }
+        
+        return response
+      },
+      (error) => {
+        // Clean up pending request on error too
+        if (error.config?.requestId) {
+          this.#removePendingRequest(error.config.requestId)
+        }
+        return Promise.reject(error)
+      }
+    )
 
-    console.log('✅ API instance created')
-    console.log('🔗 Base URL:', this.#axios.defaults.baseURL)
-    console.log('🔑 Authorization Bearer')
-    // Získání dostupných metod
-    console.log('🔦 Endpoints discovered')
+    // Only log in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ API instance created')
+      console.log('🔗 Base URL:', this.#axios.defaults.baseURL)
+      console.log('🔑 Authorization Bearer')
+      console.log('🔦 Endpoints discovered')
+    }
   }
-    /**
+  
+  // Cached request method
+  async #cachedRequest(config) {
+    const cacheKey = `${config.method}:${config.url}`
+    
+    // Check if we have a valid cached response
+    if (config.cache && this.#cache.has(cacheKey)) {
+      const cachedItem = this.#cache.get(cacheKey)
+      const now = Date.now()
+      
+      if (now - cachedItem.timestamp < cachedItem.maxAge) {
+        return { data: cachedItem.data }
+      } else {
+        // Remove expired cache
+        this.#cache.delete(cacheKey)
+      }
+    }
+    
+    // Proceed with actual request
+    return this.#axios(config)
+  }
+  
+  // Clear entire cache or specific endpoint
+  clearCache(endpoint = null) {
+    if (endpoint) {
+      // Delete specific cache entries that match the endpoint
+      this.#cache.forEach((value, key) => {
+        if (key.includes(endpoint)) {
+          this.#cache.delete(key)
+        }
+      })
+    } else {
+      // Clear all cache
+      this.#cache.clear()
+    }
+  }
+
+  /**
    * Auth management operations
    */
   auth() {
@@ -46,8 +207,6 @@ class Api {
           const response = await this.#axios.post('/auth/public/login', credentials)
           /** @type {LoginResponse} */
           const data = response.data
-
-          console.log(data)
           return [data, null]
         } catch (e) {
           return [{}, e]
@@ -170,15 +329,71 @@ class Api {
         } catch (e) {
           return [null, e]
         }
+      },
+      refreshToken: async () => {
+        try {
+          const refreshToken = localStorage.getItem('refresh-token')
+          if (!refreshToken) {
+            notify({
+              title: 'Refresh token',
+              text: 'No refresh token found, please login again',
+              type: 'error',
+              duration: 3500,
+              speed: 1000
+            })
+            router.push('/auth')
+            return null;
+          }
+
+          const decoded = jwtDecode(refreshToken)
+          if (decoded.exp * 1000 < Date.now()) {
+            notify({
+              title: 'Refresh token',
+              text: 'Refresh token has expired, please login again',
+              type: 'error',
+              duration: 3500,
+              speed: 1000
+            })
+            router.push('/auth')
+            return null;
+          }
+          const response = await axios.get('http://localhost:8080/api/me/renew', { 
+            params: { refreshToken }, 
+            headers: { 
+              Authorization: `Bearer ${refreshToken}`,
+              'Content-Type': 'application/json'
+            } 
+          })
+
+          if (response.status === 200) {
+            const { accessToken, refreshToken } = response.data
+            notify({
+              title: 'Authorization',
+              text: 'Reauthorization successful',
+              type: 'info',
+              duration: 2000,
+              speed: 1000
+            })
+            return [{ accessToken, refreshToken }, null]
+          }
+        } catch (e) {
+          return [null, e]
+        }
       }
     }
   }
 
   category() {
     return {
-      getAll: async () => {
+      getAll: async (options = {}) => {
         try {
-          const response = await this.#axios.get('/categories')
+          const response = await this.#cachedRequest({
+            method: 'get',
+            url: '/categories',
+            cache: options.cache !== false,
+            cacheMaxAge: options.cacheMaxAge || 300000, // 5 minutes default
+            requestId: options.requestId
+          })
           return [response.data, null]
         } catch (e) {
           return [null, e]

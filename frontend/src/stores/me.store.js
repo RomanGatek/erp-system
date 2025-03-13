@@ -17,6 +17,28 @@ export const useMeStore = defineStore('me', {
      */
     async fetchMe() {
       [this.user, this.error] = await api.me().current()
+      if (this.error) {
+        const [{ accessToken, refreshToken }, error]  = await api.me().refreshToken()
+        if (error){
+          this.error = error
+          return null
+        };
+        localStorage.setItem('token', accessToken)
+        localStorage.setItem('refresh-token', refreshToken)
+
+        const [user, e] = await api.me().current()
+
+        if (e) {
+          this.error = e
+          return null
+        }
+
+        if (user) {
+          this.user = user
+          this.error = null
+          return this.user
+        }
+      }
       return this.user
     },
     /**
@@ -25,7 +47,21 @@ export const useMeStore = defineStore('me', {
      * @returns {Promise<import('@/services/api').User>}
      */
     async updateProfile(profileData) {
-      [this.user, this.error] = await api.me().updateProfile(profileData)
+
+      const [user, error] = await api.me().updateProfile({
+        username: profileData.username,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        roles: profileData.roles.map(role => role.name),
+        avatar: profileData.avatar
+      })
+
+      if (error) {
+        this.error = error
+        return null
+      }
+      this.user = user
+
       return this.user
     },
     /**
@@ -34,7 +70,12 @@ export const useMeStore = defineStore('me', {
      * @returns {Promise<import('@/services/api').User>}
      */
     async updatePassword(pass) {
-      [this.user, this.error] = await api.me().updatePassword(pass)
+      const [user, error] = await api.me().updatePassword(pass)
+      if (error) {
+        this.error = error
+        return null
+      }
+      this.user = user
       return this.user
     },
     /**

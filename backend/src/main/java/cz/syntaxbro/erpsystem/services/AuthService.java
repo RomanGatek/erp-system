@@ -14,4 +14,6 @@ public interface AuthService {
     User getCurrentUser();
 
     String getRefreshToken(LoginRequest loginRequest);
+    String authenticateRefreshToken(String email);
+    String authenticateAccessToken(String email);
 }

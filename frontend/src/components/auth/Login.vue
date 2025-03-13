@@ -1,8 +1,8 @@
 <template>
   <form @submit.prevent="handleLogin" class="space-y-4" autocomplete="off">
     <!-- Email Input -->
-    <BaseInput autocomplete="email" :error="errors.email" v-model="formData.email"
-      placeholder="admin@example.com" label="Email" />
+    <BaseInput autocomplete="email" :error="errors.email" v-model="formData.email" placeholder="admin@example.com"
+      label="Email" />
 
     <!-- Password Input -->
     <div class="space-y-1.5">
@@ -31,7 +31,7 @@
 
 <script setup>
 import { watch } from 'vue'
-import api from '@/services/api'
+import api from '@/services/api.js'
 import { useMeStore } from '@/stores/me.store.js'
 import PasswordInput from '@/components/common/PasswordInput.vue'
 import { useNotifier, useErrorStore } from '@/stores'
@@ -66,20 +66,21 @@ const handleLogin = async () => {
       errors.general = 'Invalid authentication token'
       return
     }
-    
+
     localStorage.setItem('token', accessToken)
     localStorage.setItem('refresh-token', refreshToken)
 
     await meStore.fetchMe()
-    
+
     // Emit success event to parent
     emit('success', 'Successfully logged in')
-    
+
     // Reset form
     formData.$clear()
 
   } catch (err) {
     errors.handle(err)
+    console.error(err)
     $notifier.error(err.message, 'Login failed', 5000)
   }
 }
@@ -91,4 +92,4 @@ watch(
     if (newPassword !== oldPassword) errors.clear('password')
   }
 )
-</script> 
+</script>
