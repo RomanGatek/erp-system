@@ -435,9 +435,13 @@ export default {
     onMounted(async () => {
       console.log("ProductCatalog mounted, current route:", route.path);
       
-      // Load products first
+      // Nejprve inicializuji košík - zde načteme data z localStorage nebo API
+      await cart.initializeCart();
+      
+      // Load products and categories
       await Promise.all([loadProducts(), loadCategories()]);
       console.log("Products loaded, count:", products.items.length);
+      console.log("Cart loaded, items count:", cart.items.length);
       
       // Check if URL has a product after products are loaded
       await checkUrlForProduct();

@@ -14,6 +14,7 @@ import Workflow from '@/views/{pages}/Workflow.vue'
 import Orders from '@/views/{pages}/Orders.vue'
 import Categories from './views/{pages}/Categories.vue'
 import ProductCatalog from './views/{user}/ProductCatalog.vue'
+import Checkout from './views/checkout/Checkout.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -27,6 +28,25 @@ const routes = [
   { path: '/products/categories', component: Categories, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/catalog', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
   { path: '/catalog/product/:slug', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
+  {
+    path: '/checkout',
+    name: 'Checkout',
+    component: Checkout,
+    meta: {
+      requiresAuth: false,
+      title: 'Checkout'
+    }
+  },
+  {
+    path: '/order-confirmation',
+    name: 'OrderConfirmation',
+    component: () => import('@/views/checkout/OrderConfirmation.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Order Confirmation'
+    },
+  },
+
   { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
