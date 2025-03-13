@@ -21,7 +21,7 @@ defineOptions({
 })
 
 const searchInput = ref('')
-const errorStore = useErrorStore()
+const errors = useErrorStore()
 const $notifier = useNotifier()
 const categoriesStore = useCategoriesStore()
 
@@ -64,7 +64,7 @@ const $actions = computed(() => {
         isAddModalOpen.value = false
         reactiveCategory.$clear()
       } catch (error) {
-        errorStore.handle(error)
+        errors.handle(error)
       } finally {
         loading.value = false
       }
@@ -76,12 +76,12 @@ const $actions = computed(() => {
     cancelAdd: () => {
       isAddModalOpen.value = false
       reactiveCategory.$clear()
-      errorStore.clearServerErrors()
+      errors.clearServerErrors()
     },
     cancelEdit: () => {
       isEditModalOpen.value = false
       reactiveCategory.$clear()
-      errorStore.clearServerErrors()
+      errors.clearServerErrors()
     },
     updateCategory: async () => {
       loading.value = true
@@ -91,7 +91,7 @@ const $actions = computed(() => {
         isEditModalOpen.value = false
         reactiveCategory.$clear()
       } catch (error) {
-        errorStore.handle(error)
+        errors.handle(error)
       } finally {
         loading.value = false
       }
@@ -102,7 +102,7 @@ const $actions = computed(() => {
         try {
           await categoriesStore.deleteCategory(id)
           if (categoriesStore.error) {
-            errorStore.handle(categoriesStore.error)
+            errors.handle(categoriesStore.error)
           } else {
             $notifier.success('Category deleted successfully')
           }
@@ -126,8 +126,7 @@ onMounted(async () => {
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar :error="errorStore.errors.general" :loading="loading" class="mb-4"
-        @clear-error="errorStore.clearServerErrors()" />
+      <StatusBar :error="errors.general" :loading="loading" class="mb-4" @clear-error="errors.clearServerErrors()" />
 
       <!-- Header overlay -->
       <div class="flex justify-between items-center mb-6">
@@ -137,7 +136,7 @@ onMounted(async () => {
 
           <BaseButton type="primary" class="text-sm! flex!" @click="
             reactiveCategory.$clear();
-          errorStore.clearServerErrors();
+          errors.clearServerErrors();
           isAddModalOpen = true;
           ">
             <span class="mr-2">Add</span>
@@ -199,11 +198,10 @@ onMounted(async () => {
     <!-- Add Modal -->
     <Modal :show="isAddModalOpen" title="Add New Category" @close="$actions.cancelAdd">
       <div class="space-y-3">
-        <BaseInput :error="errorStore.errors.name" v-model="reactiveCategory.name" placeholder="Category name"
-          label="Name" />
-        <BaseInput :error="errorStore.errors.description" v-model="reactiveCategory.description"
-          placeholder="Category description" label="Description" />
-        <ColorPicker :error="errorStore.errors.color" v-model="reactiveCategory.color" label="Color" />
+        <BaseInput :error="errors.name" v-model="reactiveCategory.name" placeholder="Category name" label="Name" />
+        <BaseInput :error="errors.description" v-model="reactiveCategory.description" placeholder="Category description"
+          label="Description" />
+        <ColorPicker :error="errors.color" v-model="reactiveCategory.color" label="Color" />
 
         <div class="flex justify-end space-x-3 pt-2">
           <BaseButton type="error" class="text-sm! font-bold flex!" @click="$actions.cancelAdd">
@@ -219,11 +217,10 @@ onMounted(async () => {
     <!-- Edit Modal -->
     <Modal :show="isEditModalOpen" title="Edit Category" @close="$actions.cancelEdit">
       <div class="space-y-3">
-        <BaseInput :error="errorStore.errors.name" v-model="reactiveCategory.name" placeholder="Category name"
-          label="Name" />
-        <BaseInput :error="errorStore.errors.description" v-model="reactiveCategory.description"
-          placeholder="Category description" label="Description" />
-        <ColorPicker :error="errorStore.errors.color" v-model="reactiveCategory.color" label="Color" />
+        <BaseInput :error="errors.name" v-model="reactiveCategory.name" placeholder="Category name" label="Name" />
+        <BaseInput :error="errors.description" v-model="reactiveCategory.description" placeholder="Category description"
+          label="Description" />
+        <ColorPicker :error="errors.color" v-model="reactiveCategory.color" label="Color" />
         <div class="flex justify-between pt-2">
           <BaseButton type="error" class="text-sm! font-bold flex!" @click="$actions.cancelEdit">
             Cancel

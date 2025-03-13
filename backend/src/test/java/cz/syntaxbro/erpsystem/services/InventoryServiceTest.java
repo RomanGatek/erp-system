@@ -42,6 +42,7 @@ public class InventoryServiceTest {
                 .purchasePrice(20)
                 .build();
 
+
         this.item1 = InventoryItem.builder()
                 .id(1L)
                 .product(this.product)

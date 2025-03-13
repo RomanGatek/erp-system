@@ -1,11 +1,16 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import cz.syntaxbro.erpsystem.partials.UserPartial;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -58,6 +63,11 @@ public class User {
     )
     private Set<Role> roles;
 
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
     @Override
     public String toString() {
         return "User{" + "id=" + id +
@@ -70,5 +80,13 @@ public class User {
                 ", active=" + active +
                 ", roles=" + roles +
                 '}';
+    }
+
+    public void map(UserPartial partial) {
+        this.firstName = partial.getFirstName();
+        this.lastName = partial.getLastName();
+        this.avatar = partial.getAvatar();
+        this.active = partial.isActive();
+        this.username = partial.getUsername();
     }
 }

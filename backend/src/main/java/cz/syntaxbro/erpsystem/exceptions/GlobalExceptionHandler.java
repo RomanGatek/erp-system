@@ -1,6 +1,7 @@
 package cz.syntaxbro.erpsystem.exceptions;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
+import cz.syntaxbro.erpsystem.utils.ConsoleColors;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,8 +37,7 @@ public class GlobalExceptionHandler {
     // Error when user not found
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorEntity> handleUserNotFoundException(UserNotFoundException ex) {
-        var entity = new ErrorEntity("user", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(entity);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorEntity("email", ex.getMessage()));
     }
 
     // Error with unauthorized access (e.g. wrong password)
@@ -53,15 +53,6 @@ public class GlobalExceptionHandler {
         ErpSystemApplication.getLogger().warn(ex.getMessage());
         var entity = new ErrorEntity("argument", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(entity);
-    }
-
-    // General server error (unexpected errors)
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorEntity> handleGlobalException(Exception ex) {
-        ErpSystemApplication.getLogger().warn(ex.getMessage());
-        ErpSystemApplication.getLogger().warn(ex.getClass().getName());
-        var entity = new ErrorEntity("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -112,5 +103,14 @@ public class GlobalExceptionHandler {
         public UserNotFoundException(String message) {
             super(message);
         }
+    }
+
+    // General server error (unexpected errors)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorEntity> handleGlobalException(Exception ex) {
+        ErpSystemApplication.getLogger().warn(ex.getMessage());
+        ErpSystemApplication.getLogger().warn(ex.getClass().getName());
+        var entity = new ErrorEntity("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(entity);
     }
 }

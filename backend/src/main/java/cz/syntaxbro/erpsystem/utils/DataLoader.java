@@ -457,9 +457,6 @@ public class DataLoader implements CommandLineRunner {
     private void createUserIfNotExists(String username, String firstName, String email, Set<Role> roles) {
         Optional<User> userFromDb = userRepository.findByEmail(email);
         if (userFromDb.isEmpty()) {
-
-            ErpSystemApplication.getLogger().warn("[DATA LOADER] User {} fetch already exists.", username);
-
             User user = new User();
             user.setUsername(username);
             user.setPassword(encoder.encode("P&ssw0rd123@")); // Default password
@@ -470,8 +467,6 @@ public class DataLoader implements CommandLineRunner {
             user.setRoles(roles);
 
             userRepository.save(user);
-        } else {
-            ErpSystemApplication.getLogger().info("[DATA LOADER] User {} created.", username);
         }
     }
 

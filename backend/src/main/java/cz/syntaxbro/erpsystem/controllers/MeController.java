@@ -50,17 +50,8 @@ public class MeController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<User> updateCurrentUser(@Valid @RequestBody UserPartial user) {
         User currentUser = authService.getCurrentUser();
-        currentUser.setUsername(user.getUsername());
-        currentUser.setEmail(user.getEmail());
-        currentUser.setFirstName(user.getFirstName());
-        currentUser.setLastName(user.getLastName());
-        currentUser.setActive(user.isActive());
-        if (user.getAvatar() == null) {
-            currentUser.setAvatar(null);
-        }
-        var savedUser = userRepository.save(currentUser);
-        logger.info("UPDATE me user: {}", savedUser);
-        return ResponseEntity.ok(savedUser);
+        currentUser.map(user);
+        return ResponseEntity.ok(userRepository.save(currentUser));
     }
 
     // Fetching the current user

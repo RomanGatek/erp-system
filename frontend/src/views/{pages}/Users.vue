@@ -16,6 +16,8 @@ import {
 } from '@/components'
 import { $reactive } from '@/utils/index.js'
 import BaseButton from '@/components/common/BaseButton.vue'
+import AddUserModal from '@/views/{modals}/users/AddUserModal.vue'
+import EditUserModal from '@/views/{modals}/users/EditUserModal.vue'
 
 defineOptions({
   name: 'UsersView',
@@ -25,7 +27,7 @@ const userStore = useUserStore()
 const searchInput = ref('')
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
-const errorStore = useErrorStore()
+const errors = useErrorStore()
 
 const reactiveUser = $reactive({
   id: undefined,
@@ -55,59 +57,60 @@ const tableHeaders = [
 ]
 const loading = ref(false)
 const $notifier = useNotifier()
+errors.validateField(reactiveUser.$cleaned())
 
 onMounted(async () => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   loading.value = true
   try {
     await userStore.fetchUsers()
     if (!userStore.error) {
       loading.value = false
     } else {
-      errorStore.handle(userStore.error)
+      errors.handle(userStore.error)
       loading.value = false
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     loading.value = false
     console.error(err)
   }
 })
 
-const addUser = async () => {
+const addUser = async (userData) => {
   try {
-    await userStore.addUser({ ...reactiveUser })
+    await userStore.addUser(userData)
     if (!userStore.error) {
       isAddModalOpen.value = false
       $notifier.success('User was created successfully!')
       reactiveUser.$clear()
     } else {
-      errorStore.handle(userStore.error)
-      if (errorStore.errors.general) {
+      errors.handle(userStore.error)
+      if (errors.general) {
         isAddModalOpen.value = false
       }
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     loading.value = false
     console.error(err)
   }
 }
 
-const updateUser = async () => {
-  errorStore.clearServerErrors()
+const updateUser = async (userData) => {
+  errors.clearServerErrors()
   try {
-    await userStore.updateUser(reactiveUser)
+    await userStore.updateUser(userData)
     if (userStore.error) {
-      errorStore.handle(userStore.error)
-      if (errorStore.errors.general) isEditModalOpen.value = false
+      errors.handle(userStore.error)
+      if (errors.general) isEditModalOpen.value = false
     } else {
       isEditModalOpen.value = false
       $notifier.success('User was edited successfully!')
       reactiveUser.$clear()
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     loading.value = false
     console.error(err)
   }
@@ -121,7 +124,7 @@ const deleteUser = async (userId) => {
       reactiveUser.$clear()
     } catch (err) {
       console.error('Error deleting user:', err)
-      errorStore.errors.general = 'Failed to delete user. Please try again later.'
+      errors.general = 'Failed to delete user. Please try again later.'
     }
   }
 }
@@ -134,13 +137,13 @@ const openEditModal = (index) => {
 }
 
 const cancelAdd = () => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   reactiveUser.$clear()
   isAddModalOpen.value = false
 }
 
 const cancelEdit = () => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   isEditModalOpen.value = false
   reactiveUser.$clear()
 }
@@ -171,19 +174,19 @@ watch(
     [oldFirstName, oldLastName, oldEmail, oldUsername, oldPassword],
   ) => {
     if (newFirstName !== oldFirstName) {
-      errorStore.clear('firstName')
+      errors.clear('firstName')
     }
     if (newLastName !== oldLastName) {
-      errorStore.clear('lastName')
+      errors.clear('lastName')
     }
     if (newEmail !== oldEmail) {
-      errorStore.clear('email')
+      errors.clear('email')
     }
     if (newUserName !== oldUsername) {
-      errorStore.clear('username')
+      errors.clear('username')
     }
     if (oldPassword !== newPassword) {
-      errorStore.clear('password')
+      errors.clear('password')
     }
   },
 )
@@ -193,8 +196,7 @@ watch(
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar :error="errorStore.errors.general" :loading="loading" class="mb-4"
-        @clear-error="errorStore.clearServerErrors()" />
+      <StatusBar :error="errors.general" :loading="loading" class="mb-4" @clear-error="errors.clearServerErrors()" />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Users</h2>
@@ -271,104 +273,12 @@ watch(
       </template>
     </div>
 
-    <!-- Add Modal -->
-    <Modal :show="isAddModalOpen" title="Add New User" @close="cancelAdd">
-      <div class=" space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <BaseInput v-model="reactiveUser.firstName" placeholder="First Name" label="First name"
-            :error="errorStore.errors.firstName" :class="{ 'border-red-500': errorStore.errors.firstName }" />
-          <BaseInput v-model="reactiveUser.lastName" placeholder="Last Name" label="Last name"
-            :error="errorStore.errors.lastName" :class="{ 'border-red-500': errorStore.errors.lastName }" />
-        </div>
-        <BaseInput v-model="reactiveUser.email" type="email" placeholder="Email" label="Email"
-          :error="errorStore.errors.email" :class="{ 'border-red-500': errorStore.errors.email }" />
-        <BaseInput v-model="reactiveUser.username" placeholder="Username" label="Username"
-          :error="errorStore.errors.username" :class="{ 'border-red-500': errorStore.errors.username }" />
-        <BaseInput v-model="reactiveUser.password" type="password" placeholder="Password" label="Password"
-          :error="errorStore.errors.password" :class="{ 'border-red-500': errorStore.errors.password }" />
-        <!-- Role selection -->
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Role</label>
-          <div class="flex flex-wrap gap-2">
-            <label v-for="role in availableRoles" :key="role.name"
-              class="inline-flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" v-model="reactiveUser.roles" :value="{ name: `ROLE_${role.name.toUpperCase()}` }"
-                class="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-opacity-50" />
-              <span class="px-2 py-1 rounded-full text-xs font-medium" :class="[role.bgColor, role.textColor]">
-                {{ role.name }}
-              </span>
-            </label>
-          </div>
-          <span v-if="errorStore.errors.roles" class="text-xs text-red-500">
-            {{ errorStore.errors.roles }}
-          </span>
-        </div>
-        <!-- General Error Message -->
-        <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
-          {{ errorStore.errors.general }}
-        </div>
-        <BaseCheckbox v-model="reactiveUser.active" label="Account active" />
-        <div class="flex justify-end space-x-3 pt-2">
-          <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelAdd">
-            Cancel
-          </BaseButton>
-          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="addUser">
-            Add User
-          </BaseButton>
-        </div>
-      </div>
-    </Modal>
+    <!-- Add User Modal Component -->
+    <AddUserModal v-if="isAddModalOpen" :available-roles="availableRoles" :errors="errors" @add-user="addUser"
+      @cancel="cancelAdd" />
 
-    <!-- Edit Modal -->
-    <Modal :show="isEditModalOpen" title="Edit User" @close="cancelEdit">
-      <div class="space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <BaseInput v-model="reactiveUser.firstName" placeholder="First Name" label="First name" variant="success"
-            :error="errorStore.errors.firstName" :class="{ 'border-red-500': errorStore.errors.firstName }" />
-          <BaseInput v-model="reactiveUser.lastName" placeholder="Last Name" label="Last name" variant="success"
-            :error="errorStore.errors.lastName" :class="{ 'border-red-500': errorStore.errors.lastName }" />
-        </div>
-        <BaseInput v-model="reactiveUser.email" type="email" placeholder="Email" label="Email" variant="success"
-          :error="errorStore.errors.email" :class="{ 'border-red-500': errorStore.errors.email }" />
-        <BaseInput v-model="reactiveUser.username" placeholder="Username" label="Username" variant="success"
-          :error="errorStore.errors.username" :class="{ 'border-red-500': errorStore.errors.username }" />
-        <!-- Role selection -->
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Role</label>
-          <div class="flex flex-wrap gap-2">
-            <label v-for="role in availableRoles" :key="role.name"
-              class="inline-flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" :checked="isRoleSelected(role.name, reactiveUser.roles)" @change="
-                (e) => {
-                  if (e.target.checked) {
-                    reactiveUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
-                  } else {
-                    reactiveUser.roles = reactiveUser.roles.filter(
-                      (r) => r.name !== `ROLE_${role.name.toUpperCase()}`,
-                    )
-                  }
-                }
-              "
-                class="w-4 h-4 rounded border-gray-300 text-green-600 shadow-sm focus:ring-2 focus:ring-green-200 focus:ring-opacity-50" />
-              <span class="px-2 py-1 rounded-full text-xs font-medium" :class="[role.bgColor, role.textColor]">
-                {{ role.name }}
-              </span>
-            </label>
-          </div>
-          <span v-if="errorStore.errors.roles" class="text-xs text-red-500">
-            {{ errorStore.errors.roles }}
-          </span>
-        </div>
-        <BaseCheckbox v-model="reactiveUser.active" label="Account active" variant="success" />
-        <div class="flex justify-between pt-2">
-          <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelEdit">
-            Cancel
-          </BaseButton>
-          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="updateUser">
-            Update User
-          </BaseButton>
-        </div>
-      </div>
-    </Modal>
+    <!-- Edit User Modal Component -->
+    <EditUserModal v-if="isEditModalOpen" :available-roles="availableRoles" :user="reactiveUser" :errors="errors"
+      @update-user="updateUser" @cancel="cancelEdit" />
   </div>
 </template>

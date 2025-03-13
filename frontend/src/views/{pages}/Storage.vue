@@ -26,7 +26,7 @@ const inventoryStore = useInventoryStore()
 const searchInput = ref('')
 const isAddModalOpen = ref(false)
 const isEditModalOpen = ref(false)
-const errorStore = useErrorStore()
+const errors = useErrorStore()
 const productStore = useProductsStore()
 
 const reactiveItem = $reactive({
@@ -74,7 +74,7 @@ const loading = ref(false)
 const $notifier = useNotifier()
 
 onMounted(async () => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   loading.value = true
   try {
     if (productStore.items.length === 0) {
@@ -83,13 +83,13 @@ onMounted(async () => {
     await inventoryStore.fetchItems()
 
     if (inventoryStore.error) {
-      errorStore.handle(inventoryStore.error)
+      errors.handle(inventoryStore.error)
     }
     if (productStore.error) {
-      errorStore.handle(productStore.error)
+      errors.handle(productStore.error)
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     loading.value = false
     console.error(err)
   } finally {
@@ -104,13 +104,13 @@ const addItem = async () => {
       $notifier.success('Item was created successfully!')
       reactiveItem.$clear()
     } else {
-      errorStore.handle(inventoryStore.error)
-      if (errorStore.errors.general) {
+      errors.handle(inventoryStore.error)
+      if (errors.general) {
         isAddModalOpen.value = false
       }
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     console.error(err)
     reactiveItem.$clear()
     isEditModalOpen.value = false
@@ -129,13 +129,13 @@ const updateItem = async () => {
       $notifier.success('Item was updated successfully!')
       reactiveItem.$clear()
     } else {
-      errorStore.handle(inventoryStore.error)
-      if (errorStore.errors.general) {
+      errors.handle(inventoryStore.error)
+      if (errors.general) {
         isEditModalOpen.value = false
       }
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     console.error(err)
     reactiveItem.$clear()
     isEditModalOpen.value = false
@@ -151,13 +151,13 @@ const deleteItem = async (itemId) => {
       reactiveItem.$clear()
     } catch (err) {
       console.error('Error deleting item:', err)
-      errorStore.errors.general = 'Failed to delete item. Please try again later.'
+      errors.general = 'Failed to delete item. Please try again later.'
     }
   }
 }
 
 const openEditModal = (item) => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   reactiveItem.$clear()
 
   // Create a deep copy of the item to avoid reference issues
@@ -183,13 +183,13 @@ const openEditModal = (item) => {
 }
 
 const cancelEdit = () => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   isEditModalOpen.value = false
   reactiveItem.$clear()
 }
 
 const cancelAdd = () => {
-  errorStore.clearServerErrors()
+  errors.clearServerErrors()
   reactiveItem.$clear()
   isAddModalOpen.value = false
 }
@@ -198,8 +198,7 @@ const cancelAdd = () => {
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-      <StatusBar :error="errorStore.errors.general" :loading="loading" class="mb-4"
-        @clear-error="errorStore.clearServerErrors()" />
+      <StatusBar :error="errors.general" :loading="loading" class="mb-4" @clear-error="errors.clearServerErrors()" />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Storage</h2>
@@ -207,7 +206,7 @@ const cancelAdd = () => {
           <SearchBar v-model="searchInput" @update:modelValue="inventoryStore.setSearch($event)" />
           <BaseButton type="primary" class="text-sm! flex!" @click="
             reactiveItem.$clear();
-          errorStore.clearServerErrors();
+          errors.clearServerErrors();
           isAddModalOpen = true;
           ">
             <span class="mr-2">Add</span>

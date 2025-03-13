@@ -53,10 +53,25 @@ public class JwtUtil {
     public String generateToken(Map<String, Object> claims, String username) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.add(Calendar.MONTH, 6); // Přidá 1 měsíc
+        calendar.add(Calendar.MINUTE, 30);
 
         ErpSystemApplication.getLogger().warn("Generated token: {}", calendar.getTime());
 
+        return Jwts.builder()
+                .claims(claims)
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(calendar.getTime())
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String generateRefreshToken(Map<String, Object> claims, String username) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR, 12);
+
+        ErpSystemApplication.getLogger().warn("Generated refresh token: {}", calendar.getTime());
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
@@ -70,6 +85,12 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities());
         return generateToken(claims, userDetails.getUsername());
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities());
+        return generateRefreshToken(claims, userDetails.getUsername());
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {

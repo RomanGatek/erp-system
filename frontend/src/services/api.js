@@ -46,9 +46,11 @@ class Api {
           const response = await this.#axios.post('/auth/public/login', credentials)
           /** @type {LoginResponse} */
           const data = response.data
-          return [data?.accessToken ?? null, null]
+
+          console.log(data)
+          return [data, null]
         } catch (e) {
-          return [null, e]
+          return [{}, e]
         }
       },
 

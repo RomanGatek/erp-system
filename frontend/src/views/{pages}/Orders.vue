@@ -3,12 +3,7 @@
     <div class="flex gap-6">
       <!-- Main Content -->
       <div class="flex-1 bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-        <StatusBar
-          :error="errorStore.errors.general"
-          :loading="loading"
-          class="mb-4"
-          @clear-error="errorStore.clearServerErrors()"
-        />
+        <StatusBar :error="errors.general" :loading="loading" class="mb-4" @clear-error="errors.clearServerErrors()" />
 
         <div class="mb-6">
           <h2 class="text-2xl font-bold text-gray-800">
@@ -16,26 +11,22 @@
           </h2>
           <p class="text-sm text-gray-500 mt-1 mb-2">Select order type</p>
           <div class="flex gap-2">
-            <button
-              @click="orderType = 'PURCHASE'"
+            <button @click="orderType = 'PURCHASE'"
               class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 border cursor-pointer transform hover:scale-105"
               :class="[
                 orderType === 'PURCHASE'
                   ? 'bg-gradient-to-r from-red-500 to-red-400 text-white border-red-500 shadow-md'
                   : 'border-red-500 text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100',
-              ]"
-            >
+              ]">
               Purchase
             </button>
-            <button
-              @click="orderType = 'SELL'"
+            <button @click="orderType = 'SELL'"
               class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 border cursor-pointer transform hover:scale-105"
               :class="[
                 orderType === 'SELL'
                   ? 'bg-gradient-to-r from-green-500 to-green-400 text-white border-green-500 shadow-md'
                   : 'border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100',
-              ]"
-            >
+              ]">
               Sell
             </button>
           </div>
@@ -44,13 +35,8 @@
         <!-- Order Form -->
         <form @submit.prevent="isEditing ? editOrder : createOrder()" class="space-y-6">
           <!-- Product Selection -->
-          <MultiProductSelect
-            :items="products"
-            v-model="selectedProducts"
-            placeholder="Search and add products..."
-            class="product-select"
-            :order-type="orderType"
-          />
+          <MultiProductSelect :items="products" v-model="selectedProducts" placeholder="Search and add products..."
+            class="product-select" :order-type="orderType" />
 
           <!-- Order Time -->
           <DateTimePicker v-model="orderTime" label="Order Time" :error="orderTimeError" />
@@ -59,87 +45,51 @@
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <label class="block text-sm font-medium text-gray-700">Comment</label>
-              <button
-                type="button"
-                @click="showCommentField = !showCommentField"
-                class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
+              <button type="button" @click="showCommentField = !showCommentField"
+                class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
                 <span>{{ showCommentField ? 'Hide comment' : 'Add comment' }}</span>
               </button>
             </div>
 
-            <transition
-              enter-active-class="transition ease-out duration-200"
+            <transition enter-active-class="transition ease-out duration-200"
               enter-from-class="transform opacity-0 scale-95 -translate-y-4"
               enter-to-class="transform opacity-100 scale-100 translate-y-0"
               leave-active-class="transition ease-in duration-150"
               leave-from-class="transform opacity-100 scale-100 translate-y-0"
-              leave-to-class="transform opacity-0 scale-95 -translate-y-4"
-              @before-leave="isAnimating = true"
-              @after-leave="isAnimating = false"
-            >
+              leave-to-class="transform opacity-0 scale-95 -translate-y-4" @before-leave="isAnimating = true"
+              @after-leave="isAnimating = false">
               <div v-if="showCommentField || comment" class="relative">
-                <textarea
-                  v-model="comment"
-                  placeholder="Enter order comment..."
-                  rows="3"
-                  maxlength="500"
+                <textarea v-model="comment" placeholder="Enter order comment..." rows="3" maxlength="500"
                   @blur="handleCommentBlur"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all"
-                ></textarea>
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
                 <div class="text-xs text-gray-400 text-right mt-1">{{ comment.length }}/500</div>
               </div>
             </transition>
           </div>
 
           <!-- Stock Information -->
-          <div
-            v-if="selectedProducts.length > 0"
-            class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/50 shadow-sm"
-          >
+          <div v-if="selectedProducts.length > 0"
+            class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/50 shadow-sm">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <div class="p-2 bg-white rounded-lg shadow-sm relative group cursor-help">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-5 h-5 text-gray-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                    />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   <!-- Hover tooltip -->
                   <div
-                    class="absolute left-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                  >
-                    <div
-                      class="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap"
-                    >
+                    class="absolute left-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <div class="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap">
                       {{ getTotalItemCount() }} items will be
                       {{ orderType === 'SELL' ? 'removed from' : 'added to' }} inventory
-                      <div
-                        class="absolute left-3 top-full h-2 w-2 bg-gray-800 transform rotate-45"
-                      ></div>
+                      <div class="absolute left-3 top-full h-2 w-2 bg-gray-800 transform rotate-45"></div>
                     </div>
                   </div>
                 </div>
@@ -147,19 +97,10 @@
               </div>
               <div class="flex items-center gap-3">
                 <div class="p-2 bg-white rounded-lg shadow-sm">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-5 h-5 text-gray-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
@@ -172,27 +113,20 @@
 
           <!-- Submit Button -->
           <div class="mt-8 flex justify-center gap-5">
-            <button
-              type="button"
-              @click="isEditing ? editOrder() : createOrder()"
+            <button type="button" @click="isEditing ? editOrder() : createOrder()"
               class="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
-              :disabled="loading || !isValid"
-            >
+              :disabled="loading || !isValid">
               <span class="relative z-10">{{ isEditing ? 'Edit' : 'Create' }} Order</span>
               <div
-                class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              ></div>
+                class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              </div>
             </button>
-            <button
-              v-if="isEditing"
-              type="button"
-              @click="cancelEdit"
-              class="group px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-300 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
-            >
+            <button v-if="isEditing" type="button" @click="cancelEdit"
+              class="group px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-300 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md">
               <span class="relative z-10">Cancel</span>
               <div
-                class="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              ></div>
+                class="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              </div>
             </button>
           </div>
         </form>
@@ -204,26 +138,20 @@
           Recent {{ orderType === 'PURCHASE' ? 'Purchase' : 'Sell' }} Orders
         </h3>
         <div class="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-          <div
-            v-for="order in filteredRecentOrders"
-            :key="order.id"
+          <div v-for="order in filteredRecentOrders" :key="order.id"
             class="p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 relative overflow-hidden"
             :class="{
               'order-sell': order.orderType === 'SELL',
               'order-purchase': order.orderType === 'PURCHASE',
-            }"
-          >
+            }">
             <div class="flex justify-between items-start mb-2">
               <span class="text-sm font-medium text-gray-900">#{{ order.id }}</span>
               <div class="flex items-center gap-1">
-                <span
-                  class="px-1.5 py-0.5 text-[10px] font-medium rounded-full"
-                  :class="{
-                    'bg-yellow-100 text-yellow-800': order.status === 'PENDING',
-                    'bg-green-100 text-green-800': order.status === 'CONFIRMED',
-                    'bg-red-100 text-red-800': order.status === 'CANCELED',
-                  }"
-                >
+                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full" :class="{
+                  'bg-yellow-100 text-yellow-800': order.status === 'PENDING',
+                  'bg-green-100 text-green-800': order.status === 'CONFIRMED',
+                  'bg-red-100 text-red-800': order.status === 'CANCELED',
+                }">
                   {{ getStatusText(order.status) }}
                 </span>
               </div>
@@ -273,7 +201,7 @@ function parseComment(comment) {
 
 // Stores
 const ordersStore = useOrdersStore()
-const errorStore = useErrorStore()
+const errors = useErrorStore()
 const $router = useRouter()
 const $notifier = useNotifier()
 
@@ -369,13 +297,13 @@ const getTotalItemCount = () => {
 const fetchProducts = async () => {
   const [response, err] = await api.products().getAll()
   products.value = response
-  if (err) errorStore.handle(err)
+  if (err) errors.handle(err)
 }
 
 const fetchRecentOrders = async () => {
   const [response, err] = await api.orders().getAll()
   recentOrders.value = response
-  if (err) errorStore.handle(err)
+  if (err) errors.handle(err)
 }
 
 const checkStock = async () => {
@@ -390,9 +318,9 @@ const checkStock = async () => {
       selectedProducts.value.some((product) => product.id === item.product.id),
     )
     currentStock.value = inventoryItems.reduce((total, item) => total + item.quantity, 0)
-    if (err) errorStore.handle(err)
+    if (err) errors.handle(err)
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
     currentStock.value = 0 // Set to 0 on error, not null
   }
 }
@@ -425,7 +353,7 @@ const createOrder = async () => {
     await fetchRecentOrders()
     $notifier.success('Orders created successfully')
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   } finally {
     loading.value = false
   }
@@ -460,7 +388,7 @@ async function editOrder() {
 
     await $router.push({ path: '/workflow' })
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   } finally {
     loading.value = false
   }
@@ -577,20 +505,24 @@ onBeforeUnmount(async () => {
 }
 
 .order-sell::after {
-  background-color: rgb(34 197 94); /* green-500 */
+  background-color: rgb(34 197 94);
+  /* green-500 */
 }
 
 .order-purchase::after {
-  background-color: rgb(239 68 68); /* red-500 */
+  background-color: rgb(239 68 68);
+  /* red-500 */
 }
 
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.2);
   }
+
   70% {
     box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }

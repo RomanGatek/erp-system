@@ -1,7 +1,7 @@
 <script>
 import CustomNavbar from '@/components/CustomNavbar.vue'
 import CustomFooter from '@/components/CustomFooter.vue'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useMeStore } from './stores/me.store.js'
 import { NotificationWrapper } from '@/components'
 
@@ -15,12 +15,12 @@ export default {
   setup() {
     const meStore = useMeStore()
     const isAuthenticated = computed(() => meStore.user)
-
     return {
       isAuthenticated,
     }
   },
 }
+
 </script>
 
 <template>
@@ -36,15 +36,9 @@ export default {
 
       <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <router-view v-slot="{ Component }" class="w-full h-full">
-          <transition
-            enter-active-class="transition ease-out duration-200"
-            enter-from-class="opacity-0 translate-y-1"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition ease-in duration-150"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 translate-y-1"
-            mode="out-in"
-          >
+          <transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 translate-y-1"
+            enter-to-class="opacity-100 translate-y-0" leave-active-class="transition ease-in duration-150"
+            leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 translate-y-1" mode="out-in">
             <component :is="Component" />
           </transition>
         </router-view>

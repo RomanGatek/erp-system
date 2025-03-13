@@ -2,8 +2,8 @@
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-      <StatusBar :error="errorStore.errors.general" :loading="workflowStore.loading" class="mb-4"
-        @clear-error="errorStore.clearServerErrors()" />
+      <StatusBar :error="errors.general" :loading="workflowStore.loading" class="mb-4"
+        @clear-error="errors.clearServerErrors()" />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Approval Workflow</h2>
@@ -324,7 +324,7 @@ const $stores = {
 }
 
 // Stores
-const errorStore = useErrorStore()
+const errors = useErrorStore()
 const ordersStore = useOrdersStore()
 const $notifier = useNotifier()
 const workflowStore = useWorkflowStore()
@@ -391,7 +391,7 @@ onMounted(async () => {
   try {
     await workflowStore.fetchOrders()
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 })
 
@@ -403,7 +403,7 @@ const openOrderDetail = async (order) => {
     approvalComment.value = ''
     isDetailModalOpen.value = true
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -422,7 +422,7 @@ const openOrderEdit = async (order) => {
 
     $router.push({ path: '/orders' })
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -433,7 +433,7 @@ const confirmDelete = async (order) => {
       $notifier.success('Order was successfully deleted')
       await workflowStore.fetchOrders()
     } catch (err) {
-      errorStore.handle(err)
+      errors.handle(err)
     }
   }
 }
@@ -450,7 +450,7 @@ const approveOrder = async () => {
       $notifier.success('Order was successfully approved')
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -465,7 +465,7 @@ const rejectOrder = async () => {
       $notifier.success('Order was successfully rejected')
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
