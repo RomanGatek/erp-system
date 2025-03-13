@@ -15,10 +15,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-/**
- * Implementation of the ReportService interface.
- */
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -30,10 +29,10 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     public ReportServiceImpl(OrderRepository orderRepository,
-                            OrderItemRepository orderItemRepository,
-                            ProductRepository productRepository,
-                            UserRepository userRepository,
-                            InventoryRepository inventoryRepository) {
+                             OrderItemRepository orderItemRepository,
+                             ProductRepository productRepository,
+                             UserRepository userRepository,
+                             InventoryRepository inventoryRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
@@ -41,292 +40,144 @@ public class ReportServiceImpl implements ReportService {
         this.inventoryRepository = inventoryRepository;
     }
 
-    private OrderReportTable getOrders(LocalDate startDate, LocalDate endDate) {
-        // Set default dates if not provided
-        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now().minusMonths(1);
-        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.now();
+    private List<Order> getOrders(LocalDate startDate, LocalDate endDate) {
+        LocalDate effectiveStartDate = (startDate != null) ? startDate : LocalDate.now().minusMonths(1);
+        LocalDate effectiveEndDate = (endDate != null) ? endDate : LocalDate.now().plusMonths(1);
 
-        // Fetch orders within the date range
-        var orders = orderRepository.findAll().stream()
-                .filter(order -> {
-                    LocalDate orderDate = order.getOrderTime().toLocalDate();
-                    return !orderDate.isBefore(effectiveStartDate) && !orderDate.isAfter(effectiveEndDate);
-                })
-                .toList();
-
-        return new OrderReportTable(effectiveStartDate, effectiveEndDate, orders);
-    }
-
-    private static class OrderReportTable {
-        LocalDate effectiveStartDate;
-        LocalDate effectiveEndDate;
-        List<Order> orders;
-
-        public OrderReportTable(LocalDate effectiveStartDate, LocalDate effectiveEndDate, List<Order> orders) {
-            this.effectiveStartDate = effectiveStartDate;
-            this.effectiveEndDate = effectiveEndDate;
-            this.orders = orders;
-        }
+        return orderRepository.findAllByOrderTimeBetween(
+                effectiveStartDate.atStartOfDay(),
+                effectiveEndDate.atTime(23, 59, 59)
+        );
     }
 
 
     @Override
     public SalesReportDTO generateSalesReport(LocalDate startDate, LocalDate endDate, Order.OrderType orderType) {
-        OrderReportTable orderReportTable = getOrders(startDate, endDate);
-        
-        // Calculate metrics
-        BigDecimal totalSales = BigDecimal.ZERO;
-        for (Order order : orderReportTable.orders) {
-            totalSales = totalSales.add(BigDecimal.valueOf(order.getTotal(orderType)));
-        }
-        
-        int orderCount = (int) orderReportTable.orders.stream().filter(o -> o.getOrderType().equals(orderType)).count();
-        
-        BigDecimal averageOrderValue = orderCount > 0 
-                ? totalSales.divide(new BigDecimal(orderCount), 2, RoundingMode.HALF_UP) 
+        List<Order> orders = getOrders(startDate, endDate).stream()
+                .filter(order -> order.getOrderType().equals(orderType))
+                .toList();
+
+        BigDecimal totalSales = orders.stream()
+                .map(order -> BigDecimal.valueOf(order.getTotal(orderType)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int orderCount = orders.size();
+
+        BigDecimal averageOrderValue = orderCount > 0
+                ? totalSales.divide(BigDecimal.valueOf(orderCount), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
-        
-        long daysBetween = ChronoUnit.DAYS.between(orderReportTable.effectiveStartDate, orderReportTable.effectiveEndDate) + 1;
-        BigDecimal dailyAverageSales = daysBetween > 0 
-                ? totalSales.divide(new BigDecimal(daysBetween), 2, RoundingMode.HALF_UP) 
+
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        BigDecimal dailyAverageSales = daysBetween > 0
+                ? totalSales.divide(BigDecimal.valueOf(daysBetween), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
-        
-        return new SalesReportDTO(
-                orderReportTable.effectiveStartDate,
-                orderReportTable.effectiveEndDate,
-                totalSales,
-                orderCount,
-                averageOrderValue,
-                dailyAverageSales
-        );
+
+        return new SalesReportDTO(startDate, endDate, totalSales, orderCount, averageOrderValue, dailyAverageSales);
     }
 
     @Override
     public List<ProductSalesReportDTO> generateBestSellingProductsReport(LocalDate startDate, LocalDate endDate, int limit) {
-        OrderReportTable orderReportTable = getOrders(startDate, endDate);
-        
-        // Calculate total sales for the period
-        BigDecimal totalSales = BigDecimal.ZERO;
-        for (Order order : orderReportTable.orders) {
-            totalSales = totalSales.add(BigDecimal.valueOf(order.getTotal(Order.OrderType.SELL)));
-        }
-        
-        // Collect all order items from these orders
-        List<OrderItem> allOrderItems = new ArrayList<>();
-        for (Order order : orderReportTable.orders) {
-            List<OrderItem> orderItems = orderItemRepository.findAll().stream()
-                    .filter(item -> item.getOrder().getId().equals(order.getId()))
-                    .toList();
-            allOrderItems.addAll(orderItems);
-        }
-        
-        // Group by product and calculate metrics
-        Map<Long, List<OrderItem>> itemsByProduct = new HashMap<>();
-        for (OrderItem item : allOrderItems) {
-            Long productId = item.getId();
-            if (!itemsByProduct.containsKey(productId)) {
-                itemsByProduct.put(productId, new ArrayList<>());
-            }
-            itemsByProduct.get(productId).add(item);
-        }
-        
-        List<ProductSalesReportDTO> productReports = new ArrayList<>();
-        
-        for (Map.Entry<Long, List<OrderItem>> entry : itemsByProduct.entrySet()) {
-            Long productId = entry.getKey();
-            List<OrderItem> items = entry.getValue();
-            
-            // Get the product
-            Optional<Product> productOpt = productRepository.findById(productId);
-            if (productOpt.isEmpty()) {
-                continue;
-            }
-            Product product = productOpt.get();
-            
-            // Calculate metrics
-            int quantitySold = 0;
-            for (OrderItem item : items) {
-                quantitySold += item.getQuantity();
-            }
+        List<Order> orders = getOrders(startDate, endDate);
 
+        Set<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toSet());
+        List<OrderItem> allOrderItems = orderItemRepository.findByOrderIdIn(orderIds);
 
-            BigDecimal totalRevenue = BigDecimal.ZERO;
-            for (OrderItem item : items) {
-                Product product_ = item.getInventoryItem().getProduct();
-                BigDecimal itemPrice = BigDecimal.valueOf(item.getQuantity() * product_.getBuyoutPrice());
-                totalRevenue = totalRevenue.add(itemPrice);
-            }
+        BigDecimal totalSales = orders.stream()
+                .map(order -> BigDecimal.valueOf(order.getTotal(Order.OrderType.SELL)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            BigDecimal percentageOfTotalSales = totalSales.compareTo(BigDecimal.ZERO) > 0
-                    ? totalRevenue.multiply(new BigDecimal(100)).divide(totalSales, 2, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO;
-            
-            productReports.add(new ProductSalesReportDTO(
-                    productId,
-                    product.getName(),
-                    product.getDescription(),
-                    quantitySold,
-                    totalRevenue,
-                    BigDecimal.valueOf(product.getBuyoutPrice()),
-                    percentageOfTotalSales
-            ));
-        }
-        
-        // Sort by total revenue in descending order and limit results
-        productReports.sort((a, b) -> b.getTotalRevenue().compareTo(a.getTotalRevenue()));
-        if (productReports.size() > limit) {
-            productReports = productReports.subList(0, limit);
-        }
-        
-        return productReports;
+        Map<Long, List<OrderItem>> itemsByProduct = allOrderItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getInventoryItem().getProduct().getId()));
+
+        Map<Long, Product> productsMap = productRepository.findAllById(itemsByProduct.keySet()).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        return itemsByProduct.entrySet().stream()
+                .map(entry -> {
+                    Long productId = entry.getKey();
+                    List<OrderItem> items = entry.getValue();
+                    Product product = productsMap.get(productId);
+                    if (product == null) return null;
+
+                    int quantitySold = items.stream().mapToInt(OrderItem::getQuantity).sum();
+                    BigDecimal totalRevenue = items.stream()
+                            .map(item -> BigDecimal.valueOf(item.getQuantity()).multiply(BigDecimal.valueOf(product.getBuyoutPrice())))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal percentageOfTotalSales = totalSales.compareTo(BigDecimal.ZERO) > 0
+                            ? totalRevenue.multiply(BigDecimal.valueOf(100)).divide(totalSales, 2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO;
+
+                    return new ProductSalesReportDTO(productId, product.getName(), product.getDescription(), quantitySold, totalRevenue,
+                            BigDecimal.valueOf(product.getBuyoutPrice()), percentageOfTotalSales);
+                })
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ProductSalesReportDTO::getTotalRevenue).reversed())
+                .limit(limit)
+                .toList();
     }
 
     @Override
     public List<ProductPurchaseReportDTO> generateMostPurchasedProductsReport(LocalDate startDate, LocalDate endDate, int limit) {
-        // Set default dates if not provided
-        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now().minusMonths(1);
-        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.now();
+        List<InventoryItem> inventoryItems = inventoryRepository.findAllByCreatedAtBetween(startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
-        // Fetch inventory items with purchase dates in the range
-        List<InventoryItem> inventoryItems = inventoryRepository.findAll().stream()
-                .filter(item -> {
-                    LocalDate purchaseDate = item.getCreatedAt().toLocalDate();
-                    return !purchaseDate.isBefore(effectiveStartDate) && !purchaseDate.isAfter(effectiveEndDate);
+        Map<Long, List<InventoryItem>> itemsByProduct = inventoryItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getProduct().getId()));
+
+        Map<Long, Product> productsMap = productRepository.findAllById(itemsByProduct.keySet()).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        return itemsByProduct.entrySet().stream()
+                .map(entry -> {
+                    Long productId = entry.getKey();
+                    List<InventoryItem> items = entry.getValue();
+                    Product product = productsMap.get(productId);
+                    if (product == null) return null;
+
+                    int quantityPurchased = items.stream().mapToInt(InventoryItem::getStockedAmount).sum();
+                    BigDecimal totalCost = items.stream()
+                            .map(item -> BigDecimal.valueOf(item.getStockedAmount()).multiply(BigDecimal.valueOf(product.getPurchasePrice())))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal averagePurchasePrice = quantityPurchased > 0
+                            ? totalCost.divide(BigDecimal.valueOf(quantityPurchased), 2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO;
+
+                    return new ProductPurchaseReportDTO(productId, product.getName(), product.getDescription(), quantityPurchased,
+                            totalCost, averagePurchasePrice, items.size());
                 })
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ProductPurchaseReportDTO::getQuantityPurchased).reversed())
+                .limit(limit)
                 .toList();
-
-        // Group by product and calculate metrics
-        Map<Long, List<InventoryItem>> itemsByProduct = new HashMap<>();
-        for (InventoryItem item : inventoryItems) {
-            Long productId = item.getProduct().getId();
-            if (!itemsByProduct.containsKey(productId)) {
-                itemsByProduct.put(productId, new ArrayList<>());
-            }
-            itemsByProduct.get(productId).add(item);
-        }
-        
-        List<ProductPurchaseReportDTO> productReports = new ArrayList<>();
-        
-        for (Map.Entry<Long, List<InventoryItem>> entry : itemsByProduct.entrySet()) {
-            Long productId = entry.getKey();
-            List<InventoryItem> items = entry.getValue();
-            
-            // Get the product
-            Optional<Product> productOpt = productRepository.findById(productId);
-            if (productOpt.isEmpty()) {
-                continue;
-            }
-            Product product = productOpt.get();
-            
-            // Calculate metrics
-            int quantityPurchased = 0;
-            for (InventoryItem item : items) {
-                quantityPurchased += item.getStockedAmount();
-            }
-            
-            BigDecimal totalCost = BigDecimal.ZERO;
-            for (InventoryItem item : items) {
-                totalCost = totalCost.add(BigDecimal.valueOf(item.getProduct().getPurchasePrice() * item.getStockedAmount()));
-            }
-            
-            BigDecimal averagePurchasePrice = quantityPurchased > 0
-                    ? totalCost.divide(new BigDecimal(quantityPurchased), 2, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO;
-            
-            productReports.add(new ProductPurchaseReportDTO(
-                    productId,
-                    product.getName(),
-                    product.getDescription(),
-                    quantityPurchased,
-                    totalCost,
-                    averagePurchasePrice,
-                    items.size()
-            ));
-        }
-        
-        // Sort by quantity purchased in descending order and limit results
-        productReports.sort((a, b) -> Integer.compare(b.getQuantityPurchased(), a.getQuantityPurchased()));
-        if (productReports.size() > limit) {
-            productReports = productReports.subList(0, limit);
-        }
-        
-        return productReports;
     }
 
     @Override
     public List<OrderApprovalReportDTO> generateOrderApprovalsReport(LocalDate startDate, LocalDate endDate) {
-        // Set default dates if not provided
-        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now().minusMonths(1);
-        LocalDate effectiveEndDate = endDate != null ? endDate : LocalDate.now();
+        List<Order> approvedOrders = orderRepository.findAllByStatusAndOrderTimeBetween(Order.Status.CONFIRMED,
+                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
-        Order.Status status = Order.Status.CONFIRMED;
-
-        // Fetch approved orders within the date range
-        List<Order> approvedOrders = orderRepository.findAll().stream()
-                .filter(order -> {
-                    LocalDate orderDate = order.getOrderTime().toLocalDate();
-                    return status.equals(order.getStatus()) &&
-                           !orderDate.isBefore(effectiveStartDate) &&
-                           !orderDate.isAfter(effectiveEndDate);
-                })
-                .toList();
-
-        // Calculate total number of approvals
         int totalApprovals = approvedOrders.size();
 
-        // Group by approver and calculate metrics
-        Map<Long, List<Order>> ordersByApprover = new HashMap<>();
-        for (Order order : approvedOrders) {
-            if (order.getApprovedBy() == null) continue;
+        return approvedOrders.stream()
+                .collect(Collectors.groupingBy(order -> order.getApprovedBy().getId(), Collectors.toList()))
+                .entrySet().stream()
+                .map(entry -> {
+                    Long userId = entry.getKey();
+                    List<Order> orders = entry.getValue();
+                    User user = userRepository.findById(userId).orElse(null);
+                    if (user == null) return null;
 
-            Long approverId = order.getApprovedBy().getId();
-            if (!ordersByApprover.containsKey(approverId)) {
-                ordersByApprover.put(approverId, new ArrayList<>());
-            }
-            ordersByApprover.get(approverId).add(order);
-        }
+                    BigDecimal totalApprovedAmount = orders.stream()
+                            .map(Order::getTotal)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<OrderApprovalReportDTO> approvalReports = new ArrayList<>();
-
-        for (Map.Entry<Long, List<Order>> entry : ordersByApprover.entrySet()) {
-            Long userId = entry.getKey();
-            List<Order> orders = entry.getValue();
-
-            // Get the user
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isEmpty()) {
-                continue;
-            }
-            User user = userOpt.get();
-
-            // Calculate metrics
-            int approvedOrderCount = orders.size();
-
-            BigDecimal totalApprovedAmount = BigDecimal.ZERO;
-            for (Order order : orders) {
-                totalApprovedAmount = totalApprovedAmount.add(order.getTotal());
-            }
-
-            BigDecimal averageApprovedOrderAmount = approvedOrderCount > 0
-                    ? totalApprovedAmount.divide(new BigDecimal(approvedOrderCount), 2, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO;
-
-            double percentageOfTotalApprovals = (double) approvedOrderCount / totalApprovals * 100;
-
-            approvalReports.add(new OrderApprovalReportDTO(
-                    userId,
-                    user.getUsername(),
-                    user.getFirstName() + " " + user.getLastName(),
-                    approvedOrderCount,
-                    totalApprovedAmount,
-                    averageApprovedOrderAmount,
-                    percentageOfTotalApprovals
-            ));
-        }
-
-        // Sort by approved order count in descending order
-        approvalReports.sort((a, b) -> Integer.compare(b.getApprovedOrderCount(), a.getApprovedOrderCount()));
-
-        return approvalReports;
+                    return new OrderApprovalReportDTO(userId, user.getUsername(), user.getFirstName() + " " + user.getLastName(),
+                            orders.size(), totalApprovedAmount, totalApprovedAmount.divide(BigDecimal.valueOf(orders.size()), 2, RoundingMode.HALF_UP),
+                            (double) orders.size() / totalApprovals * 100);
+                })
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(OrderApprovalReportDTO::getApprovedOrderCount).reversed())
+                .toList();
     }
-} 
+}

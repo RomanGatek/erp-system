@@ -22,4 +22,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     void deleteByProduct(@Param("product") Product product);
 
     List<Order> findByStatus(Order.Status status);
+
+    @Query("SELECT o FROM Order o WHERE o.orderTime BETWEEN :start AND :end")
+    List<Order> findAllByOrderTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.orderTime BETWEEN :start AND :end")
+    List<Order> findAllByStatusAndOrderTimeBetween(@Param("status") Order.Status status,
+                                               @Param("start") LocalDateTime start,
+                                               @Param("end") LocalDateTime end);
+
 }

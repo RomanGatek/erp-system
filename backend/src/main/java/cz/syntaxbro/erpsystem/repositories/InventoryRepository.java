@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface InventoryRepository  extends JpaRepository<InventoryItem, Long> {
@@ -18,4 +20,8 @@ public interface InventoryRepository  extends JpaRepository<InventoryItem, Long>
     int updateQuantity(@Param("id") Long id, @Param("stockedAmount") int stockedAmount);
 
     Optional<InventoryItem> findByProduct(Product product);
+
+    @Query("SELECT i FROM InventoryItem i WHERE i.createdAt BETWEEN :start AND :end")
+    List<InventoryItem> findAllByCreatedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
 }

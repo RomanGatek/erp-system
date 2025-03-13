@@ -17,7 +17,7 @@ const asyncHook = ref(null);
 
 onBeforeMount(async () => {
   try {
-    asyncHook = (async () => await Promise.all([
+    asyncHook.value = (async () => await Promise.all([
       reportStore.fetchSalesReport(),
       reportStore.fetchOrderApprovalReports(),
       reportStore.fetchProductPurchaseReports(),
