@@ -13,7 +13,7 @@
           <div class="hidden md:flex space-x-1">
             <template v-for="link in navLinks" :key="link.to">
               <NavBarLink v-if="!link.dropdown" :to="link.to" :text="link.text" :icon="link.icon" :requiredRole="link.requiredRole" />
-              <NavBarLinkDropdown v-else :text="link.text" :icon="link.icon" :items="link.items" />
+              <NavBarLinkDropdown v-else :text="link.text" :icon="link.icon" :items="link.items" :requiredRole="link.requiredRole" />
             </template>
           </div>
         </div>

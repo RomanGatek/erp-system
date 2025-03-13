@@ -1,171 +1,235 @@
 <template>
-  <div class="product-card">
-    <div class="product-image">
-      <img :src="product.image" :alt="product.name" />
+  <div
+    class="bg-white rounded-xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 h-full flex flex-col group cursor-pointer"
+    @click="openProductDetail"
+  >
+    <div class="relative h-[130px] overflow-hidden bg-gray-50">
+      <template v-if="product.image && !showFallbackImage">
+        <img
+          :src="product.image"
+          :alt="product.name"
+          loading="lazy"
+          decoding="async"
+          @error="handleImageError"
+          @load="handleImageLoad"
+          :class="[
+            'w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110',
+            { 'opacity-0': !imageLoaded }
+          ]"
+        />
+        <!-- Loading placeholder -->
+        <div 
+          v-if="!imageLoaded" 
+          class="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 animate-pulse"
+        >
+          <div class="flex items-center justify-center h-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              class="w-8 h-8 text-gray-300"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+              />
+            </svg>
+          </div>
+        </div>
+      </template>
+      <div
+        v-else
+        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          class="w-12 h-12 text-gray-300"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
+          />
+        </svg>
+      </div>
+
+      <!-- Category tag -->
       <span
-        class="category-tag"
+        v-if="product.productCategory?.name"
+        class="absolute top-2 right-2 text-[0.65rem] pinline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-gray-500/10 ring-inset"
         :class="{
-          'bg-slate-100 text-slate-600': product.category.color === 'slate',
-          'bg-gray-100 text-gray-600': product.category.color === 'gray',
-          'bg-zinc-100 text-zinc-600': product.category.color === 'zinc',
-          'bg-neutral-100 text-neutral-600': product.category.color === 'neutral',
-          'bg-stone-100 text-stone-600': product.category.color === 'stone',
-          'bg-red-100 text-red-600': product.category.color === 'red',
-          'bg-orange-100 text-orange-600': product.category.color === 'orange',
-          'bg-amber-100 text-amber-600': product.category.color === 'amber',
-          'bg-yellow-100 text-yellow-600': product.category.color === 'yellow',
-          'bg-lime-100 text-lime-600': product.category.color === 'lime',
-          'bg-green-100 text-green-600': product.category.color === 'green',
-          'bg-emerald-100 text-emerald-600': product.category.color === 'emerald',
-          'bg-teal-100 text-teal-600': product.category.color === 'teal',
-          'bg-cyan-100 text-cyan-600': product.category.color === 'cyan',
-          'bg-sky-100 text-sky-600': product.category.color === 'sky',
-          'bg-blue-100 text-blue-600': product.category.color === 'blue',
-          'bg-indigo-100 text-indigo-600': product.category.color === 'indigo',
-          'bg-violet-100 text-violet-600': product.category.color === 'violet',
-          'bg-purple-100 text-purple-600': product.category.color === 'purple',
-          'bg-fuchsia-100 text-fuchsia-600': product.category.color === 'fuchsia',
-          'bg-pink-100 text-pink-600': product.category.color === 'pink',
-          'bg-rose-100 text-rose-600': product.category.color === 'rose',
+          'bg-slate-50 text-slate-600': product.productCategory?.color === 'slate',
+          'bg-gray-50 text-gray-600': product.productCategory?.color === 'gray',
+          'bg-zinc-50 text-zinc-600': product.productCategory?.color === 'zinc',
+          'bg-neutral-50 text-neutral-600': product.productCategory?.color === 'neutral',
+          'bg-stone-50 text-stone-600': product.productCategory?.color === 'stone',
+          'bg-red-50 text-red-600': product.productCategory?.color === 'red',
+          'bg-orange-50 text-orange-600': product.productCategory?.color === 'orange',
+          'bg-amber-50 text-amber-600': product.productCategory?.color === 'amber',
+          'bg-yellow-50 text-yellow-600': product.productCategory?.color === 'yellow',
+          'bg-lime-50 text-lime-600': product.productCategory?.color === 'lime',
+          'bg-green-50 text-green-600': product.productCategory?.color === 'green',
+          'bg-emerald-50 text-emerald-600': product.productCategory?.color === 'emerald',
+          'bg-teal-50 text-teal-600': product.productCategory?.color === 'teal',
+          'bg-cyan-50 text-cyan-600': product.productCategory?.color === 'cyan',
+          'bg-sky-50 text-sky-600': product.productCategory?.color === 'sky',
+          'bg-blue-50 text-blue-600': product.productCategory?.color === 'blue',
+          'bg-indigo-50 text-indigo-600': product.productCategory?.color === 'indigo',
+          'bg-violet-50 text-violet-600': product.productCategory?.color === 'violet',
+          'bg-purple-50 text-purple-600': product.productCategory?.color === 'purple',
+          'bg-fuchsia-50 text-fuchsia-600': product.productCategory?.color === 'fuchsia',
+          'bg-pink-50 text-pink-600': product.productCategory?.color === 'pink',
+          'bg-rose-50 text-rose-600': product.productCategory?.color === 'rose',
         }"
       >
-        {{ product.category.name }}
+        {{ product.productCategory?.name }}
+      </span>
+
+      <!-- Default label -->
+      <span
+        v-if="!product.image && !showFallbackImage"
+        class="absolute bottom-2 left-2 text-[0.65rem] py-0.5 px-1.5 rounded-full font-medium bg-green-100 text-green-600"
+      >
+        default
       </span>
     </div>
-    <div class="product-details">
-      <h3 class="product-name">{{ product.name }}</h3>
-      <p class="product-description">{{ product.description }}</p>
-      <div class="product-footer">
-        <span class="product-price">{{ formatPrice(product.price) }} Kč,-</span>
-        <button
-          @click="$emit('add-to-cart', product)"
-          class="add-to-cart-btn"
+
+    <div class="p-4 flex flex-col flex-grow">
+      <h3 class="text-[0.95rem] font-semibold mb-1 leading-tight">{{ product.name }}</h3>
+      <p class="text-[0.75rem] text-gray-500 mb-3 leading-relaxed flex-grow">
+        {{ product.description }}
+      </p>
+
+      <div class="flex flex-col mt-auto">
+        <div class="mb-2">
+          <span class="font-bold text-[1rem] text-gray-800">
+            {{ formatPrice(priceWithVat) }}
+            <span class="text-[0.7rem] font-medium text-gray-500">Kč</span>
+          </span>
+        </div>
+        <BaseButton
+          @click.stop="$emit('add-to-cart', product)"
           :disabled="isInCart"
+          :type="isInCart ? 'secondary' : 'primary'"
+          class="w-full"
         >
           {{ isInCart ? 'In Cart' : 'Add to Cart' }}
-        </button>
+        </BaseButton>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import BaseButton from '@/components/common/BaseButton.vue'
+
 export default {
   name: 'ProductCard',
+  components: {
+    BaseButton
+  },
   props: {
     product: {
       type: Object,
-      required: true
+      required: true,
     },
     isInCart: {
       type: Boolean,
-      default: false
+      default: false,
+    },
+  },
+  data() {
+    return {
+      showFallbackImage: !this.product.image,
+      imageLoaded: false,
+      imageLoadAttempts: 0,
+      VAT_RATE: 0.21, // 21% VAT rate for Czech Republic
     }
   },
-  emits: ['add-to-cart'],
+  computed: {
+    priceWithoutVat() {
+      return this.product.buyoutPrice || this.product.price || 0
+    },
+    vatAmount() {
+      return this.priceWithoutVat * this.VAT_RATE
+    },
+    priceWithVat() {
+      return this.priceWithoutVat + this.vatAmount
+    }
+  },
+  emits: ['add-to-cart', 'show-detail'],
   methods: {
     formatPrice(price) {
-      return new Intl.NumberFormat('cs-CZ').format(price);
+      return new Intl.NumberFormat('cs-CZ').format(price)
+    },
+    handleImageError() {
+      this.imageLoadAttempts++
+      if (this.imageLoadAttempts < 2) {
+        // Retry loading once with cache busting
+        const img = new Image()
+        img.src = `${this.product.image}?retry=${Date.now()}`
+        img.onload = () => {
+          this.showFallbackImage = false
+          this.imageLoaded = true
+        }
+        img.onerror = () => {
+          this.showFallbackImage = true
+          this.imageLoaded = false
+        }
+      } else {
+        this.showFallbackImage = true
+        this.imageLoaded = false
+      }
+    },
+    handleImageLoad() {
+      this.imageLoaded = true
+    },
+    openProductDetail(event) {
+      // Prevent event bubbling
+      event.preventDefault();
+      event.stopPropagation();
+      
+      // Emit event to show product detail
+      this.$emit('show-detail', this.product);
+      
+      // Log for debugging
+      console.log('Opening product detail for:', this.product.name);
     }
-  }
+  },
+  mounted() {
+    // Preload image if it's in viewport
+    if (this.product.image && !this.showFallbackImage) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = new Image()
+              img.src = this.product.image
+              observer.disconnect()
+            }
+          })
+        },
+        {
+          rootMargin: '50px',
+        }
+      )
+      observer.observe(this.$el)
+    }
+  },
 }
 </script>
 
 <style scoped>
-.product-card {
-  background-color: white;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.product-image {
-  position: relative;
-  height: 100px;
-  overflow: hidden;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.product-card:hover .product-image img {
-  transform: scale(1.05);
-}
-
-.category-tag {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 0.65rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-}
-
-.product-details {
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.product-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  line-height: 1.2;
-}
-
-.product-description {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
-  line-height: 1.2;
-  flex-grow: 1;
-}
-
-.product-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-.product-price {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.add-to-cart-btn {
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+/* Add hover effect to make it more obvious the card is clickable */
+.cursor-pointer:hover {
   cursor: pointer;
-  transition: background-color 0.2s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
-
-.add-to-cart-btn:hover {
-  background-color: #4338ca;
-}
-
-.add-to-cart-btn:disabled {
-  background-color: #c7d2fe;
-  cursor: not-allowed;
-}
-</style> 
+</style>

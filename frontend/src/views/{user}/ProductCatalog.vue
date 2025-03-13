@@ -1,6 +1,8 @@
 <template>
-  <div class="product-catalog">
-    <div class="catalog-layout">
+  <div class="p-6 h-[80dvh] max-h-[80dvh] overflow-hidden bg-gray-50">
+    <div
+      class="grid grid-cols-[250px_1fr_300px] gap-6 h-[calc(80dvh-3rem)] max-h-[calc(80dvh-3rem)] overflow-hidden"
+    >
       <!-- Categories Sidebar -->
       <CategoriesSidebar
         :categories="categories.items"
@@ -11,51 +13,135 @@
       />
 
       <!-- Main Content -->
-      <div class="main-content">
-        <div class="content-header">
-          <h1 class="text-2xl font-bold">Product Catalog</h1>
-          <div class="sorting-container">
-            <label for="sort" class="text-sm font-medium text-gray-700">Sort by:</label>
-            <select id="sort" v-model="sortOption" class="ml-2 text-sm border-gray-300 rounded-md">
-              <option value="name">Name</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-            </select>
+      <div
+        ref="mainContentRef"
+        class="bg-white rounded-2xl shadow-md flex flex-col h-full max-h-full overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth hide-scrollbar"
+      >
+        <div
+          class="flex justify-between items-center py-5 px-6 mb-2 sticky top-0 bg-white z-10 border-b border-gray-100"
+        >
+          <h1
+            class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent"
+          >
+            Product Catalog
+          </h1>
+
+          <div class="flex items-center gap-3">
+            <XSelect v-model="sortOption" :options="sortOptions" label="Sort" />
           </div>
         </div>
 
         <!-- Loading state -->
-        <div v-if="products.loading" class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>Loading products...</p>
+        <div
+          v-if="products.loading"
+          class="flex flex-col items-center justify-center py-12 text-center px-6 flex-grow"
+        >
+          <div
+            class="w-10 h-10 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin mb-4"
+          ></div>
+          <p class="text-gray-500 font-medium">Loading products...</p>
         </div>
 
         <!-- Error state -->
-        <div v-else-if="products.error" class="error-container">
-          <p>{{ products.error }}</p>
-          <button @click="loadProducts" class="retry-btn">Retry</button>
+        <div
+          v-else-if="products.error"
+          class="flex flex-col items-center justify-center py-12 text-center px-6 flex-grow"
+        >
+          <div class="bg-red-50 p-4 rounded-xl mb-4 w-64 text-center">
+            <p class="text-red-600">{{ products.error }}</p>
+          </div>
+          <button
+            @click="loadProducts"
+            class="mt-2 bg-indigo-600 text-white py-2 px-6 rounded-full font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            Retry
+          </button>
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="filteredProducts.length === 0" class="empty-container">
-          <p>No products found.</p>
+        <div
+          v-else-if="filteredProducts.length === 0"
+          class="flex flex-col items-center justify-center py-12 text-center px-6 flex-grow"
+        >
+          <div class="bg-amber-50 p-6 rounded-xl mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-12 w-12 text-amber-500 mx-auto mb-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p class="text-amber-800 font-medium">No products found</p>
+            <p class="text-amber-600 text-sm mt-1">Try adjusting your search or filters</p>
+          </div>
         </div>
 
         <!-- Products grid -->
-        <div v-else class="product-grid">
+        <div
+          v-else
+          class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6 p-6 pt-2"
+        >
           <ProductCard
             v-for="product in displayedProducts"
             :key="product.id"
             :product="product"
             :is-in-cart="isProductInCart(product.id)"
             @add-to-cart="addToCart"
+            @show-detail="showProductDetail"
           />
         </div>
 
-        <!-- Load more button -->
-        <div v-if="displayCount < filteredProducts.length" class="load-more-container">
-          <button @click="loadMore" class="load-more-btn">Load More</button>
+        <!-- Loading indicator for infinite scroll -->
+        <div
+          v-if="displayCount < filteredProducts.length"
+          ref="loadMoreTrigger"
+          class="flex flex-col items-center justify-center py-4 mb-4"
+        >
+          <div
+            class="w-5 h-5 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin mb-2"
+          ></div>
+          <p class="text-sm text-gray-500">Loading more products...</p>
         </div>
+      </div>
+
+      <!-- Product Detail Modal -->
+      <ProductDetailModal
+        v-if="isModalVisible"
+        :product="selectedProduct"
+        :is-in-cart="selectedProduct ? isProductInCart(selectedProduct.id) : false"
+        @close="closeProductDetail"
+        @add-to-cart="addToCart"
+        @submit-review="submitProductReview"
+        @after-leave="onModalClosed"
+      />
+
+      <!-- Custom scroll controls -->
+      <div class="absolute right-[316px] top-1/2 -translate-y-1/2 z-10 flex flex-col gap-2">
+        <button 
+          @click="scrollUp"
+          class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-blue-600 transition-colors"
+          aria-label="Scroll up"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 01-1.06-1.06l7.5-7.5z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <button 
+          @click="scrollDown"
+          class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-blue-600 transition-colors"
+          aria-label="Scroll down"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L12 14.69l6.97-6.97a.75.75 0 011.06 1.06l-7.5 7.5z" clip-rule="evenodd" />
+          </svg>
+        </button>
       </div>
 
       <!-- Shopping Cart -->
@@ -70,20 +156,26 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useProductsStore } from '@/stores/products.store'
 import { useCategoriesStore } from '@/stores/categories.store'
 import { useCartStore } from '@/stores/cart.store'
 import CategoriesSidebar from '@/components/catalog/CategoriesSidebar.vue'
 import ProductCard from '@/components/catalog/ProductCard.vue'
+import ProductDetailModal from '@/components/catalog/ProductDetailModal.vue'
 import ShoppingCart from '@/components/catalog/ShoppingCart.vue'
+import BaseInput from '@/components/common/BaseInput.vue'
+import XSelect from '@/components/common/XSelect.vue'
 
 export default {
   name: 'ProductCatalog',
   components: {
     CategoriesSidebar,
     ProductCard,
+    ProductDetailModal,
     ShoppingCart,
+    BaseInput,
+    XSelect,
   },
   setup() {
     const products = useProductsStore()
@@ -93,9 +185,17 @@ export default {
     const searchQuery = ref('')
     const selectedCategory = ref('')
     const sortOption = ref('name')
-    const displayCount = ref(12)
+    const displayCount = ref(12) // Start with more items
     const loadMoreObserver = ref(null)
     const loadMoreTrigger = ref(null)
+    const mainContentRef = ref(null)
+    const isLoading = ref(false)
+    
+    const sortOptions = [
+      { value: 'name', label: 'Name' },
+      { value: 'price-asc', label: 'Price: Low to High' },
+      { value: 'price-desc', label: 'Price: High to Low' },
+    ]
 
     // Load initial data
     const loadProducts = async () => {
@@ -110,12 +210,14 @@ export default {
     const filteredProducts = computed(() => {
       let result = [...products.items]
 
-      // Filter by category
       if (selectedCategory.value) {
-        result = result.filter((product) => product.category.id === selectedCategory.value)
+        result = result.filter(
+          (product) =>
+            product.productCategory?.id === selectedCategory.value ||
+            product.category?.id === selectedCategory.value,
+        )
       }
 
-      // Filter by search query
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
         result = result.filter(
@@ -125,49 +227,233 @@ export default {
         )
       }
 
-      // Sort products
       if (sortOption.value === 'name') {
         result.sort((a, b) => a.name.localeCompare(b.name))
       } else if (sortOption.value === 'price-asc') {
-        result.sort((a, b) => a.price - b.price)
+        result.sort((a, b) => (a.buyoutPrice || a.price) - (b.buyoutPrice || b.price))
       } else if (sortOption.value === 'price-desc') {
-        result.sort((a, b) => b.price - a.price)
+        result.sort((a, b) => (b.buyoutPrice || b.price) - (a.buyoutPrice || a.price))
       }
 
       return result
     })
 
-    // Display only a subset of products
+    // Display only loaded products
     const displayedProducts = computed(() => {
       return filteredProducts.value.slice(0, displayCount.value)
     })
 
+    // Setup intersection observer for infinite scroll
+    const setupIntersectionObserver = () => {
+      if (loadMoreObserver.value) {
+        loadMoreObserver.value.disconnect()
+        loadMoreObserver.value = null
+      }
+
+      if (displayCount.value >= filteredProducts.value.length) {
+        return
+      }
+
+      loadMoreObserver.value = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries
+          if (entry.isIntersecting && !isLoading.value) {
+            loadMore()
+          }
+        },
+        {
+          rootMargin: '200px',
+          threshold: 0.1
+        }
+      )
+
+      if (loadMoreTrigger.value) {
+        loadMoreObserver.value.observe(loadMoreTrigger.value)
+      }
+    }
+
     // Load more products
-    const loadMore = () => {
-      displayCount.value += 12
+    const loadMore = async () => {
+      if (isLoading.value || displayCount.value >= filteredProducts.value.length) return
+
+      isLoading.value = true
+      
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300)) // Increase delay for smoother loading
+        
+        // Calculate how many items to load based on remaining
+        const remainingItems = filteredProducts.value.length - displayCount.value
+        const batchSize = Math.min(12, remainingItems)
+        
+        // Don't update if user is actively scrolling
+        if (!isActivelyScrolling.value) {
+          displayCount.value += batchSize
+        } else {
+          // Retry after scroll ends
+          setTimeout(() => {
+            if (!isActivelyScrolling.value) {
+              displayCount.value += batchSize
+              setupIntersectionObserver()
+            }
+          }, 500)
+        }
+      } finally {
+        isLoading.value = false
+        nextTick(() => {
+          if (!isActivelyScrolling.value) {
+            setupIntersectionObserver()
+          }
+        })
+      }
+    }
+
+    // Track active scrolling to prevent interference with manual scrolling
+    const isActivelyScrolling = ref(false)
+    let scrollTimeout = null
+    
+    const handleScrollStart = () => {
+      isActivelyScrolling.value = true
+      clearTimeout(scrollTimeout)
+    }
+    
+    const handleScrollEnd = () => {
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        isActivelyScrolling.value = false
+        setupIntersectionObserver()
+      }, 150)
+    }
+    
+    // Setup scroll event listeners
+    const setupScrollListeners = () => {
+      if (!mainContentRef.value) return
+      
+      mainContentRef.value.addEventListener('mousedown', () => {
+        if (mainContentRef.value.querySelector(':hover')) {
+          handleScrollStart()
+        }
+      })
+      
+      mainContentRef.value.addEventListener('scroll', () => {
+        handleScrollStart()
+        handleScrollEnd()
+      }, { passive: true })
+      
+      mainContentRef.value.addEventListener('mouseup', handleScrollEnd)
+      mainContentRef.value.addEventListener('mouseleave', handleScrollEnd)
     }
 
     // Category selection
-    const selectCategory = async (categoryId) => {
-      // Reset search when changing categories
+    const selectCategory = (categoryId) => {
       searchQuery.value = ''
-
-      // Set the selected category
       selectedCategory.value = categoryId
-
-      // Reset display count
       displayCount.value = 12
-
-      // Reset observer
-      setupIntersectionObserver()
+      nextTick(() => {
+        setupIntersectionObserver()
+      })
     }
 
     // Update search query
     const updateSearchQuery = (query) => {
       searchQuery.value = query
       displayCount.value = 12
-      setupIntersectionObserver()
+      nextTick(() => {
+        setupIntersectionObserver()
+      })
     }
+
+    // Watch for sort changes
+    watch(sortOption, () => {
+      displayCount.value = 12
+      nextTick(() => {
+        setupIntersectionObserver()
+      })
+    })
+
+    // Custom scroll functions
+    const scrollUp = () => {
+      if (!mainContentRef.value) return
+      
+      const scrollAmount = mainContentRef.value.clientHeight * 0.75
+      const targetPosition = mainContentRef.value.scrollTop - scrollAmount
+      
+      mainContentRef.value.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      })
+    }
+
+    const scrollDown = () => {
+      if (!mainContentRef.value) return
+      
+      const scrollAmount = mainContentRef.value.clientHeight * 0.75
+      const targetPosition = mainContentRef.value.scrollTop + scrollAmount
+      
+      mainContentRef.value.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      })
+    }
+
+    // Add keyboard navigation for scrolling
+    const handleKeyDown = (e) => {
+      if (!mainContentRef.value) return
+      
+      // Only handle keys if the catalog content is in focus/view
+      const rect = mainContentRef.value.getBoundingClientRect()
+      const isVisible = rect.top < window.innerHeight && rect.bottom > 0
+      
+      if (!isVisible) return
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        scrollDown()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        scrollUp()
+      } else if (e.key === 'PageDown') {
+        e.preventDefault()
+        scrollDown()
+      } else if (e.key === 'PageUp') {
+        e.preventDefault()
+        scrollUp()
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        mainContentRef.value.scrollTo({ top: 0, behavior: 'smooth' })
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        mainContentRef.value.scrollTo({ top: mainContentRef.value.scrollHeight, behavior: 'smooth' })
+      }
+    }
+
+    // Setup event listeners
+    onMounted(async () => {
+      await Promise.all([loadProducts(), loadCategories()])
+      nextTick(() => {
+        setupScrollListeners()
+        setupIntersectionObserver()
+        window.addEventListener('keydown', handleKeyDown)
+      })
+    })
+
+    onUnmounted(() => {
+      if (loadMoreObserver.value) {
+        loadMoreObserver.value.disconnect()
+      }
+      
+      if (mainContentRef.value) {
+        mainContentRef.value.removeEventListener('mousedown', handleScrollStart)
+        mainContentRef.value.removeEventListener('scroll', handleScrollEnd)
+        mainContentRef.value.removeEventListener('mouseup', handleScrollEnd)
+        mainContentRef.value.removeEventListener('mouseleave', handleScrollEnd)
+      }
+      
+      window.removeEventListener('keydown', handleKeyDown)
+      
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+    })
 
     // Cart operations
     const addToCart = (product) => {
@@ -179,12 +465,36 @@ export default {
     }
 
     const increaseQuantity = (item) => {
-      cart.updateItemQuantity(item.id, item.quantity + 1)
+      // Check which method is available in the cart store
+      if (typeof cart.updateItemQuantity === 'function') {
+        cart.updateItemQuantity(item.id, item.quantity + 1)
+      } else if (typeof cart.updateQuantity === 'function') {
+        cart.updateQuantity(item.id, item.quantity + 1)
+      } else if (typeof cart.increaseQuantity === 'function') {
+        cart.increaseQuantity(item.id)
+      } else {
+        // Fallback: remove and add with updated quantity
+        const updatedItem = { ...item, quantity: item.quantity + 1 }
+        cart.removeItem(item.id)
+        cart.addItem(updatedItem)
+      }
     }
 
     const decreaseQuantity = (item) => {
-      if (item.quantity > 1) {
+      if (item.quantity <= 1) return
+
+      // Check which method is available in the cart store
+      if (typeof cart.updateItemQuantity === 'function') {
         cart.updateItemQuantity(item.id, item.quantity - 1)
+      } else if (typeof cart.updateQuantity === 'function') {
+        cart.updateQuantity(item.id, item.quantity - 1)
+      } else if (typeof cart.decreaseQuantity === 'function') {
+        cart.decreaseQuantity(item.id)
+      } else {
+        // Fallback: remove and add with updated quantity
+        const updatedItem = { ...item, quantity: item.quantity - 1 }
+        cart.removeItem(item.id)
+        cart.addItem(updatedItem)
       }
     }
 
@@ -192,46 +502,48 @@ export default {
       return cart.items.some((item) => item.id === productId)
     }
 
-    // Intersection Observer for infinite scroll
-    const setupIntersectionObserver = () => {
-      if (loadMoreObserver.value) {
-        loadMoreObserver.value.disconnect()
-      }
-
-      loadMoreObserver.value = new IntersectionObserver(
-        (entries) => {
-          const [entry] = entries
-          if (entry.isIntersecting && displayCount.value < filteredProducts.value.length) {
-            loadMore()
-          }
-        },
-        {
-          rootMargin: '0px 0px 200px 0px',
-        },
-      )
-
-      if (loadMoreTrigger.value) {
-        loadMoreObserver.value.observe(loadMoreTrigger.value)
-      }
+    // Product detail functionality
+    const selectedProduct = ref(null)
+    const isModalVisible = ref(false)
+    
+    const showProductDetail = (product) => {
+      console.log('ProductCatalog: Showing product detail for:', product.name);
+      selectedProduct.value = product;
+      // Set visible flag to trigger animation
+      nextTick(() => {
+        isModalVisible.value = true;
+      });
     }
-
-    // Lifecycle hooks
-    onMounted(async () => {
-      await Promise.all([loadProducts(), loadCategories()])
-      setupIntersectionObserver()
-    })
-
-    onUnmounted(() => {
-      if (loadMoreObserver.value) {
-        loadMoreObserver.value.disconnect()
+    
+    const closeProductDetail = () => {
+      console.log('ProductCatalog: Closing product detail');
+      // Keep the product but hide the modal to allow for exit animation
+      isModalVisible.value = false;
+    }
+    
+    const onModalClosed = () => {
+      // Clear the product only after animation completes
+      selectedProduct.value = null;
+    }
+    
+    const submitProductReview = (review) => {
+      if (!selectedProduct.value) return
+      
+      // Create reviews array if it doesn't exist
+      if (!selectedProduct.value.reviews) {
+        selectedProduct.value.reviews = []
       }
-    })
-
-    // Watch for changes in sort option
-    watch(sortOption, () => {
-      displayCount.value = 12
-      setupIntersectionObserver()
-    })
+      
+      // Add review to product
+      selectedProduct.value.reviews.push(review)
+      
+      // Recalculate product rating
+      const totalRating = selectedProduct.value.reviews.reduce((sum, r) => sum + r.rating, 0)
+      selectedProduct.value.rating = totalRating / selectedProduct.value.reviews.length
+      
+      // Here you would typically send this to an API
+      console.log('Review submitted:', review)
+    }
 
     return {
       products,
@@ -244,8 +556,8 @@ export default {
       filteredProducts,
       displayedProducts,
       loadMoreTrigger,
+      mainContentRef,
       loadProducts,
-      loadMore,
       selectCategory,
       updateSearchQuery,
       addToCart,
@@ -253,131 +565,79 @@ export default {
       increaseQuantity,
       decreaseQuantity,
       isProductInCart,
+      sortOptions,
+      scrollUp,
+      scrollDown,
+      isActivelyScrolling,
+      selectedProduct,
+      isModalVisible,
+      showProductDetail,
+      closeProductDetail,
+      onModalClosed,
+      submitProductReview,
     }
   },
 }
 </script>
 
 <style scoped>
-.product-catalog {
-  padding: 1.5rem;
-  min-height: calc(100vh - 64px);
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
-.catalog-layout {
-  display: grid;
-  grid-template-columns: 250px 1fr 300px;
-  gap: 1.5rem;
-  height: 100%;
+select::-ms-expand {
+  display: none;
 }
 
-.main-content {
-  background-color: white;
-  border-radius: 1rem;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 64px - 3rem);
-  overflow-y: auto;
-}
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  position: sticky;
-  top: 0;
-  background-color: white;
-  z-index: 10;
-}
-
-.sorting-container {
-  display: flex;
-  align-items: center;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.loading-container,
-.error-container,
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 0;
-  text-align: center;
-}
-
-.loading-spinner {
-  border: 3px solid #e5e7eb;
-  border-top: 3px solid #4f46e5;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.retry-btn {
-  margin-top: 1rem;
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+option {
+  background: white;
+  color: #374151;
+  padding: 8px 16px;
   font-weight: 500;
 }
 
-.load-more-container {
-  display: flex;
-  justify-content: center;
-  margin: 1rem 0 2rem;
-}
-
-.load-more-btn {
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.load-more-btn:hover {
-  background-color: #e5e7eb;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .catalog-layout {
-    grid-template-columns: 220px 1fr 280px;
+@media (prefers-color-scheme: dark) {
+  option {
+    background: #1f2937;
+    color: #f3f4f6;
   }
 }
 
-@media (max-width: 1024px) {
-  .catalog-layout {
-    grid-template-columns: 200px 1fr 250px;
-  }
+/* Improved scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+  border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Hide scrollbar but keep scrolling functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+  width: 0;
+}
+
+/* Make sure no scrollbar appears */
+::-webkit-scrollbar {
+  width: 0;
+  display: none;
 }
 </style>

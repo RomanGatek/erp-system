@@ -1,11 +1,15 @@
 <template>
-  <div class="left-sidebar">
-    <div class="sidebar-container">
-      <div class="sidebar-content">
-        <h2 class="text-xl font-bold mb-4">Categories</h2>
+  <div class="h-[75dvh] overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-md h-auto min-h-[300px] max-h-full overflow-y-auto">
+      <div class="p-5">
+        <h2
+          class="text-xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent"
+        >
+          Categories
+        </h2>
 
         <!-- Search bar -->
-        <div class="mb-4">
+        <div class="mb-5">
           <SearchBar
             :model-value="searchQuery"
             @update:model-value="$emit('search', $event)"
@@ -15,24 +19,31 @@
         </div>
 
         <!-- Categories list with colored dots -->
-        <div class="categories-list">
+        <div class="flex flex-col gap-1.5 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
           <button
             @click="$emit('select-category', '')"
-            class="category-item"
-            :class="{ active: selectedCategory === '' }"
+            class="text-left py-2 px-3 rounded-lg transition-all duration-200 text-[0.9rem] cursor-pointer flex items-center hover:bg-gray-50"
+            :class="{ 'bg-indigo-50 text-indigo-700 font-medium': selectedCategory === '' }"
           >
-            <span class="category-dot all-categories"></span>
+            <span
+              class="w-2.5 h-2.5 rounded-full mr-2.5 bg-gradient-to-r from-indigo-600 via-emerald-500 to-red-500"
+            ></span>
             All Categories
           </button>
+
+          <div class="h-px bg-gray-100 my-1.5"></div>
+
           <button
             v-for="category in categories"
             :key="category.id"
             @click="$emit('select-category', category.id)"
-            class="category-item"
-            :class="{ active: selectedCategory === category.id }"
+            class="text-left py-2 px-3 rounded-lg transition-all duration-200 text-[0.9rem] cursor-pointer flex items-center hover:bg-gray-50"
+            :class="{
+              'bg-indigo-50 text-indigo-700 font-medium': selectedCategory === category.id,
+            }"
           >
             <span
-              class="category-dot"
+              class="w-2.5 h-2.5 rounded-full mr-2.5"
               :class="{
                 'bg-slate-600 text-slate-600': category.color === 'slate',
                 'bg-gray-600 text-gray-600': category.color === 'gray',
@@ -72,86 +83,22 @@ import SearchBar from '@/components/common/SearchBar.vue'
 export default {
   name: 'CategoriesSidebar',
   components: {
-    SearchBar
+    SearchBar,
   },
   props: {
     categories: {
       type: Array,
-      required: true
+      required: true,
     },
     selectedCategory: {
       type: [String, Number],
-      default: ''
+      default: '',
     },
     searchQuery: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
-  emits: ['select-category', 'search']
+  emits: ['select-category', 'search'],
 }
 </script>
-
-<style scoped>
-.left-sidebar {
-  height: calc(100vh - 64px - 3rem); /* Adjust for header height and padding */
-  overflow-y: auto;
-}
-
-.sidebar-container {
-  background-color: white;
-  border-radius: 1rem;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  height: auto;
-  min-height: 300px;
-  max-height: 100%;
-  overflow-y: auto;
-}
-
-.sidebar-content {
-  padding: 1.25rem;
-}
-
-.categories-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  max-height: calc(100vh - 250px); /* Adjust based on header and other elements */
-  overflow-y: auto;
-}
-
-.category-item {
-  text-align: left;
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.375rem;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.category-item:hover {
-  background-color: #f3f4f6;
-}
-
-.category-item.active {
-  background-color: #e0e7ff;
-  color: #4f46e5;
-  font-weight: 500;
-}
-
-.category-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
-  display: inline-block;
-}
-
-.category-dot.all-categories {
-  background: linear-gradient(135deg, #4f46e5 0%, #10b981 50%, #ef4444 100%);
-}
-</style> 

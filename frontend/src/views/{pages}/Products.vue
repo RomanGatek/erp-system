@@ -152,6 +152,7 @@ watch(
     }
   },
 )
+import BaseButton from '@/components/common/BaseButton.vue'
 </script>
 
 <template>
@@ -170,11 +171,8 @@ watch(
         <h2 class="text-2xl font-bold text-gray-800">Products</h2>
         <div class="flex items-center space-x-4">
           <SearchBar v-model="searchInput" @update:modelValue="productsStore.setSearch($event)" />
-          <button
-            @click="isAddModalOpen = true"
-            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm transition flex items-center"
-          >
-            <span class="mr-2">Add Product</span>
+          <BaseButton type="primary" class="text-sm! flex!" @click="isAddModalOpen = true">
+            <span class="mr-2">Add</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5"
@@ -187,7 +185,7 @@ watch(
                 clip-rule="evenodd"
               />
             </svg>
-          </button>
+          </BaseButton>
         </div>
       </div>
 
@@ -310,19 +308,12 @@ watch(
         />
 
         <div class="flex justify-end space-x-3 pt-2">
-          <button
-            type="button"
-            @click="cancelAdd"
-            class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-          >
+          <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelAdd">
             Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm transition"
-          >
-            Add Product
-          </button>
+          </BaseButton>
+          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="$emit('submit')">
+            Add Products
+          </BaseButton>
         </div>
       </div>
     </Modal>
@@ -369,20 +360,13 @@ watch(
           returnField="id"
           placeholder="Search category..."
         />
-        <div class="flex justify-between pt-2">
-          <button
-            type="submit"
-            class="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm transition"
-          >
-            Update
-          </button>
-          <button
-            type="button"
-            @click="cancelEdit"
-            class="px-4 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-sm transition"
-          >
+        <div class="flex justify-end space-x-3 pt-2">
+          <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelEdit">
             Cancel
-          </button>
+          </BaseButton>
+          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="$emit('submit')">
+            Edit Product
+          </BaseButton>
         </div>
       </div>
     </Modal>

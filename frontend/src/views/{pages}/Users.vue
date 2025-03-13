@@ -12,10 +12,10 @@ import {
   StatusBar,
   EmptyState,
   BaseInput,
-  BaseCheckbox
+  BaseCheckbox,
 } from '@/components'
 import { $reactive } from '@/utils/index.js'
-
+import BaseButton from '@/components/common/BaseButton.vue'
 
 defineOptions({
   name: 'UsersView',
@@ -36,7 +36,7 @@ const reactiveUser = $reactive({
   password: '',
   active: false,
   roles: [],
-});
+})
 
 const availableRoles = [
   { name: 'admin', bgColor: 'bg-red-100', textColor: 'text-red-800' },
@@ -47,7 +47,7 @@ const availableRoles = [
 const tableHeaders = [
   { field: 'firstName', label: 'First name', sortable: true },
   { field: 'lastName', label: 'Last name', sortable: true },
-  { field: 'email', label: 'Email', sortable: true},
+  { field: 'email', label: 'Email', sortable: true },
   { field: 'username', label: 'Username', sortable: true },
   { field: 'roles', label: 'Role', sortable: true },
   { field: 'active', label: 'Active', sortable: true },
@@ -79,8 +79,8 @@ const addUser = async () => {
     await userStore.addUser({ ...reactiveUser })
     if (!userStore.error) {
       isAddModalOpen.value = false
-      $notifier.success("User was created successfully!")
-      reactiveUser.$clear();
+      $notifier.success('User was created successfully!')
+      reactiveUser.$clear()
     } else {
       errorStore.handle(userStore.error)
       if (errorStore.errors.general) {
@@ -103,8 +103,8 @@ const updateUser = async () => {
       if (errorStore.errors.general) isEditModalOpen.value = false
     } else {
       isEditModalOpen.value = false
-      $notifier.success("User was edited successfully!")
-      reactiveUser.$clear();
+      $notifier.success('User was edited successfully!')
+      reactiveUser.$clear()
     }
   } catch (err) {
     errorStore.handle(err)
@@ -117,8 +117,8 @@ const deleteUser = async (userId) => {
   if (confirm('Do you really want to delete this user?')) {
     try {
       await userStore.deleteUser(userId)
-      $notifier.success("User deleted removed successfully!")
-      reactiveUser.$clear();
+      $notifier.success('User deleted removed successfully!')
+      reactiveUser.$clear()
     } catch (err) {
       console.error('Error deleting user:', err)
       errorStore.errors.general = 'Failed to delete user. Please try again later.'
@@ -127,22 +127,22 @@ const deleteUser = async (userId) => {
 }
 
 const openEditModal = (index) => {
-  reactiveUser.$clear();
+  reactiveUser.$clear()
   const user = userStore.items[index]
-  reactiveUser.$assign(user);
+  reactiveUser.$assign(user)
   isEditModalOpen.value = true
 }
 
 const cancelAdd = () => {
   errorStore.clearServerErrors()
   reactiveUser.$clear()
-  isAddModalOpen.value = false;
+  isAddModalOpen.value = false
 }
 
 const cancelEdit = () => {
   errorStore.clearServerErrors()
   isEditModalOpen.value = false
-  reactiveUser.$clear();
+  reactiveUser.$clear()
 }
 
 const getRoleStyle = (roleName) => {
@@ -166,8 +166,10 @@ watch(
     () => reactiveUser.username,
     () => reactiveUser.password,
   ],
-  ([newFirstName, newLastName, newEmail, newUserName, newPassword],
-   [oldFirstName, oldLastName, oldEmail, oldUsername, oldPassword]) => {
+  (
+    [newFirstName, newLastName, newEmail, newUserName, newPassword],
+    [oldFirstName, oldLastName, oldEmail, oldUsername, oldPassword],
+  ) => {
     if (newFirstName !== oldFirstName) {
       errorStore.clear('firstName')
     }
@@ -183,45 +185,29 @@ watch(
     if (oldPassword !== newPassword) {
       errorStore.clear('password')
     }
-  }
+  },
 )
-
-
 </script>
 
 <template>
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar
-        :error="errorStore.errors.general"
-        :loading="loading"
-        class="mb-4"
-        @clear-error="errorStore.clearServerErrors()"
-      />
+      <StatusBar :error="errorStore.errors.general" :loading="loading" class="mb-4"
+        @clear-error="errorStore.clearServerErrors()" />
 
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Users</h2>
         <div class="flex items-center space-x-4">
           <SearchBar v-model="searchInput" @update:modelValue="userStore.setSearch($event)" />
-          <button
-            @click="isAddModalOpen = true"
-            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm transition flex items-center"
-          >
+          <BaseButton type="primary" class="text-sm! flex!" @click="isAddModalOpen = true">
             <span class="mr-2">Add User</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
                 d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clip-rule="evenodd"
-              />
+                clip-rule="evenodd" />
             </svg>
-          </button>
+          </BaseButton>
         </div>
       </div>
 
@@ -231,14 +217,8 @@ watch(
       <!-- Data table -->
       <template v-else>
         <div class="max-h-[500px] overflow-y-auto">
-          <DataTable
-            :headers="tableHeaders"
-            :items="userStore.paginatedUsers"
-            :sort-by="userStore.setSorting"
-            :sorting="userStore.sorting"
-            :on-edit="openEditModal"
-            :on-delete="deleteUser"
-          >
+          <DataTable :headers="tableHeaders" :items="userStore.paginatedUsers" :sort-by="userStore.setSorting"
+            :sorting="userStore.sorting" :on-edit="openEditModal" :on-delete="deleteUser">
             <template #row="{ item, index }">
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
                 {{ item.firstName }}
@@ -254,51 +234,32 @@ watch(
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex gap-1 flex-wrap">
-                  <span
-                    v-for="role in item.roles"
-                    :key="role.id"
-                    class="px-2 py-1 rounded-full text-xs font-medium"
-                    :class="getRoleStyle(role.name)"
-                  >
+                  <span v-for="role in item.roles" :key="role.id" class="px-2 py-1 rounded-full text-xs font-medium"
+                    :class="getRoleStyle(role.name)">
                     {{ formatRoleDisplay(role) }}
                   </span>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                <span
-                  :class="[
-                    'px-2 py-1 rounded-full text-xs font-medium',
-                    item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-                  ]"
-                >
+                <span :class="[
+                  'px-2 py-1 rounded-full text-xs font-medium',
+                  item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                ]">
                   {{ item.active ? 'Active' : 'Inactive' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  @click="openEditModal(index)"
-                  class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
-                >
+                <button @click="openEditModal(index)"
+                  class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </button>
-                <button
-                  @click="deleteUser(item.id)"
-                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
-                >
+                <button @click="deleteUser(item.id)"
+                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </td>
@@ -311,66 +272,29 @@ watch(
     </div>
 
     <!-- Add Modal -->
-    <Modal :show="isAddModalOpen" title="Add New User" @close="cancelAdd" @submit="addUser">
-      <div class="space-y-3">
+    <Modal :show="isAddModalOpen" title="Add New User" @close="cancelAdd">
+      <div class=" space-y-3">
         <div class="grid grid-cols-2 gap-3">
-          <BaseInput
-            v-model="reactiveUser.firstName"
-            placeholder="First Name"
-            label="First name"
-            :error="errorStore.errors.firstName"
-            :class="{ 'border-red-500': errorStore.errors.firstName }"
-          />
-          <BaseInput
-            v-model="reactiveUser.lastName"
-            placeholder="Last Name"
-            label="Last name"
-            :error="errorStore.errors.lastName"
-            :class="{ 'border-red-500': errorStore.errors.lastName }"
-          />
+          <BaseInput v-model="reactiveUser.firstName" placeholder="First Name" label="First name"
+            :error="errorStore.errors.firstName" :class="{ 'border-red-500': errorStore.errors.firstName }" />
+          <BaseInput v-model="reactiveUser.lastName" placeholder="Last Name" label="Last name"
+            :error="errorStore.errors.lastName" :class="{ 'border-red-500': errorStore.errors.lastName }" />
         </div>
-        <BaseInput
-          v-model="reactiveUser.email"
-          type="email"
-          placeholder="Email"
-          label="Email"
-          :error="errorStore.errors.email"
-          :class="{ 'border-red-500': errorStore.errors.email }"
-        />
-        <BaseInput
-          v-model="reactiveUser.username"
-          placeholder="Username"
-          label="Username"
-          :error="errorStore.errors.username"
-          :class="{ 'border-red-500': errorStore.errors.username }"
-        />
-        <BaseInput
-          v-model="reactiveUser.password"
-          type="password"
-          placeholder="Password"
-          label="Password"
-          :error="errorStore.errors.password"
-          :class="{ 'border-red-500': errorStore.errors.password }"
-        />
+        <BaseInput v-model="reactiveUser.email" type="email" placeholder="Email" label="Email"
+          :error="errorStore.errors.email" :class="{ 'border-red-500': errorStore.errors.email }" />
+        <BaseInput v-model="reactiveUser.username" placeholder="Username" label="Username"
+          :error="errorStore.errors.username" :class="{ 'border-red-500': errorStore.errors.username }" />
+        <BaseInput v-model="reactiveUser.password" type="password" placeholder="Password" label="Password"
+          :error="errorStore.errors.password" :class="{ 'border-red-500': errorStore.errors.password }" />
         <!-- Role selection -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-700">Role</label>
           <div class="flex flex-wrap gap-2">
-            <label
-              v-for="role in availableRoles"
-              :key="role.name"
-              class="inline-flex items-center space-x-2 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                v-model="reactiveUser.roles"
-                :value="{ name: `ROLE_${role.name.toUpperCase()}` }"
-                class="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-opacity-50"
-              />
-              <span
-                class="px-2 py-1 rounded-full text-xs font-medium"
-                :class="[role.bgColor, role.textColor]"
-              >
+            <label v-for="role in availableRoles" :key="role.name"
+              class="inline-flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" v-model="reactiveUser.roles" :value="{ name: `ROLE_${role.name.toUpperCase()}` }"
+                class="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-opacity-50" />
+              <span class="px-2 py-1 rounded-full text-xs font-medium" :class="[role.bgColor, role.textColor]">
                 {{ role.name }}
               </span>
             </label>
@@ -383,92 +307,50 @@ watch(
         <div v-if="errorStore.errors.general" class="text-sm text-red-600 text-center mt-4">
           {{ errorStore.errors.general }}
         </div>
-        <BaseCheckbox v-model="reactiveUser.active" label="Is Active?" />
+        <BaseCheckbox v-model="reactiveUser.active" label="Account active" />
         <div class="flex justify-end space-x-3 pt-2">
-          <button
-            type="button"
-            @click="cancelAdd"
-            class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-          >
+          <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelAdd">
             Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm transition"
-          >
+          </BaseButton>
+          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="addUser">
             Add User
-          </button>
+          </BaseButton>
         </div>
       </div>
     </Modal>
 
     <!-- Edit Modal -->
-    <Modal :show="isEditModalOpen" title="Edit User" @close="cancelEdit" @submit="updateUser">
+    <Modal :show="isEditModalOpen" title="Edit User" @close="cancelEdit">
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-3">
-          <BaseInput
-            v-model="reactiveUser.firstName"
-            placeholder="First Name"
-            label="First name"
-            variant="success"
-            :error="errorStore.errors.firstName"
-            :class="{ 'border-red-500': errorStore.errors.firstName }"
-          />
-          <BaseInput
-            v-model="reactiveUser.lastName"
-            placeholder="Last Name"
-            label="Last name"
-            variant="success"
-            :error="errorStore.errors.lastName"
-            :class="{ 'border-red-500': errorStore.errors.lastName }"
-          />
+          <BaseInput v-model="reactiveUser.firstName" placeholder="First Name" label="First name" variant="success"
+            :error="errorStore.errors.firstName" :class="{ 'border-red-500': errorStore.errors.firstName }" />
+          <BaseInput v-model="reactiveUser.lastName" placeholder="Last Name" label="Last name" variant="success"
+            :error="errorStore.errors.lastName" :class="{ 'border-red-500': errorStore.errors.lastName }" />
         </div>
-        <BaseInput
-          v-model="reactiveUser.email"
-          type="email"
-          placeholder="Email"
-          label="Email"
-          variant="success"
-          :error="errorStore.errors.email"
-          :class="{ 'border-red-500': errorStore.errors.email }"
-        />
-        <BaseInput
-          v-model="reactiveUser.username"
-          placeholder="Username"
-          label="Username"
-          variant="success"
-          :error="errorStore.errors.username"
-          :class="{ 'border-red-500': errorStore.errors.username }"
-        />
+        <BaseInput v-model="reactiveUser.email" type="email" placeholder="Email" label="Email" variant="success"
+          :error="errorStore.errors.email" :class="{ 'border-red-500': errorStore.errors.email }" />
+        <BaseInput v-model="reactiveUser.username" placeholder="Username" label="Username" variant="success"
+          :error="errorStore.errors.username" :class="{ 'border-red-500': errorStore.errors.username }" />
         <!-- Role selection -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-700">Role</label>
           <div class="flex flex-wrap gap-2">
-            <label
-              v-for="role in availableRoles"
-              :key="role.name"
-              class="inline-flex items-center space-x-2 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                :checked="isRoleSelected(role.name, reactiveUser.roles)"
-                @change="
-                  (e) => {
-                    if (e.target.checked) {
-                      reactiveUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
-                    } else {
-                      reactiveUser.roles = reactiveUser.roles.filter(
-                        (r) => r.name !== `ROLE_${role.name.toUpperCase()}`,
-                      )
-                    }
+            <label v-for="role in availableRoles" :key="role.name"
+              class="inline-flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" :checked="isRoleSelected(role.name, reactiveUser.roles)" @change="
+                (e) => {
+                  if (e.target.checked) {
+                    reactiveUser.roles.push({ name: `ROLE_${role.name.toUpperCase()}` })
+                  } else {
+                    reactiveUser.roles = reactiveUser.roles.filter(
+                      (r) => r.name !== `ROLE_${role.name.toUpperCase()}`,
+                    )
                   }
-                "
-                class="w-4 h-4 rounded border-gray-300 text-green-600 shadow-sm focus:ring-2 focus:ring-green-200 focus:ring-opacity-50"
-              />
-              <span
-                class="px-2 py-1 rounded-full text-xs font-medium"
-                :class="[role.bgColor, role.textColor]"
-              >
+                }
+              "
+                class="w-4 h-4 rounded border-gray-300 text-green-600 shadow-sm focus:ring-2 focus:ring-green-200 focus:ring-opacity-50" />
+              <span class="px-2 py-1 rounded-full text-xs font-medium" :class="[role.bgColor, role.textColor]">
                 {{ role.name }}
               </span>
             </label>
@@ -477,21 +359,14 @@ watch(
             {{ errorStore.errors.roles }}
           </span>
         </div>
-        <BaseCheckbox v-model="reactiveUser.active" label="Is Active?" variant="success" />
+        <BaseCheckbox v-model="reactiveUser.active" label="Account active" variant="success" />
         <div class="flex justify-between pt-2">
-          <button
-            type="submit"
-            class="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm transition"
-          >
-            Update
-          </button>
-          <button
-            type="button"
-            @click="cancelEdit"
-            class="px-4 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-sm transition"
-          >
+          <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelEdit">
             Cancel
-          </button>
+          </BaseButton>
+          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="updateUser">
+            Update User
+          </BaseButton>
         </div>
       </div>
     </Modal>

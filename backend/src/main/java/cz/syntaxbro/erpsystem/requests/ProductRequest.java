@@ -25,4 +25,5 @@ public class ProductRequest {
 
     @NotNull(message = "Category can't be null")
     private String productCategory;
+    private String image;
 }

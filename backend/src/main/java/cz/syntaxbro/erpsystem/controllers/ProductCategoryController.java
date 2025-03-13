@@ -25,6 +25,7 @@ public class ProductCategoryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'MANAGER')")
     public ResponseEntity<ProductCategory> getProductCategoryById(@PathVariable long id) {
         return ResponseEntity.ok(
                 productCategoryService.getProductCategory(id)
@@ -32,6 +33,7 @@ public class ProductCategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'MANAGER')")
     public ResponseEntity<List<ProductCategory>> findAll() {
         return ResponseEntity.ok(productCategoryService.getProductCategories());
     }

@@ -14,6 +14,7 @@ import {
   ColorPicker,
 } from '@/components'
 import { useErrorStore } from '@/stores/errors.store.js'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 defineOptions({
   name: 'ProductsView',
@@ -125,36 +126,27 @@ onMounted(async () => {
   <div class="p-8 space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
       <!-- Status bar -->
-      <StatusBar
-        :error="errorStore.errors.general"
-        :loading="loading"
-        class="mb-4"
-        @clear-error="errorStore.clearServerErrors()"
-      />
+      <StatusBar :error="errorStore.errors.general" :loading="loading" class="mb-4"
+        @clear-error="errorStore.clearServerErrors()" />
 
       <!-- Header overlay -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Categories</h2>
         <div class="flex items-center space-x-4">
           <SearchBar v-model="searchInput" @update:modelValue="categoriesStore.setSearch($event)" />
-          <button
-            @click="isAddModalOpen = true"
-            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm transition flex items-center"
-          >
+
+          <BaseButton type="primary" class="text-sm! flex!" @click="
+            reactiveCategory.$clear();
+          errorStore.clearServerErrors();
+          isAddModalOpen = true;
+          ">
             <span class="mr-2">Add</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
                 d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clip-rule="evenodd"
-              />
+                clip-rule="evenodd" />
             </svg>
-          </button>
+          </BaseButton>
         </div>
       </div>
 
@@ -164,23 +156,16 @@ onMounted(async () => {
       <!-- Data table -->
       <template v-else>
         <div class="flex-1 overflow-hidden">
-          <DataTable
-            :headers="tableHeaders"
-            :items="categoriesStore.paginateItems"
-            :sort-by="categoriesStore.setSorting"
-            :sorting="categoriesStore.sorting"
-            :on-edit="$actions.openEditModal"
-            :on-delete="$actions.deleteCategory"
-          >
+          <DataTable :headers="tableHeaders" :items="categoriesStore.paginateItems"
+            :sort-by="categoriesStore.setSorting" :sorting="categoriesStore.sorting" :on-edit="$actions.openEditModal"
+            :on-delete="$actions.deleteCategory">
             <template #row="{ item }">
               <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
                 {{ item.id }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                <p
-                  :class="choosedColor(item)"
-                  class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-gray-500/10 ring-inset"
-                >
+                <p :class="choosedColor(item)"
+                  class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-gray-500/10 ring-inset">
                   {{ item.name }}
                 </p>
               </td>
@@ -189,30 +174,17 @@ onMounted(async () => {
               </td>
 
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  @click="$actions.openEditModal(item)"
-                  class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer"
-                >
+                <button @click="$actions.openEditModal(item)"
+                  class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </button>
-                <button
-                  @click="$actions.deleteCategory(item.id)"
-                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
-                >
+                <button @click="$actions.deleteCategory(item.id)"
+                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </td>
@@ -225,88 +197,40 @@ onMounted(async () => {
     </div>
 
     <!-- Add Modal -->
-    <Modal
-      :show="isAddModalOpen"
-      title="Add New Category"
-      @close="$actions.cancelAdd"
-      @submit="$actions.add"
-    >
+    <Modal :show="isAddModalOpen" title="Add New Category" @close="$actions.cancelAdd">
       <div class="space-y-3">
-        <BaseInput
-          :error="errorStore.errors.name"
-          v-model="reactiveCategory.name"
-          placeholder="Category name"
-          label="Name"
-        />
-        <BaseInput
-          :error="errorStore.errors.description"
-          v-model="reactiveCategory.description"
-          placeholder="Category description"
-          label="Description"
-        />
-        <ColorPicker
-          :error="errorStore.errors.color"
-          v-model="reactiveCategory.color"
-          label="Color"
-        />
+        <BaseInput :error="errorStore.errors.name" v-model="reactiveCategory.name" placeholder="Category name"
+          label="Name" />
+        <BaseInput :error="errorStore.errors.description" v-model="reactiveCategory.description"
+          placeholder="Category description" label="Description" />
+        <ColorPicker :error="errorStore.errors.color" v-model="reactiveCategory.color" label="Color" />
 
         <div class="flex justify-end space-x-3 pt-2">
-          <button
-            type="button"
-            @click="$actions.cancelAdd"
-            class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-          >
+          <BaseButton type="error" class="text-sm! font-bold flex!" @click="$actions.cancelAdd">
             Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm transition"
-          >
+          </BaseButton>
+          <BaseButton type="success" class="text-sm! font-bold flex!" @click="$actions.add">
             Add
-          </button>
+          </BaseButton>
         </div>
       </div>
     </Modal>
 
     <!-- Edit Modal -->
-    <Modal
-      :show="isEditModalOpen"
-      title="Edit Category"
-      @close="$actions.cancelEdit"
-      @submit="$actions.updateCategory"
-    >
+    <Modal :show="isEditModalOpen" title="Edit Category" @close="$actions.cancelEdit">
       <div class="space-y-3">
-        <BaseInput
-          :error="errorStore.errors.name"
-          v-model="reactiveCategory.name"
-          placeholder="Category name"
-          label="Name"
-        />
-        <BaseInput
-          :error="errorStore.errors.description"
-          v-model="reactiveCategory.description"
-          placeholder="Category description"
-          label="Description"
-        />
-        <ColorPicker
-          :error="errorStore.errors.color"
-          v-model="reactiveCategory.color"
-          label="Color"
-        />
+        <BaseInput :error="errorStore.errors.name" v-model="reactiveCategory.name" placeholder="Category name"
+          label="Name" />
+        <BaseInput :error="errorStore.errors.description" v-model="reactiveCategory.description"
+          placeholder="Category description" label="Description" />
+        <ColorPicker :error="errorStore.errors.color" v-model="reactiveCategory.color" label="Color" />
         <div class="flex justify-between pt-2">
-          <button
-            type="submit"
-            class="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm transition"
-          >
-            Update
-          </button>
-          <button
-            type="button"
-            @click="$actions.cancelEdit"
-            class="px-4 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-sm transition"
-          >
+          <BaseButton type="error" class="text-sm! font-bold flex!" @click="$actions.cancelEdit">
             Cancel
-          </button>
+          </BaseButton>
+          <BaseButton type="success" class="text-sm! font-bold flex!" @click="$actions.updateCategory">
+            Update
+          </BaseButton>
         </div>
       </div>
     </Modal>
