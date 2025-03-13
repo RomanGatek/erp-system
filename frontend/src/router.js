@@ -26,6 +26,7 @@ const routes = [
   { path: '/orders', component: Orders, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/products/categories', component: Categories, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/catalog', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
+  { path: '/catalog/product/:slug', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
   { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }

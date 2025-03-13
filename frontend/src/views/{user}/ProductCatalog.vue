@@ -1,7 +1,7 @@
 <template>
   <div class="p-6 h-[80dvh] max-h-[80dvh] overflow-hidden bg-gray-50">
     <div
-      class="grid grid-cols-[250px_1fr_300px] gap-6 h-[calc(80dvh-3rem)] max-h-[calc(80dvh-3rem)] overflow-hidden"
+      class="grid grid-cols-[250px_1fr_300px] gap-10 h-[calc(80dvh-3rem)] max-h-[calc(80dvh-3rem)] overflow-hidden"
     >
       <!-- Categories Sidebar -->
       <CategoriesSidebar
@@ -122,23 +122,23 @@
         @after-leave="onModalClosed"
       />
 
-      <!-- Custom scroll controls -->
-      <div class="absolute right-[316px] top-1/2 -translate-y-1/2 z-10 flex flex-col gap-2">
+      <!-- Custom scroll controls - updated position and styling -->
+      <div class="absolute right-[362.5px] top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
         <button 
           @click="scrollUp"
-          class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-blue-600 transition-colors"
+          class="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-lg flex items-center justify-center text-white hover:from-blue-700 hover:to-blue-500 transition-colors transform hover:scale-105"
           aria-label="Scroll up"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
             <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 011.06 0l7.5 7.5a.75.75 0 11-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 01-1.06-1.06l7.5-7.5z" clip-rule="evenodd" />
           </svg>
         </button>
         <button 
           @click="scrollDown"
-          class="w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-blue-600 transition-colors"
+          class="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-lg flex items-center justify-center text-white hover:from-blue-700 hover:to-blue-500 transition-colors transform hover:scale-105"
           aria-label="Scroll down"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
             <path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-7.5-7.5a.75.75 0 011.06-1.06L12 14.69l6.97-6.97a.75.75 0 011.06 1.06l-7.5 7.5z" clip-rule="evenodd" />
           </svg>
         </button>
@@ -160,6 +160,8 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useProductsStore } from '@/stores/products.store'
 import { useCategoriesStore } from '@/stores/categories.store'
 import { useCartStore } from '@/stores/cart.store'
+import { useNotifier } from '@/stores/notifier.store'
+import { useRouter, useRoute } from 'vue-router'
 import CategoriesSidebar from '@/components/catalog/CategoriesSidebar.vue'
 import ProductCard from '@/components/catalog/ProductCard.vue'
 import ProductDetailModal from '@/components/catalog/ProductDetailModal.vue'
@@ -181,6 +183,9 @@ export default {
     const products = useProductsStore()
     const categories = useCategoriesStore()
     const cart = useCartStore()
+    const notifier = useNotifier()
+    const router = useRouter()
+    const route = useRoute()
 
     const searchQuery = ref('')
     const selectedCategory = ref('')
@@ -428,12 +433,20 @@ export default {
 
     // Setup event listeners
     onMounted(async () => {
-      await Promise.all([loadProducts(), loadCategories()])
+      console.log("ProductCatalog mounted, current route:", route.path);
+      
+      // Load products first
+      await Promise.all([loadProducts(), loadCategories()]);
+      console.log("Products loaded, count:", products.items.length);
+      
+      // Check if URL has a product after products are loaded
+      await checkUrlForProduct();
+      
       nextTick(() => {
-        setupScrollListeners()
-        setupIntersectionObserver()
-        window.addEventListener('keydown', handleKeyDown)
-      })
+        setupScrollListeners();
+        setupIntersectionObserver();
+        window.addEventListener('keydown', handleKeyDown);
+      });
     })
 
     onUnmounted(() => {
@@ -458,6 +471,15 @@ export default {
     // Cart operations
     const addToCart = (product) => {
       cart.addItem(product)
+      
+      // Show notification when adding directly from catalog (not from modal)
+      if (!selectedProduct.value || selectedProduct.value.id !== product.id) {
+        notifier.success(
+          `${product.name} byl přidán do košíku`,
+          'Success',
+          3000
+        )
+      }
     }
 
     const removeFromCart = (item) => {
@@ -506,24 +528,92 @@ export default {
     const selectedProduct = ref(null)
     const isModalVisible = ref(false)
     
+    // Helper to create URL slug from product name
+    const createSlug = (name) => {
+      return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-')     // Replace spaces with -
+        .replace(/--+/g, '-')     // Replace multiple - with single -
+        .trim();
+    }
+    
     const showProductDetail = (product) => {
       console.log('ProductCatalog: Showing product detail for:', product.name);
+      
+      // First set the product to ensure it's available when modal becomes visible
       selectedProduct.value = product;
-      // Set visible flag to trigger animation
-      nextTick(() => {
-        isModalVisible.value = true;
-      });
+      
+      // Set visible flag to trigger animation immediately
+      isModalVisible.value = true;
+      
+      // Update URL using history API instead of router to prevent re-renders
+      // This is much less invasive than router.push
+      const productSlug = createSlug(product.name);
+      const newUrl = `/catalog/product/${productSlug}?id=${product.id}`;
+      window.history.replaceState(
+        { id: product.id }, 
+        '', 
+        newUrl
+      );
     }
     
     const closeProductDetail = () => {
       console.log('ProductCatalog: Closing product detail');
-      // Keep the product but hide the modal to allow for exit animation
+      
+      // Hide the modal first to start animation
       isModalVisible.value = false;
+      
+      // Update URL only after animation starts, using history API
+      // This should prevent any layout shifts during animation
+      setTimeout(() => {
+        window.history.replaceState({}, '', '/catalog');
+      }, 50);
     }
     
     const onModalClosed = () => {
+      console.log('ProductCatalog: Modal closed animation completed');
       // Clear the product only after animation completes
       selectedProduct.value = null;
+    }
+    
+    // Check URL for product on initial load
+    const checkUrlForProduct = async () => {
+      // If URL has a product slug
+      if (location.pathname.includes('/catalog/product/')) {
+        // Extract id from query params
+        const params = new URLSearchParams(location.search);
+        const productId = params.get('id');
+        console.log('Checking URL for product ID:', productId);
+        
+        if (!productId) {
+          console.error('No product ID in URL');
+          // No ID, redirect to catalog using history API
+          window.history.replaceState({}, '', '/catalog');
+          return;
+        }
+        
+        // Ensure products are loaded
+        if (products.items.length === 0) {
+          await products.fetchProducts();
+        }
+        
+        // Find the product by ID (ensure comparing the same type - string vs number issue)
+        const product = products.items.find(p => String(p.id) === String(productId));
+        
+        if (product) {
+          console.log('Found product by ID:', product.name);
+          // Show the product without updating URL again
+          selectedProduct.value = product;
+          // Show modal
+          isModalVisible.value = true;
+        } else {
+          console.error('Product not found for ID:', productId);
+          // Product not found, redirect to catalog using history API
+          notifier.error('Product not found', 'Error', 3000);
+          window.history.replaceState({}, '', '/catalog');
+        }
+      }
     }
     
     const submitProductReview = (review) => {
@@ -544,6 +634,31 @@ export default {
       // Here you would typically send this to an API
       console.log('Review submitted:', review)
     }
+
+    // Create a function to handle popstate events for reuse
+    const handlePopState = async (e) => {
+      console.log('Browser navigation detected', e.state);
+      
+      if (location.pathname.includes('/catalog/product/')) {
+        // Browser navigated to product detail
+        await checkUrlForProduct();
+      } else {
+        // Browser navigated away from product detail
+        isModalVisible.value = false;
+        setTimeout(() => {
+          selectedProduct.value = null;
+        }, 250);
+      }
+    };
+
+    // Handle browser back/forward buttons with popstate
+    onMounted(() => {
+      window.addEventListener('popstate', handlePopState);
+    });
+    
+    onUnmounted(() => {
+      window.removeEventListener('popstate', handlePopState);
+    });
 
     return {
       products,

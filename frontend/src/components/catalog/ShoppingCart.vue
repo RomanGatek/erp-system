@@ -1,6 +1,6 @@
 <template>
   <div class="h-[75dvh] overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-md h-auto min-h-[300px] max-h-full overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-md flex flex-col h-full shopping-cart">
       <div class="p-5">
         <h2
           class="text-xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent"

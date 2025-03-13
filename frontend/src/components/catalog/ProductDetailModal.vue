@@ -24,7 +24,7 @@
               {{ product.name }}
             </h2>
             <button 
-              @click="$emit('close')" 
+              @click="closeModal" 
               class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none rounded-full hover:bg-gray-100 p-1"
               aria-label="Close"
             >
@@ -146,8 +146,8 @@
                 
                 <!-- Product price and add to cart -->
                 <div class="bg-gray-50 rounded-xl p-5">
-                  <div class="flex justify-between items-start">
-                    <div>
+                  <div class="flex flex-col">
+                    <div class="mb-4">
                       <div class="text-gray-500 text-sm mb-1">Price</div>
                       <div class="mb-1">
                         <span class="text-2xl font-bold text-gray-800">
@@ -161,13 +161,14 @@
                         <span>DPH (21%): {{ formatPrice(vatAmount) }} Kč</span>
                       </div>
                     </div>
-                    <button 
+                    <BaseButton 
                       @click="addToCart"
                       :disabled="isInCart"
-                      class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-3 px-8 rounded-xl font-medium transition-colors shadow-sm"
+                      :type="isInCart ? 'secondary' : 'primary'"
+                      class="w-full py-3 tx"
                     >
                       {{ isInCart ? 'In Cart' : 'Add to Cart' }}
-                    </button>
+                    </BaseButton>
                   </div>
                 </div>
               </div>
@@ -325,8 +326,15 @@
 </template>
 
 <script>
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import BaseButton from '@/components/common/BaseButton.vue'
+import { useNotifier } from '@/stores/notifier.store'
+
 export default {
   name: 'ProductDetailModal',
+  components: {
+    BaseButton
+  },
   props: {
     product: {
       type: Object,
@@ -337,146 +345,219 @@ export default {
       default: false
     }
   },
-  emits: ['close', 'add-to-cart', 'submit-review', 'after-leave'],
-  data() {
-    return {
-      userRating: 0,
-      reviewComment: '',
-      currentImageIndex: 0,
-      VAT_RATE: 0.21, // 21% VAT rate for Czech Republic
-    }
-  },
-  computed: {
-    canSubmitReview() {
-      return this.userRating > 0 && this.reviewComment.trim().length > 0
-    },
-    allImages() {
+  emits: [
+    'close',
+    'add-to-cart',
+    'submit-review',
+    'after-leave'
+  ],
+  setup(props, { emit }) {
+    const notifier = useNotifier()
+    const userRating = ref(0)
+    const reviewComment = ref('')
+    const currentImageIndex = ref(0)
+    const modalContent = ref(null)
+    const VAT_RATE = 0.21 // 21% VAT rate for Czech Republic
+    
+    const canSubmitReview = computed(() => {
+      return userRating.value > 0 && reviewComment.value.trim().length > 0
+    })
+
+    const allImages = computed(() => {
       // Combine product.image with product.images if they exist
       const images = []
       
-      if (this.product.image) {
-        images.push(this.product.image)
+      if (props.product.image) {
+        images.push(props.product.image)
       }
       
-      if (this.product.images && Array.isArray(this.product.images)) {
-        images.push(...this.product.images.filter(img => img))
+      if (props.product.images && Array.isArray(props.product.images)) {
+        images.push(...props.product.images.filter(img => img))
       }
       
       return images.length > 0 ? images : []
-    },
-    hasMultipleImages() {
-      return this.allImages.length > 1
-    },
-    totalImages() {
-      return this.allImages.length
-    },
-    currentImage() {
-      if (this.allImages.length === 0) return null
-      return this.allImages[this.currentImageIndex]
-    },
-    priceWithoutVat() {
+    })
+
+    const hasMultipleImages = computed(() => {
+      return allImages.value.length > 1
+    })
+
+    const totalImages = computed(() => {
+      return allImages.value.length
+    })
+
+    const currentImage = computed(() => {
+      if (allImages.value.length === 0) return null
+      return allImages.value[currentImageIndex.value]
+    })
+
+    const priceWithoutVat = computed(() => {
       // Base price without VAT
-      return this.product.buyoutPrice || this.product.price || 0
-    },
-    vatAmount() {
+      return props.product.buyoutPrice || props.product.price || 0
+    })
+
+    const vatAmount = computed(() => {
       // Calculate VAT amount
-      return this.priceWithoutVat * this.VAT_RATE
-    },
-    priceWithVat() {
+      return priceWithoutVat.value * VAT_RATE
+    })
+
+    const priceWithVat = computed(() => {
       // Calculate price with VAT
-      return this.priceWithoutVat + this.vatAmount
-    }
-  },
-  methods: {
-    formatPrice(price) {
+      return priceWithoutVat.value + vatAmount.value
+    })
+
+    const formatPrice = (price) => {
       return new Intl.NumberFormat('cs-CZ').format(price)
-    },
-    formatDate(date) {
+    }
+
+    const formatDate = (date) => {
       if (!date) return ''
       const d = new Date(date)
       return d.toLocaleDateString('cs-CZ')
-    },
-    addToCart() {
-      this.$emit('add-to-cart', this.product)
-    },
-    submitReview() {
-      if (!this.canSubmitReview) return
+    }
+
+    const closeModal = () => {
+      // Use a custom close method to ensure proper cleanup
+      emit('close')
+    }
+
+    const addToCart = () => {
+      // Add product to cart
+      emit('add-to-cart', props.product)
       
-      this.$emit('submit-review', {
-        productId: this.product.id,
-        rating: this.userRating,
-        comment: this.reviewComment,
+      // Show success notification
+      notifier.success(
+        `${props.product.name} byl přidán do košíku`,
+        'Success',
+        3000
+      )
+      
+      // Close the modal
+      closeModal()
+    }
+
+    const submitReview = () => {
+      if (!canSubmitReview.value) return
+      
+      emit('submit-review', {
+        productId: props.product.id,
+        rating: userRating.value,
+        comment: reviewComment.value,
         date: new Date().toISOString(),
         user: 'Guest' // In a real app, this would be the actual user's name
       })
       
       // Reset form
-      this.userRating = 0
-      this.reviewComment = ''
-    },
-    nextImage() {
-      if (this.currentImageIndex < this.totalImages - 1) {
-        this.currentImageIndex++
-      } else {
-        this.currentImageIndex = 0
-      }
-    },
-    prevImage() {
-      if (this.currentImageIndex > 0) {
-        this.currentImageIndex--
-      } else {
-        this.currentImageIndex = this.totalImages - 1
-      }
-    },
-    handleKeyDown(e) {
-      if (e.key === 'Escape') {
-        this.$emit('close')
-      } else if (e.key === 'ArrowRight' && this.hasMultipleImages) {
-        this.nextImage()
-      } else if (e.key === 'ArrowLeft' && this.hasMultipleImages) {
-        this.prevImage()
-      }
-    },
-    handleClickOutside(e) {
-      if (this.$refs.modalContent && !this.$refs.modalContent.contains(e.target)) {
-        this.$emit('close')
-      }
-    },
-    afterLeave() {
-      // Emit event after animation completes
-      this.$emit('after-leave')
+      userRating.value = 0
+      reviewComment.value = ''
     }
-  },
-  mounted() {
-    console.log('ProductDetailModal mounted, product:', this.product?.name);
-    
-    // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden'
-    
-    // Add ESC key event listener
-    document.addEventListener('keydown', this.handleKeyDown)
-    
-    // Add click outside listener
-    document.addEventListener('click', this.handleClickOutside)
-  },
-  beforeUnmount() {
-    console.log('ProductDetailModal unmounting');
-    
-    // Re-enable body scrolling when modal is closed
-    document.body.style.overflow = ''
-    
-    // Remove event listeners
-    document.removeEventListener('keydown', this.handleKeyDown)
-    document.removeEventListener('click', this.handleClickOutside)
+
+    const nextImage = () => {
+      if (currentImageIndex.value < totalImages.value - 1) {
+        currentImageIndex.value++
+      } else {
+        currentImageIndex.value = 0
+      }
+    }
+
+    const prevImage = () => {
+      if (currentImageIndex.value > 0) {
+        currentImageIndex.value--
+      } else {
+        currentImageIndex.value = totalImages.value - 1
+      }
+    }
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        closeModal()
+      } else if (e.key === 'ArrowRight' && hasMultipleImages.value) {
+        nextImage()
+      } else if (e.key === 'ArrowLeft' && hasMultipleImages.value) {
+        prevImage()
+      }
+    }
+
+    const afterLeave = () => {
+      // Emit event after animation completes
+      emit('after-leave')
+    }
+
+    onMounted(() => {
+      console.log('ProductDetailModal mounted, product:', props.product?.name);
+      
+      // Prevent body scrolling when modal is open
+      document.body.style.overflow = 'hidden'
+      
+      // Add ESC key event listener
+      document.addEventListener('keydown', handleKeyDown)
+    })
+
+    // Watch for clicks outside the modal, but use a more reliable approach
+    // that won't conflict with other components
+    onMounted(() => {
+      const handleGlobalClick = (e) => {
+        // Only handle clicks outside if the modal is visible and not inside the modal
+        if (
+          modalContent.value && 
+          !modalContent.value.contains(e.target) && 
+          !e.target.closest('.shopping-cart') // Don't close when clicking on cart
+        ) {
+          closeModal()
+        }
+      }
+      
+      // Add with a slight delay to avoid immediate trigger
+      setTimeout(() => {
+        document.addEventListener('click', handleGlobalClick)
+      }, 100)
+      
+      onUnmounted(() => {
+        document.removeEventListener('click', handleGlobalClick)
+      })
+    })
+
+    onUnmounted(() => {
+      console.log('ProductDetailModal unmounting');
+      
+      // Re-enable body scrolling when modal is closed
+      document.body.style.overflow = ''
+      
+      // Remove event listeners
+      document.removeEventListener('keydown', handleKeyDown)
+    })
+
+    return {
+      modalContent,
+      userRating,
+      reviewComment,
+      currentImageIndex,
+      canSubmitReview,
+      allImages,
+      hasMultipleImages,
+      totalImages,
+      currentImage,
+      priceWithoutVat,
+      vatAmount,
+      priceWithVat,
+      formatPrice,
+      formatDate,
+      addToCart,
+      submitReview,
+      nextImage,
+      prevImage,
+      afterLeave,
+      closeModal,
+    }
   }
 }
 </script>
 
 <style scoped>
-/* Modal animations */
+/* Modal animations - optimized for smoother transitions */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
 }
 
 .modal-fade-enter-from,
@@ -486,7 +567,7 @@ export default {
 
 .modal-zoom-enter-active,
 .modal-zoom-leave-active {
-  transition: transform 0.3s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.25s ease;
 }
 
 .modal-zoom-enter-from,
