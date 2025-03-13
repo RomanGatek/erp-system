@@ -21,6 +21,10 @@ export { default as SearchSelect } from './common/SearchSelect.vue'
 export { default as DateTimePicker } from './common/DateTimePicker.vue'
 export { default as MultiProductSelect } from './common/MultiProductSelect.vue'
 export { default as ColorPicker } from './ColorPicker.vue'
+export { default as SalesChart } from './charts/SalesChart.vue'
+export { default as OrderApprovalChart } from './charts/OrderApprovalChart.vue'
+export { default as ProductPurchaseChart } from './charts/ProductPurchaseChart.vue'
+export { default as ProductSalesChart } from './charts/ProductSalesChart.vue'
 
 // Icons
 export * from './common/rawIcons'

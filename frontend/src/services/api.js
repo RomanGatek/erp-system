@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios'
 
-
 class Api {
   #axios
 
@@ -8,7 +7,7 @@ class Api {
     this.#axios = axios.create({
       baseURL: 'http://localhost:8080/api',
       withCredentials: true,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     })
 
     this.#axios.interceptors.request.use(
@@ -22,7 +21,7 @@ class Api {
         }
         return config
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     )
 
     console.log('✅ API instance created')
@@ -31,16 +30,16 @@ class Api {
     // Získání dostupných metod
     console.log('🔦 Endpoints discovered')
   }
-    /**
+  /**
    * Auth management operations
    */
   auth() {
     return {
       /**
-     * Authenticates a user with credentials
-     * @param {{email: string, password: string}} credentials User credentials
-     * @returns {Promise<string|null>} Access token if login successful, null otherwise
-     */
+       * Authenticates a user with credentials
+       * @param {{email: string, password: string}} credentials User credentials
+       * @returns {Promise<string|null>} Access token if login successful, null otherwise
+       */
       login: async (credentials) => {
         try {
           const response = await this.#axios.post('/auth/public/login', credentials)
@@ -70,7 +69,7 @@ class Api {
        * Logs out the current user
        * @returns {Promise<Object>} Logout result
        */
-      logout: async() => {
+      logout: async () => {
         try {
           const response = await this.#axios.post('/auth/public/logout')
           return [response.data, null]
@@ -103,13 +102,13 @@ class Api {
         try {
           const response = await api.post('/auth/public/reset-password', {
             token,
-            newPassword
+            newPassword,
           })
           return [response.data, null]
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
@@ -168,7 +167,7 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
@@ -213,11 +212,11 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
-    /**
+  /**
    * Order management operations
    * Object containing user management methods
    */
@@ -278,7 +277,7 @@ class Api {
       },
       /**
        * deletes an order
-       * @param {number} orderId 
+       * @param {number} orderId
        * @returns {string}
        */
       delete: async (orderId) => {
@@ -291,7 +290,7 @@ class Api {
       },
       /**
        * Creates a new order
-       * @param {Partial<import('../../types').Order>} orderData 
+       * @param {Partial<import('../../types').Order>} orderData
        * @returns {Promise<[import('../../types').Order, AxiosError]>}
        */
       create: async (orderData) => {
@@ -304,8 +303,8 @@ class Api {
       },
       /**
        * updates an existing order
-       * @param {number} orderId 
-       * @param {Partial<import('../../types').Order>} orderData 
+       * @param {number} orderId
+       * @param {Partial<import('../../types').Order>} orderData
        * @returns {Promise<[import('../../types').Order, AxiosError]>}
        */
       update: async (orderId, orderData) => {
@@ -315,11 +314,11 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
-    /**
+  /**
    * Product management operations
    * Object containing user management methods
    */
@@ -397,7 +396,7 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
@@ -407,6 +406,66 @@ class Api {
    */
   reports() {
     return {
+      /**
+       * Generates all reports
+       * @returns {Promise<Object>} Current inventory report data
+       */
+      getAll: async () => {
+        try {
+          const response = await this.#axios.get('/reports')
+          return [response.data, null]
+        } catch (e) {
+          return [null, e]
+        }
+      },
+      /**
+       * Generates sales reports
+       * @returns {Promise<Object>} Current inventory report data
+       */
+      getSalesReport: async () => {
+        try {
+          const response = await this.#axios.get('/reports/sales')
+          return [response.data, null]
+        } catch (e) {
+          return [null, e]
+        }
+      },
+      /**
+       * Generates Order Approval reports
+       * @returns {Promise<Object>} Current inventory report data
+       */
+      getOrderApprovalReports: async () => {
+        try {
+          const response = await this.#axios.get('/reports/order-approvals')
+          return [response.data, null]
+        } catch (e) {
+          return [null, e]
+        }
+      },
+      /**
+       * Generates product Purchase Reports
+       * @returns {Promise<Object>} Current inventory report data
+       */
+      getProductPurchaseReports: async () => {
+        try {
+          const response = await this.#axios.get('/reports/most-purchased-products')
+          return [response.data, null]
+        } catch (e) {
+          return [null, e]
+        }
+      },
+      /**
+       * Generates product Sales Reports
+       * @returns {Promise<Object>} Current inventory report data
+       */
+      getProductSalesReports: async () => {
+        try {
+          const response = await this.#axios.get('/reports/best-selling-products')
+          return [response.data, null]
+        } catch (e) {
+          return [null, e]
+        }
+      },
       /**
        * Generates a sales report for a given period
        * @param {Object} params - Report parameters
@@ -433,7 +492,7 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
@@ -514,7 +573,7 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 
@@ -550,11 +609,11 @@ class Api {
         }
       },
       /**
-       * 
-       * @param {*} Item 
+       *
+       * @param {*} Item
        * @returns {Promise<?>}
        */
-      add : async (Item) => {
+      add: async (Item) => {
         try {
           const response = await this.#axios.post('/inventory', Item)
           return [response.data, null]
@@ -577,7 +636,7 @@ class Api {
         } catch (e) {
           return [null, e]
         }
-      }
+      },
     }
   }
 }

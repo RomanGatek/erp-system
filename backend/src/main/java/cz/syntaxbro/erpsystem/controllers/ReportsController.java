@@ -2,10 +2,7 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.Order;
-import cz.syntaxbro.erpsystem.responses.reports.OrderApprovalReportDTO;
-import cz.syntaxbro.erpsystem.responses.reports.ProductPurchaseReportDTO;
-import cz.syntaxbro.erpsystem.responses.reports.ProductSalesReportDTO;
-import cz.syntaxbro.erpsystem.responses.reports.SalesReportDTO;
+import cz.syntaxbro.erpsystem.responses.reports.*;
 import cz.syntaxbro.erpsystem.services.ReportService;
 import cz.syntaxbro.erpsystem.utils.ConsoleColors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +30,43 @@ public class ReportsController {
     }
 
     /**
+     * Retrieves report data for best-selling products.
+     *
+     * @param startDate The start date for the report period
+     * @param endDate The end date for the report period
+     * @param limit The maximum number of products to include in the report
+     * @return A response with best-selling products report data
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<AllReportsDTO> getAllReports(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "sell") String orderType,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        var orderTypeEnum = orderType != null ? Order.OrderType.valueOf(orderType.toUpperCase()) : null;
+
+        SalesReportDTO salesReport = reportService.generateSalesReport(startDate, endDate, orderTypeEnum);
+        List<ProductSalesReportDTO> productSalesReport = reportService.generateBestSellingProductsReport(startDate, endDate, limit);
+        List<ProductPurchaseReportDTO> productPurchaseReport = reportService.generateMostPurchasedProductsReport(startDate, endDate, limit);
+        List<OrderApprovalReportDTO> orderApprovalReport = reportService.generateOrderApprovalsReport(startDate, endDate);
+
+        AllReportsDTO reports = AllReportsDTO.builder()
+                .productSalesReports(productSalesReport)
+                .salesReport(salesReport)
+                .productPurchaseReports(productPurchaseReport)
+                .orderApprovalReports(orderApprovalReport)
+                .build();
+
+        ErpSystemApplication
+                .getLogger()
+                .info("\n\t{} Reports > all reports: {}\n{}", ConsoleColors.PURPLE, reports, ConsoleColors.RESET);
+
+        return ResponseEntity.ok(reports);
+    }
+
+    /**
      * Retrieves sales/purchases report data for a specified date range.
      * 
      * @param startDate The start date for the report period
@@ -57,7 +91,7 @@ public class ReportsController {
 
         return ResponseEntity.ok(report);
     }
-    
+
     /**
      * Retrieves report data for best-selling products.
      * 
