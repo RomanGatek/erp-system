@@ -32,7 +32,7 @@ export type ErrorItem = {
 export type ValidationResponse = {
     errors: ErrorItem[],
     code?: number,
-    general?: any
+    general?: string
 }
 
 export type DefaultResponse = {
@@ -50,7 +50,7 @@ export const errorParser = (error: RawError): ReponseErrorEntity => {
     switch (errorType) {
         case ErrorType.CLIENT: {
             const rsp = {} as DefaultResponse
-            rsp.cause = (error as Error).stack + "",
+            rsp.cause = error.stack + "",
             rsp.message = error.message
             response = rsp
             break;
@@ -59,7 +59,7 @@ export const errorParser = (error: RawError): ReponseErrorEntity => {
             const axiosError: AxiosError = error as AxiosError;
             const rsp_ = {errors:[]} as ValidationResponse
             if (Array.isArray(axiosError.response?.data)) {
-                const rsp = axiosError.response!!.data as any as ErrorItem[];
+                const rsp = axiosError.response!!.data as ErrorItem[];
                 const arrayProcess = (
                     errorArray: ErrorItem[]
                 ) => {

@@ -22,12 +22,8 @@
       </div>
 
       <!-- Team Section -->
-      <TeamView
-        v-else-if="currentSection === 'team'"
-        key="team"
-        :team-members="teamMembers"
-        @change-section="currentSection = $event"
-      />
+      <TeamView v-else-if="currentSection === 'team'" key="team" :team-members="teamMembers"
+        @change-section="currentSection = $event" />
 
       <!-- About Course Section -->
       <CourseView v-else key="about" @change-section="currentSection = $event" />
@@ -125,18 +121,17 @@ export default {
 
 <style scoped>
 .h-full {
-  min-height: calc(100dvh - 15rem); /* Upravíme výšku */
+  min-height: calc(100dvh - 15rem);
+  /* Upravíme výšku */
 }
 
 .text-gradient {
-  background: linear-gradient(
-    135deg,
-    #1e40af 0%,
-    #3b82f6 25%,
-    #2563eb 50%,
-    #1d4ed8 75%,
-    #1e40af 100%
-  );
+  background: linear-gradient(135deg,
+      #1e40af 0%,
+      #3b82f6 25%,
+      #2563eb 50%,
+      #1d4ed8 75%,
+      #1e40af 100%);
   background-size: 400% 400%;
   animation: gradient 6s ease infinite;
   -webkit-background-clip: text;
@@ -155,9 +150,11 @@ export default {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -168,9 +165,11 @@ export default {
   0% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-5px);
   }
+
   100% {
     transform: translateY(0px);
   }
@@ -184,7 +183,8 @@ export default {
 .grid {
   perspective: 1000px;
   margin: 0 auto;
-  max-width: 1200px; /* Omezení maximální šířky gridu */
+  max-width: 1200px;
+  /* Omezení maximální šířky gridu */
 }
 
 .bg-white {
@@ -218,7 +218,7 @@ export default {
 }
 
 /* Vylepšení pro karty - postupné objevování */
-.grid > div {
+.grid>div {
   animation: cardAppear 0.6s ease backwards;
 }
 
@@ -227,6 +227,7 @@ export default {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -234,28 +235,23 @@ export default {
 }
 
 /* Aplikujeme zpoždění pro každou kartu */
-.grid > div:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.grid > div:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.grid > div:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.grid > div:nth-child(4) {
+.grid>div:nth-child(4) {
   animation-delay: 0.4s;
 }
-.grid > div:nth-child(5) {
+
+.grid>div:nth-child(5) {
   animation-delay: 0.5s;
 }
-.grid > div:nth-child(6) {
+
+.grid>div:nth-child(6) {
   animation-delay: 0.6s;
 }
-.grid > div:nth-child(7) {
+
+.grid>div:nth-child(7) {
   animation-delay: 0.7s;
 }
-.grid > div:nth-child(8) {
+
+.grid>div:nth-child(8) {
   animation-delay: 0.8s;
 }
 
@@ -266,7 +262,7 @@ export default {
 }
 
 /* Přidáme animaci pro statistiky */
-.grid > div {
+.grid>div {
   animation: fadeInUp 0.6s ease backwards;
 }
 
@@ -275,6 +271,7 @@ export default {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -282,13 +279,15 @@ export default {
 }
 
 /* Aplikujeme zpoždění pro statistiky */
-.grid > div:nth-child(1) {
+.grid>div:nth-child(1) {
   animation-delay: 0.2s;
 }
-.grid > div:nth-child(2) {
+
+.grid>div:nth-child(2) {
   animation-delay: 0.4s;
 }
-.grid > div:nth-child(3) {
+
+.grid>div:nth-child(3) {
   animation-delay: 0.6s;
 }
 
