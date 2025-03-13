@@ -67,8 +67,8 @@ class OrderRepositoryTest {
                 .description("test products")
                 .build());
 
-        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne);
-        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo);
+        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", null, productCategoryOne);
+        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", null, productCategoryTwo);
         productOne = productRepository.save(productOne);
         productTwo = productRepository.save(productTwo);
 
