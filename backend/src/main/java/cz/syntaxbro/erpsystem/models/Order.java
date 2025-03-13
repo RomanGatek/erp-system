@@ -94,6 +94,7 @@ public class Order {
         return BigDecimal.valueOf(total);
     }
 
+    @SuppressWarnings("unused")
     public void recalculateTotal() {
         this.cost = this.orderItems.stream()
                 .mapToDouble(item -> item.getQuantity() * (
@@ -103,4 +104,15 @@ public class Order {
                 .sum();
     }
 
+    public Order(OrderType orderType, Long id, List<OrderItem> orderItems, double cost, Status status, LocalDateTime orderTime, String comment, User approvedBy, LocalDateTime decisionTime) {
+        this.orderType = orderType;
+        this.id = id;
+        this.orderItems = orderItems;
+        this.cost = cost;
+        this.status = status;
+        this.orderTime = orderTime;
+        this.comment = comment;
+        this.approvedBy = approvedBy;
+        this.decisionTime = decisionTime;
+    }
 }

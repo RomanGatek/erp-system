@@ -30,7 +30,7 @@ export const useCategoriesStore = defineStore("categories", {
             this.loading = true;
             var output;
             [output, this.error] = await api.category().create(category);
-            await this.fetchCategories();
+            if (!this.error) await this.fetchCategories();
             this.loading = false;
         },
         async updateCategory(id, categoryData) {
@@ -38,7 +38,7 @@ export const useCategoriesStore = defineStore("categories", {
             this.loading = true;
             var output;
             [output, this.error] = await api.category().update(id, categoryData);
-            await this.fetchCategories();
+            if (!this.error) await this.fetchCategories();
             this.loading = false;
         },
         async deleteCategory(categoryId) {

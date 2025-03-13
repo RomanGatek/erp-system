@@ -39,4 +39,11 @@ public class OrderItem {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public OrderItem(Long id, int quantity, Order order, InventoryItem inventoryItem) {
+        this.id = id;
+        this.quantity = quantity;
+        this.order = order;
+        this.inventoryItem = inventoryItem;
+    }
 }

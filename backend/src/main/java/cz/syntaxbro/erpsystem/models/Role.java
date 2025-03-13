@@ -56,4 +56,10 @@ public class Role {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public Role(Long id, String name, Set<Permission> permissions) {
+        this.id = id;
+        this.name = name;
+        this.permissions = permissions;
+    }
 }

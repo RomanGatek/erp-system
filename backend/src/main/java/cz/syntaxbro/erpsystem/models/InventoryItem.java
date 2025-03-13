@@ -41,4 +41,10 @@ public class InventoryItem {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public InventoryItem(int stockedAmount, Product product, Long id) {
+        this.stockedAmount = stockedAmount;
+        this.product = product;
+        this.id = id;
+    }
 }

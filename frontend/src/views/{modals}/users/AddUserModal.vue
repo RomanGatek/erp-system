@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue'
-import { Modal, BaseInput, BaseCheckbox } from '@/components'
+import { Modal, BaseInput } from '@/components'
 import { $reactive } from '@/utils/index.js'
 import BaseButton from '@/components/common/BaseButton.vue'
+import XSelect from '@/components/common/XSelect.vue'
 
 const props = defineProps({
   availableRoles: {
@@ -27,7 +28,31 @@ const newUser = $reactive({
   roles: [],
 })
 
+// Convert roles for XSelect format - using just the name property without prefix for the value
+const roleOptions = props.availableRoles.map(role => ({
+  value: role.name,  // Use just the name without prefix as the value
+  label: role.name
+}))
+
+// Currently selected role - initialize with the first role option
+const selectedRole = ref(roleOptions[0]?.value || '')
+
+// Initialize with the default role
+if (selectedRole.value) {
+  newUser.roles = [{ name: `ROLE_${selectedRole.value.toUpperCase()}` }]
+}
+
+// Update the roles array when the selected role changes
+const updateSelectedRole = (roleName) => {
+  // Clear previous roles and add the new one with proper format
+  newUser.roles = [{ name: `ROLE_${roleName.toUpperCase()}` }]
+}
+
 const handleAddUser = () => {
+  // Make sure a role is set before submitting
+  if (newUser.roles.length === 0 && selectedRole.value) {
+    updateSelectedRole(selectedRole.value)
+  }
   emit('add-user', newUser.$cleaned())
 }
 
@@ -52,19 +77,15 @@ const handleCancel = () => {
         :class="{ 'border-red-500': errors.username }" />
       <BaseInput v-model="newUser.password" type="password" placeholder="Password" label="Password"
         :error="errors.password" :class="{ 'border-red-500': errors.password }" />
-      <!-- Role selection -->
+      <!-- Role selection using XSelect -->
       <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700">Role</label>
-        <div class="flex flex-wrap gap-2">
-          <label v-for="role in availableRoles" :key="role.name"
-            class="inline-flex items-center space-x-2 cursor-pointer">
-            <input type="checkbox" v-model="newUser.roles" :value="{ name: `ROLE_${role.name.toUpperCase()}` }"
-              class="w-4 h-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-2 focus:ring-blue-200 focus:ring-opacity-50" />
-            <span class="px-2 py-1 rounded-full text-xs font-medium" :class="[role.bgColor, role.textColor]">
-              {{ role.name }}
-            </span>
-          </label>
-        </div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+        <XSelect
+          v-model="selectedRole"
+          :options="roleOptions"
+          label="Role"
+          @update:modelValue="updateSelectedRole"
+        />
         <span v-if="errors.roles" class="text-xs text-red-500">
           {{ errors.roles }}
         </span>
@@ -73,7 +94,23 @@ const handleCancel = () => {
       <div v-if="errors.general" class="text-sm text-red-600 text-center mt-4">
         {{ errors.general }}
       </div>
-      <BaseCheckbox v-model="newUser.active" label="Account active" />
+
+      <!-- Account active slider toggle -->
+      <div class="flex items-center justify-between pt-2">
+        <label class="text-sm font-medium text-gray-700">Account active</label>
+        <button
+          type="button"
+          @click="newUser.active = !newUser.active"
+          class="relative inline-block w-12 h-6 rounded-full cursor-pointer"
+          :class="newUser.active ? 'bg-green-500' : 'bg-gray-300'"
+        >
+          <span
+            class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out transform"
+            :class="{ 'translate-x-6': newUser.active }"
+          ></span>
+        </button>
+      </div>
+
       <div class="flex justify-end space-x-3 pt-2">
         <BaseButton type="error" class="text-sm! font-bold flex!" @click="handleCancel">
           Cancel
@@ -84,4 +121,4 @@ const handleCancel = () => {
       </div>
     </div>
   </Modal>
-</template> 
+</template>

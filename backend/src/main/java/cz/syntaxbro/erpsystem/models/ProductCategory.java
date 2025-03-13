@@ -1,7 +1,6 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -38,4 +37,12 @@ public class ProductCategory {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public ProductCategory(Long id, String name, String description, List<Product> products, String color) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.products = products;
+        this.color = color;
+    }
 }

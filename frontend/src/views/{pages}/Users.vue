@@ -8,11 +8,9 @@ import {
   DataTable,
   SearchBar,
   Pagination,
-  Modal,
   StatusBar,
   EmptyState,
-  BaseInput,
-  BaseCheckbox,
+
 } from '@/components'
 import { $reactive } from '@/utils/index.js'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -131,8 +129,9 @@ const deleteUser = async (userId) => {
 
 const openEditModal = (index) => {
   reactiveUser.$clear()
-  const user = userStore.items[index]
-  reactiveUser.$assign(user)
+  const user = userStore.paginatedUsers[index]
+  const fullUser = userStore.items.find(item => item.id === user.id)
+  reactiveUser.$assign(fullUser || user)
   isEditModalOpen.value = true
 }
 

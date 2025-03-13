@@ -51,4 +51,14 @@ public class Product {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public Product(Long id, String name, double buyoutPrice, double purchasePrice, String description, String image, ProductCategory productCategory) {
+        this.id = id;
+        this.name = name;
+        this.buyoutPrice = buyoutPrice;
+        this.purchasePrice = purchasePrice;
+        this.description = description;
+        this.image = image;
+        this.productCategory = productCategory;
+    }
 }

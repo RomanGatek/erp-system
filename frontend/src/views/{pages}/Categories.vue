@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { $reactive, choosedColor } from '@/utils/index.js'
-import { useNotifier, useProductsStore, useCategoriesStore } from '@/stores'
+import { useNotifier, useCategoriesStore } from '@/stores'
 
 import {
   DataTable,
@@ -35,8 +35,9 @@ const reactiveCategory = $reactive({
   color: '',
 })
 
+errors.validateField(reactiveCategory.$cleaned())
+
 const tableHeaders = [
-  { field: 'id', label: 'ID', sortable: true },
   { field: 'name', label: 'Name', sortable: true },
   { field: 'description', label: 'Description', sortable: false, class: 'text-right' },
   { field: 'actions', label: '', sortable: false, class: 'text-right' },
@@ -50,19 +51,26 @@ const $actions = computed(() => {
       loading.value = true
       try {
         await categoriesStore.fetchCategories()
+        if (categoriesStore.error) errors.handle(categoriesStore.error)
       } catch (error) {
+        errors.handle(error)
         $notifier.error('An error occurred while fetching categories')
       } finally {
         loading.value = false
       }
     },
     add: async () => {
+      errors.clearServerErrors()
       loading.value = true
       try {
         await categoriesStore.addCategory(reactiveCategory.$cleaned())
-        $notifier.success('Category added successfully')
-        isAddModalOpen.value = false
-        reactiveCategory.$clear()
+        if (!categoriesStore.error) {
+          $notifier.success('Category added successfully')
+          isAddModalOpen.value = false
+          reactiveCategory.$clear()
+        } else {
+          errors.handle(categoriesStore.error)
+        }
       } catch (error) {
         errors.handle(error)
       } finally {
@@ -70,6 +78,7 @@ const $actions = computed(() => {
       }
     },
     openEditModal: (category) => {
+      errors.clearServerErrors()
       reactiveCategory.$assign(category)
       isEditModalOpen.value = true
     },
@@ -87,9 +96,13 @@ const $actions = computed(() => {
       loading.value = true
       try {
         await categoriesStore.updateCategory(reactiveCategory.id, reactiveCategory.$cleaned())
-        $notifier.success('Category updated successfully')
-        isEditModalOpen.value = false
-        reactiveCategory.$clear()
+        if (categoriesStore.error) {
+          errors.handle(categoriesStore.error)
+        } else {
+          $notifier.success('Category updated successfully')
+          isEditModalOpen.value = false
+          reactiveCategory.$clear()
+        }
       } catch (error) {
         errors.handle(error)
       } finally {
@@ -159,9 +172,6 @@ onMounted(async () => {
             :sort-by="categoriesStore.setSorting" :sorting="categoriesStore.sorting" :on-edit="$actions.openEditModal"
             :on-delete="$actions.deleteCategory">
             <template #row="{ item }">
-              <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-                {{ item.id }}
-              </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-600">
                 <p :class="choosedColor(item)"
                   class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-gray-500/10 ring-inset">

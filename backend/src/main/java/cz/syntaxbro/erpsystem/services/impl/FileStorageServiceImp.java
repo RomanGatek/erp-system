@@ -39,13 +39,13 @@ public class FileStorageServiceImp implements FileStorageService {
         String fileName = username + fileExtension;
 
         try {
-            if(fileName.contains("..")) {
-                throw new RuntimeException("Invalid file path sequence " + fileName);
-            }
+            ErpSystemApplication.getLogger().info("Storing file: {}", fileName);
+
+            if(fileName.contains("..")) throw new RuntimeException("Invalid file path sequence " + fileName);
 
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
 
-            ErpSystemApplication.getLogger().info("Storing file " + targetLocation);
+            ErpSystemApplication.getLogger().info("Storing file {}", targetLocation);
 
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 

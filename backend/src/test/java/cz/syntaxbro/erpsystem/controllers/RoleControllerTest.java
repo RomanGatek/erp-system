@@ -30,7 +30,7 @@ class RoleControllerTest {
     @BeforeEach
     void setUp() {
         // Initialize a sample role object for testing
-        role = new Role(1L, "ROLE_TEST", new HashSet<>());
+        role = new Role(1L, "ROLE_TEST", new HashSet<>(), null, null);
     }
 
     /**

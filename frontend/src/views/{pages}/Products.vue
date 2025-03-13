@@ -36,6 +36,8 @@ const reactiveProduct = $reactive({
   productCategory: null,
 })
 
+errors.validateField(reactiveProduct.$cleaned())
+
 const tableHeaders = [
   { field: 'name', label: 'Name', sortable: true },
   { field: 'buyoutPrice', label: 'Buy / Sell', sortable: true },
@@ -234,7 +236,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
     </div>
 
     <!-- Add Modal -->
-    <Modal :show="isAddModalOpen" title="Add New Product" @close="cancelAdd" @submit="addProduct">
+    <Modal :show="isAddModalOpen" title="Add New Product" @close="cancelAdd">
       <div class="space-y-3">
         <BaseInput :error="errors.name" v-model="reactiveProduct.name" placeholder="Product name" label="Name" />
         <BaseInput v-model="reactiveProduct.buyoutPrice" :error="errors.buyoutPrice" type="number"
@@ -251,7 +253,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
           <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelAdd">
             Cancel
           </BaseButton>
-          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="$emit('submit')">
+          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="addProduct">
             Add Products
           </BaseButton>
         </div>
@@ -259,7 +261,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
     </Modal>
 
     <!-- Edit Modal -->
-    <Modal :show="isEditModalOpen" title="Edit Product" @close="cancelEdit" @submit="updateProduct">
+    <Modal :show="isEditModalOpen" title="Edit Product" @close="cancelEdit">
       <div class="space-y-3">
         <BaseInput v-model="reactiveProduct.name" :error="errors.name" placeholder="Product name" label="Name"
           variant="success" />
@@ -276,7 +278,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
           <BaseButton type="error" class="text-sm! font-bold flex!" @click="cancelEdit">
             Cancel
           </BaseButton>
-          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="$emit('submit')">
+          <BaseButton type="primary" class="text-sm! font-bold flex!" @click="updateProduct">
             Edit Product
           </BaseButton>
         </div>

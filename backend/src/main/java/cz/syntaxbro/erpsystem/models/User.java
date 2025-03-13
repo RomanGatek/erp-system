@@ -8,10 +8,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -88,5 +86,17 @@ public class User {
         this.avatar = partial.getAvatar();
         this.active = partial.isActive();
         this.username = partial.getUsername();
+    }
+
+    public User(Long id, String username, String password, String firstName, String lastName, String email, String avatar, boolean active, Set<Role> roles) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.avatar = avatar;
+        this.active = active;
+        this.roles = roles;
     }
 }
