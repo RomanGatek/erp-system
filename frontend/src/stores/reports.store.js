@@ -20,40 +20,46 @@ export const useReportsStore = defineStore('reports', {
       this.loading = false
     },
 
-    async fetchSalesReport() {
+    async fetchSalesReport(startDate, endDate, orderType) {
       this.loading = true
 
-      const [data, error] = await api.reports().getSalesReport()
+      console.log(startDate)
+
+      const [data, error] = await api.reports().getSalesReport({ startDate, endDate, orderType })
       this.error = error
       this.salesReport = data
 
       this.loading = false
     },
 
-    async fetchOrderApprovalReports() {
+    async fetchOrderApprovalReports(startDate, endDate) {
       this.loading = true
 
-      const [data, error] = await api.reports().getOrderApprovalReports()
+      const [data, error] = await api.reports().getOrderApprovalReports({ startDate, endDate })
       this.error = error
       this.orderApprovalReports = data
 
       this.loading = false
     },
 
-    async fetchProductPurchaseReports() {
+    async fetchProductPurchaseReports(startDate, endDate, limit) {
       this.loading = true
 
-      const [data, error] = await api.reports().getProductPurchaseReports()
+      const [data, error] = await api
+        .reports()
+        .getProductPurchaseReports({ startDate, endDate, limit })
       this.error = error
       this.productPurchaseReports = data
 
       this.loading = false
     },
 
-    async fetchProductSalesReports() {
+    async fetchProductSalesReports(startDate, endDate, limit) {
       this.loading = true
 
-      const [data, error] = await api.reports().getProductSalesReports()
+      const [data, error] = await api
+        .reports()
+        .getProductSalesReports({ startDate, endDate, limit })
       this.error = error
       this.productSalesReports = data
 

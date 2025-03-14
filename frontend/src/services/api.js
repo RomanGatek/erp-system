@@ -422,9 +422,9 @@ class Api {
        * Generates sales reports
        * @returns {Promise<Object>} Current inventory report data
        */
-      getSalesReport: async () => {
+      getSalesReport: async (params) => {
         try {
-          const response = await this.#axios.get('/reports/sales')
+          const response = await this.#axios.get('/reports/sales', { params })
           return [response.data, null]
         } catch (e) {
           return [null, e]
@@ -434,9 +434,9 @@ class Api {
        * Generates Order Approval reports
        * @returns {Promise<Object>} Current inventory report data
        */
-      getOrderApprovalReports: async () => {
+      getOrderApprovalReports: async (params) => {
         try {
-          const response = await this.#axios.get('/reports/order-approvals')
+          const response = await this.#axios.get('/reports/order-approvals', { params })
           return [response.data, null]
         } catch (e) {
           return [null, e]
@@ -446,9 +446,9 @@ class Api {
        * Generates product Purchase Reports
        * @returns {Promise<Object>} Current inventory report data
        */
-      getProductPurchaseReports: async () => {
+      getProductPurchaseReports: async (params) => {
         try {
-          const response = await this.#axios.get('/reports/most-purchased-products')
+          const response = await this.#axios.get('/reports/most-purchased-products', { params })
           return [response.data, null]
         } catch (e) {
           return [null, e]
@@ -458,9 +458,9 @@ class Api {
        * Generates product Sales Reports
        * @returns {Promise<Object>} Current inventory report data
        */
-      getProductSalesReports: async () => {
+      getProductSalesReports: async (params) => {
         try {
-          const response = await this.#axios.get('/reports/best-selling-products')
+          const response = await this.#axios.get('/reports/best-selling-products', { params })
           return [response.data, null]
         } catch (e) {
           return [null, e]
