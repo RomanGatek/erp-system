@@ -41,4 +41,8 @@ public class Product {
     @NotNull(message = "Category can't be null or empty")
     @JsonManagedReference
     private ProductCategory productCategory;
+
+    @ManyToOne
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
 }
