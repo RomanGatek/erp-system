@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.security.test.context.support.WithMockUser;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,15 +23,17 @@ class OrderRepositoryTest {
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final SupplierRepository supplierRepository;
 
     @Autowired
-    OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository, InventoryRepository inventoryRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductCategoryRepository productCategoryRepository) {
+    OrderRepositoryTest(OrderRepository orderRepository, ProductRepository productRepository, InventoryRepository inventoryRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductCategoryRepository productCategoryRepository, SupplierRepository supplierRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.productCategoryRepository = productCategoryRepository;
+        this.supplierRepository = supplierRepository;
     }
 
     private Product productOne;
@@ -56,6 +60,17 @@ class OrderRepositoryTest {
         // Verify user was saved
         assertNotNull(testUser.getId(), "User ID should be generated");
 
+        //create supplier
+        Supplier supplier = Supplier.builder()
+                .companyName("company")
+                .address("company address")
+                .calendarOrder(LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.FRIDAY)))
+                .email("company@company.com")
+                .build();
+
+        //save supplier
+        supplier = supplierRepository.save(supplier);
+
         // Creating products
         ProductCategory productCategoryOne = productCategoryRepository.save(ProductCategory.builder()
                 .name("firstCategory")
@@ -67,8 +82,8 @@ class OrderRepositoryTest {
                 .description("test products")
                 .build());
 
-        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne);
-        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo);
+        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne, supplier);
+        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo, supplier);
         productOne = productRepository.save(productOne);
         productTwo = productRepository.save(productTwo);
 
