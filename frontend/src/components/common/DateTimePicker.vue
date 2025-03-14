@@ -29,12 +29,8 @@
         <div
           class="w-full px-3 py-2 border rounded-lg focus:outline-none transition-colors cursor-pointer"
           :class="[
-            error
-              ? 'border-red-500 hover:border-red-600'
-              : 'border-gray-300 hover:border-gray-400',
-            disabled
-              ? 'bg-gray-200 pointer-events-none cursor-not-allowed text-gray-500'
-              : ''
+            error ? 'border-red-500 hover:border-red-600' : 'border-gray-300 hover:border-gray-400',
+            disabled ? 'bg-gray-200 pointer-events-none cursor-not-allowed text-gray-500' : '',
           ]"
         >
           {{ formattedValue }}
@@ -53,28 +49,28 @@ import { computed, ref, watch } from 'vue'
 const props = defineProps({
   modelValue: {
     type: [Date, String],
-    default: null
+    default: null,
   },
   label: {
     type: String,
-    default: ''
+    default: '',
   },
   placeholder: {
     type: String,
-    default: 'Select date and time'
+    default: 'Select date and time',
   },
   error: {
     type: String,
-    default: ''
+    default: '',
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   minDate: {
     type: Date,
-    default: () => new Date()
-  }
+    default: () => new Date(),
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -89,7 +85,7 @@ const format = (date) => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -105,13 +101,16 @@ const handleUpdate = (newValue) => {
   }
 }
 
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    dateValue.value = new Date(newValue)
-  } else {
-    dateValue.value = null
-  }
-})
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue) {
+      dateValue.value = new Date(newValue)
+    } else {
+      dateValue.value = null
+    }
+  },
+)
 </script>
 
 <style>
@@ -133,7 +132,9 @@ watch(() => props.modelValue, (newValue) => {
 
 .dp-menu {
   border-radius: 0.5rem !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
   border: 1px solid var(--dp-border-color) !important;
 }
 
@@ -155,4 +156,4 @@ watch(() => props.modelValue, (newValue) => {
   border-color: var(--dp-primary-color);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
-</style> 
+</style>

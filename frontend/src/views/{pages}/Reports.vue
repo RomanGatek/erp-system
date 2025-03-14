@@ -9,25 +9,33 @@ import {
 } from '@/components'
 import Button from '@/components/ui/Button.vue'
 import { useReportsStore } from '@/stores/reports.store'
-import { onBeforeMount, ref } from 'vue'
+import { onMounted, onBeforeMount, ref } from 'vue'
 
 const reportStore = useReportsStore()
 
-const asyncHook = ref(null);
+const asyncHook = ref(null)
+
+const startDate = ref(new Date())
+const endDate = ref(new Date().toISOString().split('T')[0])
 
 onBeforeMount(async () => {
   try {
-    asyncHook.value = (async () => await Promise.all([
-      reportStore.fetchSalesReport(),
-      reportStore.fetchOrderApprovalReports(),
-      reportStore.fetchProductPurchaseReports(),
-      reportStore.fetchProductSalesReports(),
-    ]))
+    asyncHook.value = async () =>
+      await Promise.all([
+        reportStore.fetchSalesReport(),
+        reportStore.fetchOrderApprovalReports(),
+        reportStore.fetchProductPurchaseReports(),
+        reportStore.fetchProductSalesReports(),
+      ])
   } catch (error) {
     console.error('Chyba pri načítaní reportov:', error)
   } finally {
     asyncHook.value()
   }
+})
+
+onMounted(() => {
+  console.log(endDate.value)
 })
 </script>
 
@@ -44,15 +52,15 @@ onBeforeMount(async () => {
 
       <h2 class="text-2xl font-bold text-gray-800 mb-6">Reports</h2>
 
-      <div class="flex items-center justify-center my-4">
+      <div class="flex items-center gap-4 justify-center my-4">
         <div>
-          <DateTimePicker placeholder="Start date" />
+          <DateTimePicker placeholder="Start date" v-model="startDate" />
         </div>
         <div>
-          <DateTimePicker placeholder="End date" />
+          <DateTimePicker placeholder="End date" v-model="endDate" />
         </div>
         <div>
-          <BaseInput />
+          <BaseInput class="w-16" placeholder="Limit" />
         </div>
         <Button>Send</Button>
       </div>
@@ -64,15 +72,24 @@ onBeforeMount(async () => {
         </div>
         <div class="w-xl rounded-lg border border-gray-100">
           <p class="bg-gray-100 px-2.5 py-1">Most Purchased Products</p>
-          <ProductPurchaseChart v-if="reportStore.productPurchaseReports" :data="reportStore.productPurchaseReports" />
+          <ProductPurchaseChart
+            v-if="reportStore.productPurchaseReports"
+            :data="reportStore.productPurchaseReports"
+          />
         </div>
         <div class="w-xl rounded-lg border border-gray-100">
           <p class="bg-gray-100 px-2.5 py-1">Most Approval Orders</p>
-          <OrderApprovalChart v-if="reportStore.orderApprovalReports" :data="reportStore.orderApprovalReports" />
+          <OrderApprovalChart
+            v-if="reportStore.orderApprovalReports"
+            :data="reportStore.orderApprovalReports"
+          />
         </div>
         <div class="w-xl rounded-lg border border-gray-100">
           <p class="bg-gray-100 px-2.5 py-1">Best Selling Products</p>
-          <ProductSalesChart v-if="reportStore.productSalesReports" :data="reportStore.productSalesReports" />
+          <ProductSalesChart
+            v-if="reportStore.productSalesReports"
+            :data="reportStore.productSalesReports"
+          />
         </div>
       </div>
     </div>
