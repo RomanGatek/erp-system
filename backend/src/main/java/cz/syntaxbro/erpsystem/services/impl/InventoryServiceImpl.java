@@ -9,7 +9,6 @@ import cz.syntaxbro.erpsystem.services.InventoryService;
 import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,11 +114,12 @@ public class InventoryServiceImpl implements InventoryService {
         );
     }
 
+    @Override
     public Optional<InventoryItem> findItemByProductForOrder(Product product) {
         return inventoryRepository.findByProduct(product);
     }
 
-
+    @Override
     public InventoryItem getItem(Long itemId) {
         return inventoryRepository.findById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Item with id %d not found", itemId)));
