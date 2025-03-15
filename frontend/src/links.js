@@ -21,12 +21,6 @@ export const navLinks = ref([
       icon: workflowIcon
     },
     {
-      to: '/catalog',
-      text: 'Catalog',
-      requiredRole: 'USER',
-      icon: catalogIcon
-    },
-    {
       to: '',
       text: 'Managment',
       requiredRole: 'MANAGER',
@@ -60,4 +54,10 @@ export const navLinks = ref([
         }
       ],
     },
+    {
+      to: '/catalog',
+      text: 'Catalog',
+      requiredRole: 'USER',
+      icon: catalogIcon
+    }
   ])

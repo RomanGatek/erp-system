@@ -473,7 +473,7 @@ class Api {
        */
       confirm: async (orderId, comment) => {
         try {
-          const response = await this.#axios.put(`/orders/${orderId}/confirm`, { comment })
+          const response = await this.#axios.put(`/orders/${orderId}/confirm`, comment)
           return [response.data, null]
         } catch (e) {
           return [null, e]
@@ -487,7 +487,7 @@ class Api {
        */
       cancel: async (orderId, comment) => {
         try {
-          const response = await this.#axios.put(`/orders/${orderId}/cancel`, { comment })
+          const response = await this.#axios.put(`/orders/${orderId}/cancel`,comment)
           return [response.data, null]
         } catch (e) {
           return [null, e]

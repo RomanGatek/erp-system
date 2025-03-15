@@ -64,9 +64,9 @@
             <div class="relative rounded-xl overflow-hidden">
               <div
                 class="max-h-[calc(100vh-20rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
-                <DataTable :headers="tableHeaders" :items="workflowStore.paginatedOrders" :sorting="workflowStore.sorting"
-                  :sortBy="workflowStore.setSorting" :onEdit="openOrderDetail" :onDelete="confirmDelete"
-                  :expandedRows="expandedRows" :onRowClick="toggleRow">
+                <DataTable :headers="tableHeaders" :items="workflowStore.paginatedOrders"
+                  :sorting="workflowStore.sorting" :sortBy="workflowStore.setSorting" :onEdit="openOrderDetail"
+                  :onDelete="confirmDelete" :expandedRows="expandedRows" :onRowClick="toggleRow">
                   <template #row="{ item }">
                     <td class="px-4 py-3 text-sm sticky left-0 z-[1] bg-inherit">
                       <div class="flex items-center gap-3">
@@ -101,11 +101,12 @@
                       </span>
                     </td>
                     <td class="px-4 py-3 text-sm">
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" :class="{
-                        'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20': item.status === 'PENDING',
-                        'bg-green-50 text-green-700 ring-1 ring-green-600/20': item.status === 'CONFIRMED',
-                        'bg-red-50 text-red-700 ring-1 ring-red-600/20': item.status === 'CANCELED'
-                      }">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                        :class="{
+                          'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20': item.status === 'PENDING',
+                          'bg-green-50 text-green-700 ring-1 ring-green-600/20': item.status === 'CONFIRMED',
+                          'bg-red-50 text-red-700 ring-1 ring-red-600/20': item.status === 'CANCELED'
+                        }">
                         <span class="w-1.5 h-1.5 rounded-full" :class="{
                           'bg-yellow-500': item.status === 'PENDING',
                           'bg-green-500': item.status === 'CONFIRMED',
@@ -522,9 +523,12 @@ const approveOrder = async () => {
       await workflowStore.fetchOrders()
       closeOrderDetail()
       $notifier.success('Order was successfully approved')
+    } else {
+      closeOrderDetail()
     }
   } catch (err) {
     errors.handle(err)
+    closeOrderDetail()
   }
 }
 
