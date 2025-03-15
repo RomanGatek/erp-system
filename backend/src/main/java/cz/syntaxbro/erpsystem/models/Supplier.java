@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,14 +22,16 @@ public class Supplier {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @NotEmpty
     String name;
 
+    @NotEmpty
     @Email
     String email;
 
+    @NotEmpty
     String address;
 
-    @Column(nullable = true)
     LocalDate calendarOrder;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.REMOVE)
