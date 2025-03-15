@@ -62,7 +62,7 @@ class OrderRepositoryTest {
 
         //create supplier
         Supplier supplier = Supplier.builder()
-                .companyName("company")
+                .name("company")
                 .address("company address")
                 .calendarOrder(LocalDate.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.FRIDAY)))
                 .email("company@company.com")
