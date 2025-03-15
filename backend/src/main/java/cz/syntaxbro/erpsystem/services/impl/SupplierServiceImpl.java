@@ -47,7 +47,7 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     private Supplier mappedSupplier(Supplier savedSupplier, Supplier updatedSupplier) {
-        savedSupplier.setCompanyName(updatedSupplier.getCompanyName());
+        savedSupplier.setName(updatedSupplier.getName());
         savedSupplier.setAddress(updatedSupplier.getAddress());
         savedSupplier.setEmail(updatedSupplier.getEmail());
         savedSupplier.setCalendarOrder(updatedSupplier.getCalendarOrder());
