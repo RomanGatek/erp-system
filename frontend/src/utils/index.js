@@ -203,6 +203,38 @@ export const isLoggedIn = computed(() => {
     return !!meStore.user
 })
 
+export function choosedBackground(item) {
+  if (!item) return
+
+  const selectedColor = item.color
+  return {
+  'bg-slate-400': selectedColor === 'slate',
+  'bg-gray-400': selectedColor === 'gray',
+  'bg-zinc-400': selectedColor === 'zinc',
+  'bg-neutral-400 ': selectedColor === 'neutral',
+  'bg-stone-400 ': selectedColor === 'stone',
+  'bg-red-400 ': selectedColor === 'red',
+  'bg-orange-400 ': selectedColor === 'orange',
+  'bg-amber-400 ': selectedColor === 'amber',
+  'bg-yellow-400 ': selectedColor === 'yellow',
+  'bg-lime-400 ': selectedColor === 'lime',
+  'bg-green-400 ': selectedColor === 'green',
+  'bg-emerald-400 ': selectedColor === 'emerald',
+  'bg-teal-400 ': selectedColor === 'teal',
+  'bg-cyan-400 ': selectedColor === 'cyan',
+  'bg-sky-400 ': selectedColor === 'sky',
+  'bg-blue-400 ': selectedColor === 'blue',
+  'bg-indigo-400 ': selectedColor === 'indigo',
+  'bg-violet-400 ': selectedColor === 'violet',
+  'bg-purple-400 ': selectedColor === 'purple',
+  'bg-fuchsia-400 ': selectedColor === 'fuchsia',
+  'bg-pink-400 ': selectedColor === 'pink',
+  'bg-rose-400 ': selectedColor === 'rose',
+  }
+
+}
+
+
 
 export function choosedColor(item) {
 

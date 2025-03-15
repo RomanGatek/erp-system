@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { $reactive } from '@/utils/index.js'
+import { $reactive, choosedBackground, choosedColor } from '@/utils/index.js'
 import { useNotifier, useCategoriesStore } from '@/stores'
 import { useErrorStore } from '@/stores/errors.store.js'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -190,9 +190,8 @@ onMounted(async () => {
                   <template #row="{ item }">
                     <td class="px-4 py-3 whitespace-nowrap">
                       <div class="flex items-center">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br" :style="{
-                          backgroundColor: item.color || '#94A3B8',
-                          opacity: 0.15
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br " :class="choosedBackground(item)" :style="{
+                          opacity: 0.20
                         }"></div>
                         <div class="ml-3">
                           <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
