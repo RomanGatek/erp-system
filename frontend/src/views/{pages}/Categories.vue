@@ -73,6 +73,7 @@ const $actions = computed(() => ({
         reactiveCategory.$clear()
       } else {
         errors.handle(categoriesStore.error)
+        isAddModalOpen.value = false
       }
     } catch (error) {
       errors.handle(error)
