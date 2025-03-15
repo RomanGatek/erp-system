@@ -24,7 +24,6 @@ class UserServiceImplTest {
     private AutoCloseable autoCloseable;
     private User user;
     private UserRequest userRequest;
-    private CreateUserRequest createUserRequest;
 
     @Mock
     private UserRepository userRepository;
@@ -41,8 +40,8 @@ class UserServiceImplTest {
         userServiceImpl = new UserServiceImpl(userRepository, roleRepository, passwordSecurity);
 
         user = new User(1L, "username", "1!Password", "firstName", "lastName", "email@email.com", null, true, Set.of());
-        userRequest = new UserRequest("username", "firstName", "lastName", "email@email.com", true, Set.of(), null);
-        createUserRequest = new CreateUserRequest("username", "1!Password", "email@email.com", "firstName", "lastName", true, Set.of("ROLE_USER"));
+        userRequest = new UserRequest("username", "firstName", "lastName", true, Set.of(), null);
+        new CreateUserRequest("username", "1!Password", "email@email.com", "firstName", "lastName", true, Set.of("ROLE_USER"));
     }
 
     @AfterEach

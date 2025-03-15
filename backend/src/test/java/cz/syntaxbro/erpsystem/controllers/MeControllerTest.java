@@ -19,7 +19,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -81,7 +80,6 @@ class MeControllerTest {
     void updateCurrentUser_ShouldUpdateAndReturnUser() {
         UserRequest updatedUser = new UserRequest();
         updatedUser.setUsername("updatedUser");
-        updatedUser.setEmail("updated@example.com");
         updatedUser.setFirstName("Updated");
         updatedUser.setLastName("User");
         updatedUser.setActive(false);
@@ -95,7 +93,6 @@ class MeControllerTest {
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getUsername()).isEqualTo(updatedUser.getUsername());
-        assertThat(response.getBody().getEmail()).isEqualTo(updatedUser.getEmail());
 
         verify(userRepository, times(1)).save(testUser);
     }
@@ -148,7 +145,7 @@ class MeControllerTest {
      * Test: Should throw an exception when the uploaded file is not an image.
      */
     @Test
-    void updateAvatar_ShouldThrowException_WhenFileIsNotImage() throws IOException, URISyntaxException {
+    void updateAvatar_ShouldThrowException_WhenFileIsNotImage() throws IOException {
         MultipartFile invalidFile = new MockMultipartFile(
                 "avatar", "avatar.jpg", MediaType.TEXT_PLAIN_VALUE, new byte[10]
         );

@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.controllers;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
+import cz.syntaxbro.erpsystem.requests.InventoryItemRequest;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,7 @@ class InventoryControllerTest {
     private InventoryController inventoryController;
 
     private InventoryItem sampleItem;
+    private InventoryItemRequest sampleItemRequest;
 
     @BeforeEach
     void setUp() {
@@ -50,6 +52,11 @@ class InventoryControllerTest {
                 .id(1L)
                 .stockedAmount(10)
                 .product(sampleProduct)
+                .build();
+        this.sampleItemRequest = InventoryItemRequest.builder()
+                .id(1L)
+                .stockedAmount(18)
+                .productId(sampleProduct.getId())
                 .build();
     }
 
@@ -74,9 +81,9 @@ class InventoryControllerTest {
      */
     @Test
     void testAddItem() {
-        when(inventoryService.addItem(any(InventoryItem.class))).thenReturn(sampleItem);
+        when(inventoryService.addItem(any(InventoryItemRequest.class))).thenReturn(sampleItem);
 
-        ResponseEntity<InventoryItem> response = inventoryController.addItem(sampleItem);
+        ResponseEntity<InventoryItem> response = inventoryController.addItem(sampleItemRequest);
 
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getProduct(), "Ensures the product is not null before accessing its properties");
@@ -89,9 +96,9 @@ class InventoryControllerTest {
      */
     @Test
     void testUpdateItem() {
-        when(inventoryService.updateItem(anyLong(), any(InventoryItem.class))).thenReturn(sampleItem);
+        when(inventoryService.updateItem(anyLong(), any(InventoryItemRequest.class))).thenReturn(sampleItem);
 
-        ResponseEntity<InventoryItem> response = inventoryController.updateItem(1L, sampleItem);
+        ResponseEntity<InventoryItem> response = inventoryController.updateItem(1L, sampleItemRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody(), "Ensures the response body is not null");
@@ -105,7 +112,7 @@ class InventoryControllerTest {
      */
     @Test
     void testGetAllItems() {
-        List<InventoryItem> items = Arrays.asList(sampleItem);
+        List<InventoryItem> items = Collections.singletonList(sampleItem);
         when(inventoryService.getAll()).thenReturn(items);
 
         ResponseEntity<List<InventoryItem>> response = inventoryController.getAllItems();

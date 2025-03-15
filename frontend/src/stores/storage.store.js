@@ -41,7 +41,7 @@ export const useInventoryStore = defineStore('inventory', {
       var _;
       [_, this.error] = await api.inventory().update({
         id: ItemData.id,
-        productId: ItemData.product.id,
+        productId: ItemData.product?.id,
         stockedAmount: ItemData.stockedAmount,
       })
 

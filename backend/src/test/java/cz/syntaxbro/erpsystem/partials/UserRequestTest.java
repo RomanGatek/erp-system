@@ -37,7 +37,6 @@ class UserRequestTest {
         // Arrange: Create a valid UserPartial object
         UserRequest userRequest = new UserRequest(
                 "ValidUser_123",
-                "user@example.com",
                 "John",
                 "Doe",
                 true,
@@ -60,7 +59,6 @@ class UserRequestTest {
         // Arrange: Create a UserPartial object with a short username
         UserRequest userRequest = new UserRequest(
                 "usr",
-                "user@example.com",
                 "John",
                 "Doe",
                 true,
@@ -84,7 +82,6 @@ class UserRequestTest {
         // Arrange: Create a UserPartial object with an excessively long username
         UserRequest userRequest = new UserRequest(
                 "a".repeat(51), // 51-character username
-                "user@example.com",
                 "John",
                 "Doe",
                 true,
@@ -108,7 +105,6 @@ class UserRequestTest {
         // Arrange: Create a UserPartial object with an invalid username
         UserRequest userRequest = new UserRequest(
                 "Invalid@Name!",
-                "user@example.com",
                 "John",
                 "Doe",
                 true,
@@ -124,29 +120,6 @@ class UserRequestTest {
         assertThat(violations.stream().anyMatch(v -> v.getMessage().contains("can only contain letters, numbers, and underscores"))).isTrue();
     }
 
-    /**
-     * Test to verify that an invalid email format fails validation.
-     */
-    @Test
-    void shouldFailValidation_WhenEmailIsInvalid() {
-        // Arrange: Create a UserPartial object with an invalid email
-        UserRequest userRequest = new UserRequest(
-                "ValidUser",
-                "invalid-email",
-                "John",
-                "Doe",
-                true,
-                Set.of("ROLE_USER"),
-                null
-        );
-
-        // Act: Validate the userPartial object
-        var violations = validator.validate(userRequest);
-
-        // Assert: Expect a validation error related to invalid email format
-        assertThat(violations).isNotEmpty();
-        assertThat(violations.stream().anyMatch(v -> v.getMessage().contains("Invalid email format"))).isTrue();
-    }
 
     /**
      * Test to verify that an empty email field passes validation (email is optional).
@@ -156,7 +129,6 @@ class UserRequestTest {
         // Arrange: Create a UserPartial object with no email
         UserRequest userRequest = new UserRequest(
                 "ValidUser",
-                null, // Email is optional
                 "John",
                 "Doe",
                 true,
@@ -179,7 +151,6 @@ class UserRequestTest {
         // Arrange: Create a UserPartial object with an empty role set
         UserRequest userRequest = new UserRequest(
                 "ValidUser",
-                "user@example.com",
                 "John",
                 "Doe",
                 true,

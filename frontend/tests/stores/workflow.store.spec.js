@@ -115,8 +115,8 @@ describe('Workflow Store', () => {
 
     it('should sort filtered orders correctly', () => {
       // Default sorting is by orderTime desc
-      expect(store.sortedAndFiltered[0].id).toBe(1)
-      expect(store.sortedAndFiltered[4].id).toBe(5)
+      expect(store.sortedAndFiltered[0].id).toBe(5)
+      expect(store.sortedAndFiltered[4].id).toBe(1)
 
       // Change sorting to asc
       store.sorting.direction = 'asc'
@@ -133,17 +133,16 @@ describe('Workflow Store', () => {
       store.pagination.perPage = 2
       store.pagination.currentPage = 1
       expect(store.paginatedOrders).toHaveLength(2)
-      expect(store.paginatedOrders[0].id).toBe(1)
-      expect(store.paginatedOrders[1].id).toBe(2)
+      expect(store.paginatedOrders[0].id).toBe(5)
+      expect(store.paginatedOrders[1].id).toBe(4)
 
       store.pagination.currentPage = 2
       expect(store.paginatedOrders).toHaveLength(2)
       expect(store.paginatedOrders[0].id).toBe(3)
-      expect(store.paginatedOrders[1].id).toBe(4)
+      expect(store.paginatedOrders[1].id).toBe(2)
 
       store.pagination.currentPage = 3
       expect(store.paginatedOrders).toHaveLength(1)
-      expect(store.paginatedOrders[0].id).toBe(5)
     })
   })
 

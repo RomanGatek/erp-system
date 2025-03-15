@@ -181,7 +181,6 @@ public class UserControllerTest {
         String updatedUserJson = """
             {
                 "username": "updatedUser",
-                "email": "updated@example.com",
                 "firstName": "Updated",
                 "lastName": "User",
                 "active": false,
@@ -193,8 +192,7 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updatedUserJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("updatedUser"))
-                .andExpect(jsonPath("$.email").value("updated@example.com"));
+                .andExpect(jsonPath("$.username").value("updatedUser"));
     }
 
     /**

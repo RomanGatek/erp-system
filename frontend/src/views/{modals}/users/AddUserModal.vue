@@ -69,58 +69,27 @@ const handleCancel = () => {
       <div class="bg-gray-50/50 rounded-lg p-4 space-y-3">
         <h3 class="text-sm font-medium text-gray-700">Personal Information</h3>
         <div class="grid grid-cols-2 gap-3">
-          <BaseInput 
-            v-model="newUser.firstName" 
-            placeholder="First Name" 
-            label="First name" 
-            :error="errors.firstName"
-            class="text-sm"
-          />
-          <BaseInput 
-            v-model="newUser.lastName" 
-            placeholder="Last Name" 
-            label="Last name" 
-            :error="errors.lastName"
-            class="text-sm"
-          />
+          <BaseInput v-model="newUser.firstName" placeholder="First Name" label="First name" :error="errors.firstName"
+            class="text-sm" />
+          <BaseInput v-model="newUser.lastName" placeholder="Last Name" label="Last name" :error="errors.lastName"
+            class="text-sm" />
         </div>
-        <BaseInput 
-          v-model="newUser.email" 
-          type="email" 
-          placeholder="Email" 
-          label="Email" 
-          :error="errors.email"
-          class="text-sm"
-        />
+        <BaseInput v-model="newUser.email" type="email" placeholder="Email" label="Email" :error="errors.email"
+          class="text-sm" />
       </div>
 
       <!-- Account Details Section -->
       <div class="bg-gray-50/50 rounded-lg p-4 space-y-3">
         <h3 class="text-sm font-medium text-gray-700">Account Details</h3>
-        <BaseInput 
-          v-model="newUser.username" 
-          placeholder="Username" 
-          label="Username" 
-          :error="errors.username"
-          class="text-sm"
-        />
-        <PasswordInput 
-          v-model="newUser.password" 
-          placeholder="Password" 
-          label="Password"
-          :error="errors.password"
-          class="text-sm"
-        />
+        <BaseInput v-model="newUser.username" placeholder="Username" label="Username" :error="errors.username"
+          class="text-sm" />
+        <PasswordInput v-model="newUser.password" placeholder="Password" label="Password" :error="errors.password"
+          class="text-sm" />
 
         <!-- Role Selection -->
-        <div class="space-y-2">
-          <XSelect 
-            v-model="selectedRole" 
-            :options="roleOptions" 
-            label="Role" 
-            class="text-sm"
-            @update:modelValue="updateSelectedRole" 
-          />
+        <div class="space-y-2 flex items-center gap-3">
+          <XSelect v-model="selectedRole" :options="roleOptions" label="Role" class="text-sm"
+            @update:modelValue="updateSelectedRole" />
           <span v-if="errors.roles" class="text-xs text-red-500 pl-1">
             {{ errors.roles }}
           </span>
@@ -128,7 +97,8 @@ const handleCancel = () => {
 
         <!-- Account Status -->
         <div class="pt-2">
-          <label class="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg cursor-pointer group hover:bg-gray-100/50 transition-colors">
+          <label
+            class="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg cursor-pointer group hover:bg-gray-100/50 transition-colors">
             <div>
               <span class="text-sm font-medium text-gray-700">Account Status</span>
               <p class="text-xs text-gray-500">Enable or disable user account</p>
@@ -139,7 +109,9 @@ const handleCancel = () => {
               </span>
               <div class="relative">
                 <input type="checkbox" class="sr-only peer" v-model="newUser.active" />
-                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                <div
+                  class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500">
+                </div>
               </div>
             </div>
           </label>
@@ -153,18 +125,10 @@ const handleCancel = () => {
 
       <!-- Action Buttons -->
       <div class="flex justify-end gap-3 pt-4">
-        <BaseButton 
-          type="secondary" 
-          class="px-4!" 
-          @click="handleCancel"
-        >
+        <BaseButton type="secondary" class="px-4!" @click="handleCancel">
           Cancel
         </BaseButton>
-        <BaseButton 
-          type="primary" 
-          class="px-4!" 
-          @click="handleAddUser"
-        >
+        <BaseButton type="primary" class="px-4!" @click="handleAddUser">
           Add User
         </BaseButton>
       </div>
