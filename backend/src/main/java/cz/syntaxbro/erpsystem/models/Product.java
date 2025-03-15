@@ -38,6 +38,7 @@ public class Product {
     @Positive(message = "Product purchase price must be greater than zero")
     private double purchasePrice;
 
+    @Column(columnDefinition="TEXT")
     private String description;
     private String image;
 
