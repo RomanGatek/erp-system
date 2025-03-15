@@ -50,6 +50,14 @@
                 </svg>
                 Profile
               </router-link>
+              <router-link to="/user/orders"
+                class="flex px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r from-blue-50 to-blue-100 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                My Orders
+              </router-link>
               <button @click="logout"
                 class="group flex w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gradient-to-r from-red-50 to-red-100 transition-all duration-300 relative overflow-hidden">
                 <span class="relative z-10 flex items-center">

@@ -51,11 +51,6 @@ tr:hover td {
   background-color: rgba(59, 130, 246, 0.05);
 }
 
-/* Expanded row specific styles */
-tr[class*='bg-blue-50'] td {
-  position: relative;
-  background-color: rgba(59, 130, 246, 0.08);
-}
 
 tr[class*='bg-blue-50'] td::after {
   content: '';
@@ -67,6 +62,10 @@ tr[class*='bg-blue-50'] td::after {
   background: rgb(59, 130, 246);
   transform: scaleX(0);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+tr[class*='relative'] td::after {
+  background: rgb(209, 213, 219);
 }
 
 tr[class*='bg-blue-50']:hover td::after {

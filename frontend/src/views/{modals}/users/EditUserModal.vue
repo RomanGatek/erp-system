@@ -85,48 +85,100 @@ const handleCancel = () => {
 
 <template>
   <Modal :show="true" title="Edit User" @close="handleCancel">
-    <div class="space-y-3">
-      <div class="grid grid-cols-2 gap-3">
-        <BaseInput v-model="user.firstName" placeholder="First Name" label="First name" variant="success"
-          :error="errors.firstName" :class="{ 'border-red-500': errors.firstName }" />
-        <BaseInput v-model="user.lastName" placeholder="Last Name" label="Last name" variant="success"
-          :error="errors.lastName" :class="{ 'border-red-500': errors.lastName }" />
+    <div class="space-y-4">
+      <!-- Personal Information Section -->
+      <div class="bg-gray-50/50 rounded-lg p-4 space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">Personal Information</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <BaseInput 
+            v-model="user.firstName" 
+            placeholder="First Name" 
+            label="First name" 
+            :error="errors.firstName"
+            class="text-sm"
+          />
+          <BaseInput 
+            v-model="user.lastName" 
+            placeholder="Last Name" 
+            label="Last name" 
+            :error="errors.lastName"
+            class="text-sm"
+          />
+        </div>
+        <BaseInput 
+          v-model="user.email" 
+          type="email" 
+          placeholder="Email" 
+          label="Email" 
+          :error="errors.email"
+          class="text-sm"
+        />
       </div>
-      <BaseInput v-model="user.email" type="email" placeholder="Email" label="Email" variant="success"
-        :error="errors.email" :class="{ 'border-red-500': errors.email }" />
-      <BaseInput v-model="user.username" placeholder="Username" label="Username" variant="success"
-        :error="errors.username" :class="{ 'border-red-500': errors.username }" />
 
-      <!-- Role selection using XSelect -->
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-        <XSelect v-model="selectedRole" :options="roleOptions" label="Role" @update:modelValue="updateSelectedRole" />
-        <span v-if="errors.roles" class="text-xs text-red-500">
-          {{ errors.roles }}
-        </span>
+      <!-- Account Details Section -->
+      <div class="bg-gray-50/50 rounded-lg p-4 space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">Account Details</h3>
+        <BaseInput 
+          v-model="user.username" 
+          placeholder="Username" 
+          label="Username" 
+          :error="errors.username"
+          class="text-sm"
+        />
+
+        <!-- Role Selection -->
+        <div class="space-y-2">
+          <XSelect 
+            v-model="selectedRole" 
+            :options="roleOptions" 
+            label="Role"
+            class="text-sm"
+            @update:modelValue="updateSelectedRole" 
+          />
+          <span v-if="errors.roles" class="text-xs text-red-500 pl-1">
+            {{ errors.roles }}
+          </span>
+        </div>
+
+        <!-- Account Status -->
+        <div class="pt-2">
+          <label class="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg cursor-pointer group hover:bg-gray-100/50 transition-colors">
+            <div>
+              <span class="text-sm font-medium text-gray-700">Account Status</span>
+              <p class="text-xs text-gray-500">Enable or disable user account</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm" :class="user.active ? 'text-green-600' : 'text-gray-400'">
+                {{ user.active ? 'Active' : 'Inactive' }}
+              </span>
+              <div class="relative">
+                <input type="checkbox" class="sr-only peer" v-model="user.active" />
+                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+              </div>
+            </div>
+          </label>
+        </div>
       </div>
 
-      <!-- Account active slider toggle -->
-      <div class="flex items-center justify-between pt-2">
-        <label class="text-sm font-medium text-gray-700">Account active</label>
-        <button
-          type="button"
-          @click="user.active = !user.active"
-          class="relative inline-block w-12 h-6 rounded-full cursor-pointer"
-          :class="user.active ? 'bg-green-500' : 'bg-gray-300'"
+      <!-- Error Message -->
+      <div v-if="errors.general" class="p-3 bg-red-50 border border-red-100 rounded-lg">
+        <p class="text-sm text-red-600 text-center">{{ errors.general }}</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-3 pt-4">
+        <BaseButton 
+          type="secondary" 
+          class="px-4!" 
+          @click="handleCancel"
         >
-          <span
-            class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out transform"
-            :class="{ 'translate-x-6': user.active }"
-          ></span>
-        </button>
-      </div>
-
-      <div class="flex justify-between pt-2">
-        <BaseButton type="error" class="text-sm! font-bold flex!" @click="handleCancel">
           Cancel
         </BaseButton>
-        <BaseButton type="primary" class="text-sm! font-bold flex!" @click="handleUpdateUser">
+        <BaseButton 
+          type="primary" 
+          class="px-4!" 
+          @click="handleUpdateUser"
+        >
           Update User
         </BaseButton>
       </div>

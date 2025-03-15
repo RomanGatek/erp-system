@@ -141,8 +141,8 @@ export const paginateViaState = (state) => {
  * @param {string} field 
  * @returns 
  */
-export const setupSort = (field) => {
-  return { field, direction: 'asc' }
+export const setupSort = (field, direction = 'asc') => {
+  return { field, direction }
 }
 
 

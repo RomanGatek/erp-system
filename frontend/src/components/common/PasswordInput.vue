@@ -54,6 +54,7 @@
         </svg>
       </button>
     </div>
+    <span v-if="error" class="text-xs text-red-500">{{ error }}</span>
   </div>
 </template>
 

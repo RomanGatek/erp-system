@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.controllers;
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
+import cz.syntaxbro.erpsystem.requests.InventoryItemRequest;
 import cz.syntaxbro.erpsystem.services.InventoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -43,10 +44,7 @@ public class InventoryController {
     }
 
     @PostMapping
-    public ResponseEntity<InventoryItem> addItem(@Valid @RequestBody InventoryItem item) {
-
-        ErpSystemApplication.getLogger().debug("\n\tInventory item: {}", item);
-
+    public ResponseEntity<InventoryItem> addItem(@Valid @RequestBody InventoryItemRequest item) {
         InventoryItem savedItem = inventoryService.addItem(item);
         return ResponseEntity.ok(savedItem);
     }
@@ -54,7 +52,7 @@ public class InventoryController {
     @PutMapping("/{itemId}")
     public ResponseEntity<InventoryItem> updateItem(
             @PathVariable @Min(value = 1, message = "Must be positive number") Long itemId,
-            @Valid @RequestBody InventoryItem item
+            @Valid @RequestBody InventoryItemRequest item
     ) {
         var savedItem = inventoryService.updateItem(itemId, item);
         return ResponseEntity.ok(savedItem);

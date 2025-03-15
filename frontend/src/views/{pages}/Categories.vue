@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { $reactive, choosedColor } from '@/utils/index.js'
+import { $reactive } from '@/utils/index.js'
 import { useNotifier, useCategoriesStore } from '@/stores'
+import { useErrorStore } from '@/stores/errors.store.js'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 import {
   DataTable,
@@ -13,11 +15,9 @@ import {
   BaseInput,
   ColorPicker,
 } from '@/components'
-import { useErrorStore } from '@/stores/errors.store.js'
-import BaseButton from '@/components/common/BaseButton.vue'
 
 defineOptions({
-  name: 'ProductsView',
+  name: 'CategoriesView',
 })
 
 const searchInput = ref('')
@@ -38,187 +38,220 @@ const reactiveCategory = $reactive({
 errors.validateField(reactiveCategory.$cleaned())
 
 const tableHeaders = [
-  { field: 'name', label: 'Name', sortable: true },
-  { field: 'description', label: 'Description', sortable: false, class: 'text-right' },
-  { field: 'actions', label: '', sortable: false, class: 'text-right' },
+  { field: 'name', label: 'Category', sortable: true },
+  { field: 'description', label: 'Description', sortable: false },
+  { field: 'actions', label: '', sortable: false, class: 'text-right w-[100px]' },
 ]
 
 const loading = ref(false)
 
-const $actions = computed(() => {
-  return {
-    fetchCategories: async () => {
-      loading.value = true
-      try {
-        await categoriesStore.fetchCategories()
-        if (categoriesStore.error) errors.handle(categoriesStore.error)
-      } catch (error) {
-        errors.handle(error)
-        $notifier.error('An error occurred while fetching categories')
-      } finally {
-        loading.value = false
+const $actions = computed(() => ({
+  fetchCategories: async () => {
+    loading.value = true
+    try {
+      await categoriesStore.fetchCategories()
+      if (categoriesStore.error) errors.handle(categoriesStore.error)
+    } catch (error) {
+      errors.handle(error)
+      $notifier.error('An error occurred while fetching categories')
+    } finally {
+      loading.value = false
+    }
+  },
+  openAddModal: () => {
+    reactiveCategory.$clear()
+    errors.clearServerErrors()
+    isAddModalOpen.value = true
+  },
+  add: async () => {
+    errors.clearServerErrors()
+    try {
+      await categoriesStore.addCategory(reactiveCategory.$cleaned())
+      if (!categoriesStore.error) {
+        $notifier.success('Category added successfully')
+        isAddModalOpen.value = false
+        reactiveCategory.$clear()
+      } else {
+        errors.handle(categoriesStore.error)
       }
-    },
-    add: async () => {
-      errors.clearServerErrors()
-      loading.value = true
-      try {
-        await categoriesStore.addCategory(reactiveCategory.$cleaned())
-        if (!categoriesStore.error) {
-          $notifier.success('Category added successfully')
-          isAddModalOpen.value = false
-          reactiveCategory.$clear()
-        } else {
-          errors.handle(categoriesStore.error)
-        }
-      } catch (error) {
-        errors.handle(error)
-      } finally {
-        loading.value = false
+    } catch (error) {
+      errors.handle(error)
+    }
+  },
+  openEditModal: (category) => {
+    errors.clearServerErrors()
+    reactiveCategory.$assign(category)
+    isEditModalOpen.value = true
+  },
+  cancelAdd: () => {
+    isAddModalOpen.value = false
+    reactiveCategory.$clear()
+    errors.clearServerErrors()
+  },
+  cancelEdit: () => {
+    isEditModalOpen.value = false
+    reactiveCategory.$clear()
+    errors.clearServerErrors()
+  },
+  updateCategory: async () => {
+    try {
+      await categoriesStore.updateCategory(reactiveCategory.id, reactiveCategory.$cleaned())
+      if (categoriesStore.error) {
+        errors.handle(categoriesStore.error)
+      } else {
+        $notifier.success('Category updated successfully')
+        isEditModalOpen.value = false
+        reactiveCategory.$clear()
       }
-    },
-    openEditModal: (category) => {
-      errors.clearServerErrors()
-      reactiveCategory.$assign(category)
-      isEditModalOpen.value = true
-    },
-    cancelAdd: () => {
-      isAddModalOpen.value = false
-      reactiveCategory.$clear()
-      errors.clearServerErrors()
-    },
-    cancelEdit: () => {
-      isEditModalOpen.value = false
-      reactiveCategory.$clear()
-      errors.clearServerErrors()
-    },
-    updateCategory: async () => {
-      loading.value = true
+    } catch (error) {
+      errors.handle(error)
+    }
+  },
+  deleteCategory: async (id) => {
+    if (confirm('Are you sure you want to delete this category?\nThis action cannot be undone!\nYou can also delete the products associated with this category.')) {
       try {
-        await categoriesStore.updateCategory(reactiveCategory.id, reactiveCategory.$cleaned())
+        await categoriesStore.deleteCategory(id)
         if (categoriesStore.error) {
           errors.handle(categoriesStore.error)
         } else {
-          $notifier.success('Category updated successfully')
-          isEditModalOpen.value = false
-          reactiveCategory.$clear()
+          $notifier.success('Category deleted successfully')
         }
       } catch (error) {
-        errors.handle(error)
-      } finally {
-        loading.value = false
+        console.error(error)
+        $notifier.error('An error occurred while deleting the category')
       }
-    },
-    deleteCategory: async (id) => {
-      if (confirm('Are you sure you want to delete this category?')) {
-        loading.value = true
-        try {
-          await categoriesStore.deleteCategory(id)
-          if (categoriesStore.error) {
-            errors.handle(categoriesStore.error)
-          } else {
-            $notifier.success('Category deleted successfully')
-          }
-        } catch (error) {
-          console.log(error)
-          $notifier.error('An error occurred while deleting the category')
-        } finally {
-          loading.value = false
-        }
-      }
-    },
-  }
-})
+    }
+  },
+}))
 
 onMounted(async () => {
-  $actions.value.fetchCategories()
+  await $actions.value.fetchCategories()
 })
 </script>
 
 <template>
-  <div class="p-8 space-y-6">
-    <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-      <!-- Status bar -->
-      <StatusBar :error="errors.general" :loading="loading" class="mb-4" @clear-error="errors.clearServerErrors()" />
+  <div class="w-full h-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 overflow-hidden">
+        <!-- Header Section -->
+        <div class="border-b border-gray-100">
+          <div class="p-6">
+            <StatusBar :error="errors.general" :loading="loading" class="mb-4"
+              @clear-error="errors.clearServerErrors()" />
 
-      <!-- Header overlay -->
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Categories</h2>
-        <div class="flex items-center space-x-4">
-          <SearchBar v-model="searchInput" @update:modelValue="categoriesStore.setSearch($event)" />
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                  Categories</h2>
+                <p class="mt-1 text-sm text-gray-600">Manage product categories</p>
+              </div>
 
-          <BaseButton type="primary" class="text-sm! flex!" @click="
-            reactiveCategory.$clear();
-          errors.clearServerErrors();
-          isAddModalOpen = true;
-          ">
-            <span class="mr-2">Add</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clip-rule="evenodd" />
-            </svg>
-          </BaseButton>
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <SearchBar v-model="searchInput" @update:modelValue="categoriesStore.setSearch($event)"
+                  class="min-w-[250px]" />
+                <BaseButton type="primary" class="text-sm! flex items-center justify-center gap-2 px-4 py-2!"
+                  @click="$actions.openAddModal">
+                  <span>Add Category</span>
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                </BaseButton>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="p-6">
+          <!-- Empty state -->
+          <EmptyState v-if="!categoriesStore.paginateItems.length" message="No categories to display"
+            class="bg-gray-50/50 rounded-xl py-12">
+            <template #icon>
+              <svg class="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </template>
+            <template #message>
+              <h3 class="mt-4 text-lg font-medium text-gray-900">No categories found</h3>
+              <p class="mt-1 text-gray-500">Start by adding your first category</p>
+            </template>
+          </EmptyState>
+
+          <!-- Data table -->
+          <template v-else>
+            <div class="relative rounded-xl overflow-hidden">
+              <div
+                class="max-h-[calc(100vh-20rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
+                <DataTable :headers="tableHeaders" :items="categoriesStore.paginateItems"
+                  :sort-by="categoriesStore.setSorting" :sorting="categoriesStore.sorting"
+                  :on-edit="$actions.openEditModal" :on-delete="$actions.deleteCategory">
+                  <template #row="{ item }">
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br" :style="{
+                          backgroundColor: item.color || '#94A3B8',
+                          opacity: 0.15
+                        }"></div>
+                        <div class="ml-3">
+                          <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+                          <div class="text-xs text-gray-500 line-clamp-1">ID: #{{ item.id }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <p class="text-sm text-gray-600 line-clamp-2">{{ item.description || 'No description' }}</p>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">
+                      <div class="flex justify-end items-center gap-2">
+                        <button @click="$actions.openEditModal(item)"
+                          class="p-1.5 text-blue-600 hover:text-blue-900 rounded-lg hover:bg-blue-50/80 transition-colors"
+                          title="Edit Category">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                        <button @click="$actions.deleteCategory(item.id)"
+                          class="p-1.5 text-red-600 hover:text-red-900 rounded-lg hover:bg-red-50/80 transition-colors"
+                          title="Delete Category">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </template>
+                </DataTable>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <Pagination :store="useCategoriesStore" />
+            </div>
+          </template>
         </div>
       </div>
-
-      <!-- Empty state -->
-      <EmptyState v-if="!categoriesStore.paginateItems.length" message="No products to display" />
-
-      <!-- Data table -->
-      <template v-else>
-        <div class="flex-1 overflow-hidden">
-          <DataTable :headers="tableHeaders" :items="categoriesStore.paginateItems"
-            :sort-by="categoriesStore.setSorting" :sorting="categoriesStore.sorting" :on-edit="$actions.openEditModal"
-            :on-delete="$actions.deleteCategory">
-            <template #row="{ item }">
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                <p :class="choosedColor(item)"
-                  class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-gray-500/10 ring-inset">
-                  {{ item.name }}
-                </p>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                {{ item.description }}
-              </td>
-
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button @click="$actions.openEditModal(item)"
-                  class="text-blue-600 hover:text-blue-900 mr-4 p-1 rounded hover:bg-blue-50 cursor-pointer">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
-                <button @click="$actions.deleteCategory(item.id)"
-                  class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </td>
-            </template>
-          </DataTable>
-        </div>
-
-        <Pagination :store="useCategoriesStore" />
-      </template>
     </div>
 
     <!-- Add Modal -->
     <Modal :show="isAddModalOpen" title="Add New Category" @close="$actions.cancelAdd">
-      <div class="space-y-3">
-        <BaseInput :error="errors.name" v-model="reactiveCategory.name" placeholder="Category name" label="Name" />
-        <BaseInput :error="errors.description" v-model="reactiveCategory.description" placeholder="Category description"
-          label="Description" />
-        <ColorPicker :error="errors.color" v-model="reactiveCategory.color" label="Color" />
+      <div class="space-y-4">
+        <BaseInput v-model="reactiveCategory.name" :error="errors.name" placeholder="Enter category name..."
+          label="Name" />
 
-        <div class="flex justify-end space-x-3 pt-2">
-          <BaseButton type="error" class="text-sm! font-bold flex!" @click="$actions.cancelAdd">
+        <BaseInput v-model="reactiveCategory.description" :error="errors.description" type="textarea"
+          placeholder="Enter category description..." label="Description" :rows="3" />
+
+        <ColorPicker v-model="reactiveCategory.color" :error="errors.color" label="Category Color" />
+
+        <div class="flex justify-end items-center gap-3 pt-4">
+          <BaseButton type="error" class="text-sm!" @click="$actions.cancelAdd">
             Cancel
           </BaseButton>
-          <BaseButton type="success" class="text-sm! font-bold flex!" @click="$actions.add">
-            Add
+          <BaseButton type="primary" class="text-sm! bg-gradient-to-r from-blue-600 to-blue-400!" @click="$actions.add">
+            Add Category
           </BaseButton>
         </div>
       </div>
@@ -226,17 +259,22 @@ onMounted(async () => {
 
     <!-- Edit Modal -->
     <Modal :show="isEditModalOpen" title="Edit Category" @close="$actions.cancelEdit">
-      <div class="space-y-3">
-        <BaseInput :error="errors.name" v-model="reactiveCategory.name" placeholder="Category name" label="Name" />
-        <BaseInput :error="errors.description" v-model="reactiveCategory.description" placeholder="Category description"
-          label="Description" />
-        <ColorPicker :error="errors.color" v-model="reactiveCategory.color" label="Color" />
-        <div class="flex justify-between pt-2">
-          <BaseButton type="error" class="text-sm! font-bold flex!" @click="$actions.cancelEdit">
+      <div class="space-y-4">
+        <BaseInput v-model="reactiveCategory.name" :error="errors.name" placeholder="Enter category name..."
+          label="Name" />
+
+        <BaseInput v-model="reactiveCategory.description" :error="errors.description" type="textarea"
+          placeholder="Enter category description..." label="Description" :rows="3" />
+
+        <ColorPicker v-model="reactiveCategory.color" :error="errors.color" label="Category Color" />
+
+        <div class="flex justify-end items-center gap-3 pt-4">
+          <BaseButton type="error" class="text-sm!" @click="$actions.cancelEdit">
             Cancel
           </BaseButton>
-          <BaseButton type="success" class="text-sm! font-bold flex!" @click="$actions.updateCategory">
-            Update
+          <BaseButton type="primary" class="text-sm! bg-gradient-to-r from-blue-600 to-blue-400!"
+            @click="$actions.updateCategory">
+            Save Changes
           </BaseButton>
         </div>
       </div>

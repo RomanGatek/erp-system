@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Modal, BaseInput } from '@/components'
+import { Modal, BaseInput, PasswordInput } from '@/components'
 import { $reactive } from '@/utils/index.js'
 import BaseButton from '@/components/common/BaseButton.vue'
 import XSelect from '@/components/common/XSelect.vue'
@@ -24,7 +24,7 @@ const newUser = $reactive({
   email: '',
   username: '',
   password: '',
-  active: false,
+  active: true,
   roles: [],
 })
 
@@ -64,58 +64,107 @@ const handleCancel = () => {
 
 <template>
   <Modal :show="true" title="Add New User" @close="handleCancel">
-    <div class=" space-y-3">
-      <div class="grid grid-cols-2 gap-3">
-        <BaseInput v-model="newUser.firstName" placeholder="First Name" label="First name"
-          :error="errors.firstName" :class="{ 'border-red-500': errors.firstName }" />
-        <BaseInput v-model="newUser.lastName" placeholder="Last Name" label="Last name" :error="errors.lastName"
-          :class="{ 'border-red-500': errors.lastName }" />
-      </div>
-      <BaseInput v-model="newUser.email" type="email" placeholder="Email" label="Email" :error="errors.email"
-        :class="{ 'border-red-500': errors.email }" />
-      <BaseInput v-model="newUser.username" placeholder="Username" label="Username" :error="errors.username"
-        :class="{ 'border-red-500': errors.username }" />
-      <BaseInput v-model="newUser.password" type="password" placeholder="Password" label="Password"
-        :error="errors.password" :class="{ 'border-red-500': errors.password }" />
-      <!-- Role selection using XSelect -->
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-        <XSelect
-          v-model="selectedRole"
-          :options="roleOptions"
-          label="Role"
-          @update:modelValue="updateSelectedRole"
+    <div class="space-y-4">
+      <!-- Personal Information Section -->
+      <div class="bg-gray-50/50 rounded-lg p-4 space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">Personal Information</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <BaseInput 
+            v-model="newUser.firstName" 
+            placeholder="First Name" 
+            label="First name" 
+            :error="errors.firstName"
+            class="text-sm"
+          />
+          <BaseInput 
+            v-model="newUser.lastName" 
+            placeholder="Last Name" 
+            label="Last name" 
+            :error="errors.lastName"
+            class="text-sm"
+          />
+        </div>
+        <BaseInput 
+          v-model="newUser.email" 
+          type="email" 
+          placeholder="Email" 
+          label="Email" 
+          :error="errors.email"
+          class="text-sm"
         />
-        <span v-if="errors.roles" class="text-xs text-red-500">
-          {{ errors.roles }}
-        </span>
-      </div>
-      <!-- General Error Message -->
-      <div v-if="errors.general" class="text-sm text-red-600 text-center mt-4">
-        {{ errors.general }}
       </div>
 
-      <!-- Account active slider toggle -->
-      <div class="flex items-center justify-between pt-2">
-        <label class="text-sm font-medium text-gray-700">Account active</label>
-        <button
-          type="button"
-          @click="newUser.active = !newUser.active"
-          class="relative inline-block w-12 h-6 rounded-full cursor-pointer"
-          :class="newUser.active ? 'bg-green-500' : 'bg-gray-300'"
+      <!-- Account Details Section -->
+      <div class="bg-gray-50/50 rounded-lg p-4 space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">Account Details</h3>
+        <BaseInput 
+          v-model="newUser.username" 
+          placeholder="Username" 
+          label="Username" 
+          :error="errors.username"
+          class="text-sm"
+        />
+        <PasswordInput 
+          v-model="newUser.password" 
+          placeholder="Password" 
+          label="Password"
+          :error="errors.password"
+          class="text-sm"
+        />
+
+        <!-- Role Selection -->
+        <div class="space-y-2">
+          <XSelect 
+            v-model="selectedRole" 
+            :options="roleOptions" 
+            label="Role" 
+            class="text-sm"
+            @update:modelValue="updateSelectedRole" 
+          />
+          <span v-if="errors.roles" class="text-xs text-red-500 pl-1">
+            {{ errors.roles }}
+          </span>
+        </div>
+
+        <!-- Account Status -->
+        <div class="pt-2">
+          <label class="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg cursor-pointer group hover:bg-gray-100/50 transition-colors">
+            <div>
+              <span class="text-sm font-medium text-gray-700">Account Status</span>
+              <p class="text-xs text-gray-500">Enable or disable user account</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm" :class="newUser.active ? 'text-green-600' : 'text-gray-400'">
+                {{ newUser.active ? 'Active' : 'Inactive' }}
+              </span>
+              <div class="relative">
+                <input type="checkbox" class="sr-only peer" v-model="newUser.active" />
+                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="errors.general" class="p-3 bg-red-50 border border-red-100 rounded-lg">
+        <p class="text-sm text-red-600 text-center">{{ errors.general }}</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-3 pt-4">
+        <BaseButton 
+          type="secondary" 
+          class="px-4!" 
+          @click="handleCancel"
         >
-          <span
-            class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out transform"
-            :class="{ 'translate-x-6': newUser.active }"
-          ></span>
-        </button>
-      </div>
-
-      <div class="flex justify-end space-x-3 pt-2">
-        <BaseButton type="error" class="text-sm! font-bold flex!" @click="handleCancel">
           Cancel
         </BaseButton>
-        <BaseButton type="primary" class="text-sm! font-bold flex!" @click="handleAddUser">
+        <BaseButton 
+          type="primary" 
+          class="px-4!" 
+          @click="handleAddUser"
+        >
           Add User
         </BaseButton>
       </div>

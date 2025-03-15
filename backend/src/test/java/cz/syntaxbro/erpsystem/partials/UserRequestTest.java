@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.partials;
 
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -14,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Unit tests for UserPartial DTO.
  * Ensures that validation constraints are correctly applied when updating user information.
  */
-class UserPartialTest {
+class UserRequestTest {
 
     private Validator validator;
 
@@ -34,7 +35,7 @@ class UserPartialTest {
     @Test
     void shouldCreateValidUserPartial() {
         // Arrange: Create a valid UserPartial object
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "ValidUser_123",
                 "user@example.com",
                 "John",
@@ -45,7 +46,7 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: No validation errors should be found
         assertThat(violations).isEmpty();
@@ -57,7 +58,7 @@ class UserPartialTest {
     @Test
     void shouldFailValidation_WhenUsernameIsTooShort() {
         // Arrange: Create a UserPartial object with a short username
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "usr",
                 "user@example.com",
                 "John",
@@ -68,7 +69,7 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: Expect at least one validation error related to username length
         assertThat(violations).isNotEmpty();
@@ -81,7 +82,7 @@ class UserPartialTest {
     @Test
     void shouldFailValidation_WhenUsernameIsTooLong() {
         // Arrange: Create a UserPartial object with an excessively long username
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "a".repeat(51), // 51-character username
                 "user@example.com",
                 "John",
@@ -92,7 +93,7 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: Expect a validation error due to excessive username length
         assertThat(violations).isNotEmpty();
@@ -105,7 +106,7 @@ class UserPartialTest {
     @Test
     void shouldFailValidation_WhenUsernameContainsInvalidCharacters() {
         // Arrange: Create a UserPartial object with an invalid username
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "Invalid@Name!",
                 "user@example.com",
                 "John",
@@ -116,7 +117,7 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: Expect a validation error due to invalid username format
         assertThat(violations).isNotEmpty();
@@ -129,7 +130,7 @@ class UserPartialTest {
     @Test
     void shouldFailValidation_WhenEmailIsInvalid() {
         // Arrange: Create a UserPartial object with an invalid email
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "ValidUser",
                 "invalid-email",
                 "John",
@@ -140,7 +141,7 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: Expect a validation error related to invalid email format
         assertThat(violations).isNotEmpty();
@@ -153,7 +154,7 @@ class UserPartialTest {
     @Test
     void shouldPassValidation_WhenEmailIsNull() {
         // Arrange: Create a UserPartial object with no email
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "ValidUser",
                 null, // Email is optional
                 "John",
@@ -164,7 +165,7 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: No validation errors should occur, as email is optional
         assertThat(violations).isEmpty();
@@ -176,7 +177,7 @@ class UserPartialTest {
     @Test
     void shouldAllowEmptyRoles() {
         // Arrange: Create a UserPartial object with an empty role set
-        UserPartial userPartial = new UserPartial(
+        UserRequest userRequest = new UserRequest(
                 "ValidUser",
                 "user@example.com",
                 "John",
@@ -187,10 +188,10 @@ class UserPartialTest {
         );
 
         // Act: Validate the userPartial object
-        var violations = validator.validate(userPartial);
+        var violations = validator.validate(userRequest);
 
         // Assert: No validation errors should occur
         assertThat(violations).isEmpty();
-        assertThat(userPartial.getRoles()).isEmpty();
+        assertThat(userRequest.getRoles()).isEmpty();
     }
 }

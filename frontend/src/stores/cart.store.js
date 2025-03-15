@@ -33,24 +33,18 @@ export const useCartStore = defineStore('cart', {
     // Metoda pro inicializaci košíku z localStorage při načtení aplikace
     async initializeCart() {
       try {
-        console.log('Initializing cart from storage...');
         const savedCart = localStorage.getItem('cart');
         if (savedCart) {
           this.items = JSON.parse(savedCart);
-          console.log('Cart loaded from storage, items:', this.items.length);
-        } else {
-          console.log('No saved cart found in storage');
         }
       } catch (error) {
         console.error('Failed to load cart from storage:', error);
       }
     },
 
-    // Metoda pro uložení košíku do localStorage po každé změně
     saveCart() {
       try {
         localStorage.setItem('cart', JSON.stringify(this.items));
-        console.log('Cart saved to storage, items:', this.items.length);
       } catch (error) {
         console.error('Failed to save cart to storage:', error);
       }
@@ -73,11 +67,8 @@ export const useCartStore = defineStore('cart', {
       this.saveCart();
     },
     
-    // Remove an item from the cart
     removeItem(itemId) {
       this.items = this.items.filter(item => item.id !== itemId);
-      
-      // Uložit košík po změně
       this.saveCart();
     },
     
@@ -87,52 +78,40 @@ export const useCartStore = defineStore('cart', {
       if (item) {
         item.quantity = quantity;
       }
-      
-      // Uložit košík po změně
       this.saveCart();
     },
     
-    // Increase the quantity of an item in the cart
     increaseQuantity(itemId) {
       const item = this.items.find(item => item.id === itemId);
       if (item) {
         item.quantity += 1;
       }
-      
-      // Uložit košík po změně
+    
       this.saveCart();
     },
     
-    // Decrease the quantity of an item in the cart
     decreaseQuantity(itemId) {
       const item = this.items.find(item => item.id === itemId);
       if (item && item.quantity > 1) {
         item.quantity -= 1;
       }
-      
-      // Uložit košík po změně
       this.saveCart();
     },
     
     // Clear all items from the cart
     clearCart() {
       this.items = [];
-      
-      // Uložit košík po změně (vymazat z localStorage)
       this.saveCart();
     },
     
-    // Calculate the total price of all items in the cart
     updateTotal() {
       this.total = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     },
     
-    // Initialize the cart
     init() {
       this.initializeCart();
     },
     
-    // Add clearItems method if it doesn't exist
     clearItems() {
       this.items = [];
       this.total = 0;

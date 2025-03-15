@@ -2,9 +2,11 @@ import { defineStore } from 'pinia'
 import api from '@/services/api'
 import {
   filter,
-  setupSort
+  setupSort,
+  paginateViaState
 } from '@/utils'
-import { paginateViaState } from '@/utils'
+
+let _;
 
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
@@ -12,9 +14,8 @@ export const useInventoryStore = defineStore('inventory', {
     loading: false,
     error: null,
     searchQuery: '',
-    currentFilter: 'all',
-    sorting: setupSort('product.name'),
     pagination: { currentPage: 1, perPage: 10 },
+    sorting: setupSort('product.name'),
   }),
   getters: {
     filtered: (state) => filter(state, (item) => {
@@ -30,19 +31,29 @@ export const useInventoryStore = defineStore('inventory', {
       [this.items, this.error] = await api.inventory().getAll()
     },
     async addItem(Item) {
-      [this.items, this.error] = await api.inventory().add(Item)
+      [_, this.error] = await api.inventory().add({
+        productId: Item.product.id,
+        stockedAmount: Item.stockedAmount,
+      })
+      if (!this.error) this.items.push(_)
     },
     async updateItem(ItemData) {
       var _;
-      [_, this.error] = await api.inventory().update(ItemData)
+      [_, this.error] = await api.inventory().update({
+        id: ItemData.id,
+        productId: ItemData.product.id,
+        stockedAmount: ItemData.stockedAmount,
+      })
 
-      const index = this.items.findIndex(p => p.id === ItemData.id)
-      if (index !== -1) {
-        this.items[index] = {
-          ...this.items[index],
-          ...ItemData,
-          id: ItemData.id,
-          stockedAmount: ItemData.stockedAmount ?? 0,
+      if (!this.error) {
+        const index = this.items.findIndex(p => p.id === ItemData.id)
+        if (index !== -1) {
+          this.items[index] = {
+            ...this.items[index],
+            ...ItemData,
+            id: ItemData.id,
+            stockedAmount: ItemData.stockedAmount ?? 0,
+          }
         }
       }
     },

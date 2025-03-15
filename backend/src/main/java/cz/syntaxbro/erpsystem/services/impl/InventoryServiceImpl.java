@@ -4,7 +4,9 @@ import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
+import cz.syntaxbro.erpsystem.requests.InventoryItemRequest;
 import cz.syntaxbro.erpsystem.services.InventoryService;
+import cz.syntaxbro.erpsystem.services.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,22 +21,28 @@ import java.util.Optional;
 @Service
 public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
+    private final ProductService productService;
 
     @Autowired
-    public InventoryServiceImpl(InventoryRepository inventoryRepository) {
+    public InventoryServiceImpl(InventoryRepository inventoryRepository, ProductService productService) {
         this.inventoryRepository = inventoryRepository;
+        this.productService = productService;
     }
 
-    public InventoryItem addItem(InventoryItem item) {
-        ErpSystemApplication.getLogger().debug("\n\tInventory items > add: {}", item);
-        return inventoryRepository.save(item);
+    public InventoryItem addItem(InventoryItemRequest item) {
+        return inventoryRepository.save(InventoryItem
+                .builder()
+                .product(productService.getProductById(item.getProductId()))
+                .stockedAmount(item.getStockedAmount())
+                .build()
+        );
     }
 
     @Transactional
     @Override
     public void reserveStock(Long itemId, int quantity) {
         InventoryItem item = this.getItem(itemId);
-        int newQuantity = item.getStockedAmount() - quantity;
+        double newQuantity = item.getStockedAmount() - quantity;
 
         if (newQuantity < 0) {
             throw new IllegalArgumentException("We do not have enough quantity of this item.");
@@ -58,14 +66,10 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public InventoryItem updateItem(Long id, InventoryItem item) {
-
-        ErpSystemApplication.getLogger().info("Updating item with id {}", id);
-        ErpSystemApplication.getLogger().info("Updating item with product {}", item.getProduct());
-
+    public InventoryItem updateItem(Long id, InventoryItemRequest item) {
         return inventoryRepository.findById(id)
             .map(existingItem -> {
-                existingItem.setProduct(item.getProduct());
+                existingItem.setProduct(productService.getProductById(item.getProductId()));
                 existingItem.setStockedAmount(item.getStockedAmount());
                 return inventoryRepository.save(existingItem);
             }).orElseThrow(() -> new EntityNotFoundException("Inventory Item not found with id: " + id));

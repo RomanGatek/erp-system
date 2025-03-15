@@ -15,7 +15,7 @@ public interface InventoryRepository  extends JpaRepository<InventoryItem, Long>
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("UPDATE InventoryItem i SET i.stockedAmount = :stockedAmount WHERE i.id = :id")
-    int updateQuantity(@Param("id") Long id, @Param("stockedAmount") int stockedAmount);
+    int updateQuantity(@Param("id") Long id, @Param("stockedAmount") double stockedAmount);
 
     Optional<InventoryItem> findByProduct(Product product);
 }

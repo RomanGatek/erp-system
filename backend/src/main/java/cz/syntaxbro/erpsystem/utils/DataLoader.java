@@ -66,9 +66,9 @@ public class DataLoader implements CommandLineRunner {
         Permission approveBudgets = createPermissionIfNotExists("APPROVE_BUDGETS");
         Permission viewProfile = createPermissionIfNotExists("VIEW_PROFILE");
 
-        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", Set.of(readReports, approveBudgets));
         Role managerRole = createRoleIfNotExists("ROLE_MANAGER", Set.of(readReports));
         Role userRole = createRoleIfNotExists("ROLE_USER", Set.of(viewProfile));
+        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", Set.of(readReports, approveBudgets));
 
         // Create users
         createUserIfNotExists(

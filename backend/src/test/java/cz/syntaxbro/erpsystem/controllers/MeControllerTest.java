@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.PasswordChangeRequest;
 import cz.syntaxbro.erpsystem.security.FileStorageConfig;
@@ -13,8 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -81,7 +79,7 @@ class MeControllerTest {
      */
     @Test
     void updateCurrentUser_ShouldUpdateAndReturnUser() {
-        UserPartial updatedUser = new UserPartial();
+        UserRequest updatedUser = new UserRequest();
         updatedUser.setUsername("updatedUser");
         updatedUser.setEmail("updated@example.com");
         updatedUser.setFirstName("Updated");

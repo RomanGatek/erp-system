@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -80,13 +80,12 @@ public class User {
                 '}';
     }
 
-    public void map(UserPartial partial) {
+    public void map(UserRequest partial) {
         this.firstName = partial.getFirstName();
         this.lastName = partial.getLastName();
         this.avatar = partial.getAvatar();
         this.active = partial.isActive();
         this.username = partial.getUsername();
-        this.email = partial.getEmail();
     }
 
     public User(Long id, String username, String password, String firstName, String lastName, String email, String avatar, boolean active, Set<Role> roles) {

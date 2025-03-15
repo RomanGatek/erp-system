@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.services.impl;
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.exceptions.ResourceNotFoundException;
 import cz.syntaxbro.erpsystem.models.*;
+import cz.syntaxbro.erpsystem.requests.InventoryItemRequest;
 import cz.syntaxbro.erpsystem.requests.OrderCreateRequest;
 import cz.syntaxbro.erpsystem.requests.OrderRequest;
 import cz.syntaxbro.erpsystem.repositories.OrderRepository;
@@ -92,15 +93,12 @@ public class OrderServiceImpl implements OrderService {
             var optionalInventoryItem = inventoryService.findItemByProductForOrder(product);
             InventoryItem inventoryItem;
 
-            if (optionalInventoryItem.isEmpty()) {
-                inventoryItem = InventoryItem.builder()
-                        .product(product)
-                        .stockedAmount(0)
-                        .build();
-                inventoryService.addItem(inventoryItem);
-            } else {
-                inventoryItem = optionalInventoryItem.get();
-            }
+            inventoryItem = optionalInventoryItem.orElseGet(() -> inventoryService.addItem(InventoryItemRequest
+                    .builder()
+                    .stockedAmount(0d)
+                    .productId(product.getId())
+                    .build()
+            ));
 
             double productPrice = orderRequest.getOrderType() == Order.OrderType.SELL
                     ? inventoryItem.getProduct().getPurchasePrice()
@@ -167,9 +165,9 @@ public class OrderServiceImpl implements OrderService {
                     InventoryItem inventoryItem;
 
                     if (optionalInventoryItem.isEmpty()) {
-                        inventoryService.addItem(InventoryItem.builder()
+                        inventoryService.addItem(InventoryItemRequest.builder()
                                 .stockedAmount(0)
-                                .product(productFromDb)
+                                .productId(productFromDb.getId())
                                 .build());
 
                         inventoryItem = inventoryService.findItemByProduct(productFromDb);

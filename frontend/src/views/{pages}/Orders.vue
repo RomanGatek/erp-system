@@ -1,177 +1,215 @@
 <template>
-  <div class="p-8">
-    <div class="flex gap-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex gap-6 flex-col lg:flex-row">
       <!-- Main Content -->
-      <div class="flex-1 bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-        <StatusBar :error="errors.general" :loading="loading" class="mb-4" @clear-error="errors.clearServerErrors()" />
+      <div class="flex-1 bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 overflow-hidden">
+        <div class="p-6">
+          <StatusBar :error="errors.general" :loading="loading" class="mb-4"
+            @clear-error="errors.clearServerErrors()" />
 
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">
-            {{ isEditing ? 'Edit' : 'Create New' }} Order
-          </h2>
-          <p class="text-sm text-gray-500 mt-1 mb-2">Select order type</p>
-          <div class="flex gap-2">
-            <button @click="orderType = 'PURCHASE'"
-              class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 border cursor-pointer transform hover:scale-105"
-              :class="[
-                orderType === 'PURCHASE'
-                  ? 'bg-gradient-to-r from-red-500 to-red-400 text-white border-red-500 shadow-md'
-                  : 'border-red-500 text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100',
-              ]">
-              Purchase
-            </button>
-            <button @click="orderType = 'SELL'"
-              class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 border cursor-pointer transform hover:scale-105"
-              :class="[
-                orderType === 'SELL'
-                  ? 'bg-gradient-to-r from-green-500 to-green-400 text-white border-green-500 shadow-md'
-                  : 'border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100',
-              ]">
-              Sell
-            </button>
+          <!-- Order Type Selection -->
+          <div class="mb-8">
+            <div>
+              <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                {{ isEditing ? 'Edit' : 'Create New' }} Order
+              </h2>
+              <p class="mt-1 text-sm text-gray-600">Select order type and add products</p>
+            </div>
+            <div class="mt-4 flex flex-col gap-2">
+              <p class="text-sm text-gray-500">Select order type</p>
+              <div class="flex gap-3">
+                <button @click="orderType = 'PURCHASE'"
+                  class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border relative overflow-hidden group"
+                  :class="[
+                    orderType === 'PURCHASE'
+                      ? 'bg-gradient-to-r from-red-500 to-red-400 text-white border-red-500 shadow-md'
+                      : 'border-red-500 text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100',
+                  ]">
+                  <span class="relative z-10">Purchase Order</span>
+                  <div
+                    class="absolute inset-0 bg-gradient-to-r from-red-600 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  </div>
+                </button>
+                <button @click="orderType = 'SELL'"
+                  class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border relative overflow-hidden group"
+                  :class="[
+                    orderType === 'SELL'
+                      ? 'bg-gradient-to-r from-green-500 to-green-400 text-white border-green-500 shadow-md'
+                      : 'border-green-500 text-green-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-green-100',
+                  ]">
+                  <span class="relative z-10">Sell Order</span>
+                  <div
+                    class="absolute inset-0 bg-gradient-to-r from-green-600 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Order Form -->
-        <form @submit.prevent="isEditing ? editOrder : createOrder()" class="space-y-6">
-          <!-- Product Selection -->
-          <MultiProductSelect :items="products" v-model="selectedProducts" placeholder="Search and add products..."
-            class="product-select" :order-type="orderType" />
-
-          <!-- Order Time -->
-          <DateTimePicker v-model="orderTime" label="Order Time" :error="orderTimeError" />
-
-          <!-- Comment with Toggle -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="block text-sm font-medium text-gray-700">Comment</label>
-              <button type="button" @click="showCommentField = !showCommentField"
-                class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                <span>{{ showCommentField ? 'Hide comment' : 'Add comment' }}</span>
-              </button>
+          <!-- Order Form -->
+          <form @submit.prevent="isEditing ? editOrder : createOrder()" class="space-y-6">
+            <!-- Product Selection -->
+            <div class="bg-gray-50/50 rounded-xl p-4 ring-1 ring-gray-100">
+              <MultiProductSelect :items="products" v-model="selectedProducts" placeholder="Search and add products..."
+                class="product-select" :order-type="orderType" />
             </div>
 
-            <transition enter-active-class="transition ease-out duration-200"
-              enter-from-class="transform opacity-0 scale-95 -translate-y-4"
-              enter-to-class="transform opacity-100 scale-100 translate-y-0"
-              leave-active-class="transition ease-in duration-150"
-              leave-from-class="transform opacity-100 scale-100 translate-y-0"
-              leave-to-class="transform opacity-0 scale-95 -translate-y-4" @before-leave="isAnimating = true"
-              @after-leave="isAnimating = false">
-              <div v-if="showCommentField || comment" class="relative">
-                <textarea v-model="comment" placeholder="Enter order comment..." rows="3" maxlength="500"
-                  @blur="handleCommentBlur"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
-                <div class="text-xs text-gray-400 text-right mt-1">{{ comment.length }}/500</div>
-              </div>
-            </transition>
-          </div>
+            <!-- Order Time -->
+            <div class="bg-gray-50/50 rounded-xl p-4 ring-1 ring-gray-100">
+              <DateTimePicker v-model="orderTime" label="Order Time" :error="orderTimeError" />
+            </div>
 
-          <!-- Stock Information -->
-          <div v-if="selectedProducts.length > 0"
-            class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/50 shadow-sm">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="p-2 bg-white rounded-lg shadow-sm relative group cursor-help">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  <!-- Hover tooltip -->
-                  <div
-                    class="absolute left-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                    <div class="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap">
-                      {{ getTotalItemCount() }} items will be
-                      {{ orderType === 'SELL' ? 'removed from' : 'added to' }} inventory
-                      <div class="absolute left-3 top-full h-2 w-2 bg-gray-800 transform rotate-45"></div>
+            <!-- Comment Section -->
+            <div class="bg-gray-50/50 rounded-xl p-4 ring-1 ring-gray-100">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="block text-sm font-medium text-gray-700">Order Comment</label>
+                  <button type="button" @click="showCommentField = !showCommentField"
+                    class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    <span>{{ showCommentField ? 'Hide comment' : 'Add comment' }}</span>
+                  </button>
+                </div>
+
+                <transition enter-active-class="transition ease-out duration-200"
+                  enter-from-class="transform opacity-0 scale-95 -translate-y-4"
+                  enter-to-class="transform opacity-100 scale-100 translate-y-0"
+                  leave-active-class="transition ease-in duration-150"
+                  leave-from-class="transform opacity-100 scale-100 translate-y-0"
+                  leave-to-class="transform opacity-0 scale-95 -translate-y-4">
+                  <div v-if="showCommentField || comment" class="relative">
+                    <textarea v-model="comment" placeholder="Enter order comment..." rows="3" maxlength="500"
+                      @blur="handleCommentBlur"
+                      class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
+                    <div class="text-xs text-gray-400 text-right mt-1">{{ comment.length }}/500</div>
+                  </div>
+                </transition>
+              </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div v-if="selectedProducts.length > 0"
+              class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl ring-1 ring-gray-100 shadow-sm">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="p-2 bg-white rounded-lg shadow-sm relative group cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <div
+                      class="absolute left-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                      <div class="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap">
+                        {{ getTotalItemCount() }} items will be
+                        {{ orderType === 'SELL' ? 'removed from' : 'added to' }} inventory
+                        <div class="absolute left-3 top-full h-2 w-2 bg-gray-800 transform rotate-45"></div>
+                      </div>
                     </div>
                   </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Items Count</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ getTotalItemCount() }}</p>
+                  </div>
                 </div>
-                <p class="text-sm font-medium text-gray-700">Current Stock</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="p-2 bg-white rounded-lg shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-700">Total Price</p>
-                  <p class="text-xl font-bold text-gray-900">{{ formatPrice(totalPrice) }} Kč</p>
+                <div class="flex items-center gap-3">
+                  <div class="p-2 bg-white rounded-lg shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Total Price</p>
+                    <p class="text-xl font-bold text-gray-900">{{ formatPrice(totalPrice) }} Kč</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Submit Button -->
-          <div class="mt-8 flex justify-center gap-5">
-            <button type="button" @click="isEditing ? editOrder() : createOrder()"
-              class="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
-              :disabled="loading || !isValid">
-              <span class="relative z-10">{{ isEditing ? 'Edit' : 'Create' }} Order</span>
-              <div
-                class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              </div>
-            </button>
-            <button v-if="isEditing" type="button" @click="cancelEdit"
-              class="group px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-300 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md">
-              <span class="relative z-10">Cancel</span>
-              <div
-                class="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              </div>
-            </button>
-          </div>
-        </form>
+            <!-- Submit Buttons -->
+            <div class="flex justify-center gap-4 pt-4">
+              <button type="button" @click="isEditing ? editOrder() : createOrder()"
+                class="group px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden shadow-md"
+                :disabled="loading || !isValid">
+                <span class="relative z-10">{{ isEditing ? 'Save Changes' : 'Create Order' }}</span>
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                </div>
+              </button>
+              <button v-if="isEditing" type="button" @click="cancelEdit"
+                class="group px-6 py-2.5 bg-gradient-to-r from-gray-500 to-gray-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden shadow-md">
+                <span class="relative z-10">Cancel</span>
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-gray-600 to-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                </div>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Recent Orders Sidebar -->
-      <div class="w-96 bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-        <h3 class="text-lg font-medium text-gray-800 mb-4">
-          Recent {{ orderType === 'PURCHASE' ? 'Purchase' : 'Sell' }} Orders
-        </h3>
-        <div class="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-          <div v-for="order in filteredRecentOrders" :key="order.id"
-            class="p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 relative overflow-hidden"
-            :class="{
-              'order-sell': order.orderType === 'SELL',
-              'order-purchase': order.orderType === 'PURCHASE',
-            }">
-            <div class="flex justify-between items-start mb-2">
-              <span class="text-sm font-medium text-gray-900">#{{ order.id }}</span>
-              <div class="flex items-center gap-1">
-                <span class="px-1.5 py-0.5 text-[10px] font-medium rounded-full" :class="{
-                  'bg-yellow-100 text-yellow-800': order.status === 'PENDING',
-                  'bg-green-100 text-green-800': order.status === 'CONFIRMED',
-                  'bg-red-100 text-red-800': order.status === 'CANCELED',
-                }">
-                  {{ getStatusText(order.status) }}
-                </span>
+      <div class="lg:w-96 bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-800 flex items-center gap-2">
+              <span>Recent {{ orderType === 'PURCHASE' ? 'Purchase' : 'Sell' }} Orders</span>
+              <span class="px-2 py-0.5 text-xs font-medium rounded-full" :class="{
+                'bg-red-100 text-red-700': orderType === 'PURCHASE',
+                'bg-green-100 text-green-700': orderType === 'SELL'
+              }">
+                {{ filteredRecentOrders.length }}
+              </span>
+            </h3>
+          </div>
+          <div class="space-y-4 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            <div v-for="order in filteredRecentOrders" :key="order.id"
+              class="p-4 rounded-xl transition-all duration-200 relative overflow-hidden hover:shadow-md ring-1" :class="{
+                'bg-green-50/30 ring-green-100': order.orderType === 'SELL',
+                'bg-red-50/30 ring-red-100': order.orderType === 'PURCHASE',
+              }">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-sm font-medium text-gray-900">#{{ order.id }}</span>
+                <div class="flex items-center gap-1">
+                  <span class="px-2 py-0.5 text-xs font-medium rounded-full" :class="{
+                    'bg-yellow-100 text-yellow-800': order.status === 'PENDING',
+                    'bg-green-100 text-green-800': order.status === 'CONFIRMED',
+                    'bg-red-100 text-red-800': order.status === 'CANCELED',
+                  }">
+                    {{ getStatusText(order.status) }}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm text-gray-600">Items count: {{ order.orderItems.length }}</p>
-              <div class="flex justify-between text-sm">
-                <span class="font-medium">{{ formatPrice(order.cost) }} Kč</span>
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>{{ order.orderItems.length }} items</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-900">{{ formatPrice(order.cost) }} Kč</span>
+                  <span class="text-xs text-gray-500">{{ formatDate(order.orderTime) }}</span>
+                </div>
+                <p v-if="order.comment" class="text-xs text-gray-600 mt-2 line-clamp-2 bg-white/50 p-2 rounded-lg">
+                  {{ parseComment(order.comment) }}
+                </p>
+                <div v-if="order.approvedBy" class="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                  <span>{{ order.status === 'CONFIRMED' ? 'Approved' : 'Rejected' }} by:</span>
+                  <span class="font-medium text-gray-700">{{ order.approvedBy.username }}</span>
+                </div>
+                <p v-if="order.decisionTime" class="text-xs text-gray-500">
+                  Decision: {{ formatDate(order.decisionTime) }}
+                </p>
               </div>
-              <p class="text-xs text-gray-400">{{ formatDate(order.orderTime) }}</p>
-              <p v-if="order.comment" class="text-xs text-gray-500 mt-2 line-clamp-2">
-                {{ parseComment(order.comment) }}
-              </p>
-              <p v-if="order.approvedBy" class="text-xs text-gray-400">
-                {{ order.status === 'CONFIRMED' ? 'Approved' : 'Rejected' }} by:
-                {{ order.approvedBy.username }}
-              </p>
-              <p v-if="order.decisionTime" class="text-xs text-gray-400">
-                Decision: {{ formatDate(order.decisionTime) }}
-              </p>
             </div>
           </div>
         </div>

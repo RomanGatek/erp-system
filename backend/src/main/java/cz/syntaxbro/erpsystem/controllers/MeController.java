@@ -2,9 +2,8 @@ package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.ErpSystemApplication;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
-import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.PasswordChangeRequest;
 import cz.syntaxbro.erpsystem.responses.JWTResponse;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
@@ -20,12 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/me")
@@ -58,7 +54,7 @@ public class MeController {
     // Fetching the current user
     @PutMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<User> updateCurrentUser(@Valid @RequestBody UserPartial user) {
+    public ResponseEntity<User> updateCurrentUser(@Valid @RequestBody UserRequest user) {
         User currentUser = authService.getCurrentUser();
         currentUser.map(user);
         return ResponseEntity.ok(userRepository.save(currentUser));

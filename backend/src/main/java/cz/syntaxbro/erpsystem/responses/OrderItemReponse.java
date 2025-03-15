@@ -9,7 +9,7 @@ public class OrderItemReponse {
     private Long id;
     private Long inventoryItemId;
     private Long productId;
-    private int stockedQuantity;
+    private double stockedQuantity;
     private int needQuantity;
     private String name;
     private double buyoutPrice;

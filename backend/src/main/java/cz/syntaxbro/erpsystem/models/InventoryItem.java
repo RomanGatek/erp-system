@@ -35,7 +35,7 @@ public class InventoryItem {
 
     @PositiveOrZero(message = "Item quantity must be zero or positive")
     @Column(name = "stocked_amount")
-    private int stockedAmount;
+    private double stockedAmount;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

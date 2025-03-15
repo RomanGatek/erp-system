@@ -2,7 +2,7 @@ package cz.syntaxbro.erpsystem.services.impl;
 
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import cz.syntaxbro.erpsystem.repositories.RoleRepository;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.CreateUserRequest;
@@ -61,14 +61,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(Long id, UserPartial userDto) {
+    public User updateUser(Long id, UserRequest userDto) {
         System.out.println("updateUser + " + userDto);
         var optionalUser = getUserByIdOrThrow(id);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
 
             user.setUsername(userDto.getUsername());
-            user.setEmail(userDto.getEmail());
             user.setFirstName(userDto.getFirstName());
             user.setLastName(userDto.getLastName());
             user.setActive(userDto.isActive());

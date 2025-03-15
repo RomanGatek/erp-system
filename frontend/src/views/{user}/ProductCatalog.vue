@@ -377,17 +377,8 @@ export default {
 
     // Setup event listeners
     onMounted(async () => {
-      console.log("ProductCatalog mounted, current route:", route.path);
-
-      // Nejprve inicializuji košík - zde načteme data z localStorage nebo API
       await cart.initializeCart();
-
-      // Load products and categories
       await Promise.all([loadProducts(), loadCategories()]);
-      console.log("Products loaded, count:", products.items.length);
-      console.log("Cart loaded, items count:", cart.items.length);
-
-      // Check if URL has a product after products are loaded
       await checkUrlForProduct();
 
       nextTick(() => {
@@ -487,16 +478,8 @@ export default {
     }
 
     const showProductDetail = (product) => {
-      console.log('ProductCatalog: Showing product detail for:', product.name);
-
-      // First set the product to ensure it's available when modal becomes visible
       selectedProduct.value = product;
-
-      // Set visible flag to trigger animation immediately
       isModalVisible.value = true;
-
-      // Update URL using history API instead of router to prevent re-renders
-      // This is much less invasive than router.push
       const productSlug = createSlug(product.name);
       const newUrl = `/catalog/product/${productSlug}?id=${product.id}`;
       window.history.replaceState(
@@ -507,20 +490,13 @@ export default {
     }
 
     const closeProductDetail = () => {
-      console.log('ProductCatalog: Closing product detail');
-
-      // Hide the modal first to start animation
       isModalVisible.value = false;
-
-      // Update URL only after animation starts, using history API
-      // This should prevent any layout shifts during animation
       setTimeout(() => {
         window.history.replaceState({}, '', '/catalog');
       }, 50);
     }
 
     const onModalClosed = () => {
-      console.log('ProductCatalog: Modal closed animation completed');
       // Clear the product only after animation completes
       selectedProduct.value = null;
     }
@@ -532,7 +508,6 @@ export default {
         // Extract id from query params
         const params = new URLSearchParams(location.search);
         const productId = params.get('id');
-        console.log('Checking URL for product ID:', productId);
 
         if (!productId) {
           console.error('No product ID in URL');
@@ -550,7 +525,6 @@ export default {
         const product = products.items.find(p => String(p.id) === String(productId));
 
         if (product) {
-          console.log('Found product by ID:', product.name);
           // Show the product without updating URL again
           selectedProduct.value = product;
           // Show modal
@@ -580,12 +554,10 @@ export default {
       selectedProduct.value.rating = totalRating / selectedProduct.value.reviews.length
 
       // Here you would typically send this to an API
-      console.log('Review submitted:', review)
     }
 
     // Create a function to handle popstate events for reuse
     const handlePopState = async (e) => {
-      console.log('Browser navigation detected', e.state);
 
       if (location.pathname.includes('/catalog/product/')) {
         // Browser navigated to product detail
@@ -644,11 +616,6 @@ export default {
 </script>
 
 <style scoped>
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
 select::-ms-expand {
   display: none;
 }

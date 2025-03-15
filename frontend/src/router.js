@@ -15,6 +15,8 @@ import Orders from '@/views/{pages}/Orders.vue'
 import Categories from './views/{pages}/Categories.vue'
 import ProductCatalog from './views/{user}/ProductCatalog.vue'
 import Checkout from './views/checkout/Checkout.vue'
+import UserOrders from './views/{user}/UserOrders.vue'
+import Dashboard from './views/{pages}/Dashboard.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -28,6 +30,7 @@ const routes = [
   { path: '/products/categories', component: Categories, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/catalog', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
   { path: '/catalog/product/:slug', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, role: "MANAGER" } },
   {
     path: '/checkout',
     name: 'Checkout',
@@ -44,6 +47,15 @@ const routes = [
     meta: {
       requiresAuth: false,
       title: 'Order Confirmation'
+    },
+  },
+  {
+    path: '/user/orders',
+    name: 'UserOrders',
+    component: UserOrders,
+    meta: {
+      requiresAuth: false,
+      title: 'User Orders'
     },
   },
 

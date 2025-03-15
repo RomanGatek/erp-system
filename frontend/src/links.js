@@ -28,7 +28,7 @@ export const navLinks = ref([
     },
     {
       to: '',
-      text: 'Inventory',
+      text: 'Managment',
       requiredRole: 'MANAGER',
       icon: inventoryIcon,
       dropdown: true,
@@ -48,7 +48,7 @@ export const navLinks = ref([
         },
         {
           to: '/storage',
-          text: 'Storage',
+          text: 'Inventory',
           requiredRole: 'MANAGER',
           icon: storageIcon
         },
