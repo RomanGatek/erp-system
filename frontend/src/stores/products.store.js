@@ -31,13 +31,13 @@ export const useProductsStore = defineStore('products', {
         },
         async addProduct(product) {
             var _;
-            [_, this.error] = await api.products().add({ ...product, productCategory: product.productCategory.name });
-            await this.fetchProducts();
+            [_, this.error] = await api.products().add({ ...product, productCategory: product.productCategory?.name });
+            if (!this.error) await this.fetchProducts();
         },
         async updateProduct(id, productData) {
             var item;
             [item, this.error] = await api.products().update(id, productData);
-            await this.fetchProducts();
+            if (!this.error) await this.fetchProducts();
             if (item) this.items[this.items.findIndex((item) => item.id === id)] = item;
         },
         async deleteProduct(productId) {

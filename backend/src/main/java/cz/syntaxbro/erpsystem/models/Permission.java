@@ -5,7 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -28,5 +31,16 @@ public class Permission {
 
     public Permission(String name) {
         this.name = name;
+    }
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public Permission(Long id, String name, Set<Role> roles) {
+        this.id = id;
+        this.name = name;
+        this.roles = roles;
     }
 }

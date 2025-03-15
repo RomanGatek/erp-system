@@ -1,5 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
+import cz.syntaxbro.erpsystem.exceptions.GlobalExceptionHandler;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -11,6 +12,7 @@ import cz.syntaxbro.erpsystem.utils.JwtUtil;
 import cz.syntaxbro.erpsystem.requests.LoginRequest;
 import cz.syntaxbro.erpsystem.requests.SignUpRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -57,12 +59,37 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String authenticateUser(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new GlobalExceptionHandler.UserNotFoundException("Invalid email or password"));
 
         if (!security.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new RuntimeException("[password];Invalid email or password");
         }
 
+        return jwtUtil.generateToken(new CustomUserDetails(user));
+    }
+
+    public String getRefreshToken(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
+
+        if (!security.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new RuntimeException("[password];Invalid email or password");
+        }
+
+        return jwtUtil.generateRefreshToken(new CustomUserDetails(user));
+    }
+
+    @Override
+    public String authenticateRefreshToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
+        return jwtUtil.generateRefreshToken(new CustomUserDetails(user));
+    }
+
+    @Override
+    public String authenticateAccessToken(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
         return jwtUtil.generateToken(new CustomUserDetails(user));
     }
 

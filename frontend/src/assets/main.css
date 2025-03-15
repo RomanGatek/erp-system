@@ -117,7 +117,7 @@ h2 {
 main {
   position: relative;
   width: 100%;
-  max-width: 90rem;
+  max-width: 85dvw;
   margin: 0 auto;
 }
 

@@ -1,398 +1,367 @@
 <!--suppress ALL -->
 <template>
-  <div class="p-8 space-y-6">
-    <div class="bg-white p-6 rounded-2xl shadow-lg ring-1 ring-gray-100">
-      <StatusBar
-        :error="errorStore.errors.general"
-        :loading="workflowStore.loading"
-        class="mb-4"
-        @clear-error="errorStore.clearServerErrors()"
-      />
+  <div class="workflow-view">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 overflow-hidden">
+        <!-- Header Section -->
+        <div class="p-6 border-b border-gray-100">
+          <StatusBar :error="errors.general" :loading="workflowStore.loading" class="mb-6"
+            @clear-error="errors.clearServerErrors()" />
 
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Approval Workflow</h2>
-        <div class="flex items-center space-x-4">
-          <div class="flex space-x-2">
-            <button
-              v-for="filter in filters"
-              :key="filter.value"
-              @click="currentFilter = filter.value"
-              class="px-3 py-1.5 text-sm rounded-lg transition"
-              :class="
-                currentFilter === filter.value
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              "
-            >
-              {{ filter.label }}
-            </button>
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                Approval Workflow
+              </h1>
+              <p class="mt-1 text-sm text-gray-600">Manage and approve orders</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <!-- Filter Pills -->
+              <div class="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+                <button v-for="filter in filters" :key="filter.value" @click="currentFilter = filter.value"
+                  class="px-3 py-1.5 text-sm rounded-xl transition-all duration-200 whitespace-nowrap flex items-center gap-2 ring-1"
+                  :class="[
+                    currentFilter === filter.value
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white ring-blue-400'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 ring-gray-200'
+                  ]">
+                  <span class="w-2 h-2 rounded-full" :class="[
+                    filter.value === 'pending' ? 'bg-yellow-400' : '',
+                    filter.value === 'confirmed' ? 'bg-green-400' : '',
+                    filter.value === 'canceled' ? 'bg-red-400' : '',
+                    filter.value === 'all' ? 'bg-blue-400' : ''
+                  ]"></span>
+                  {{ filter.label }}
+                </button>
+              </div>
+
+              <!-- Search Bar -->
+              <SearchBar v-model="searchQuery" @update:modelValue="(value) => workflowStore.setSearch(value)"
+                class="min-w-[250px]" />
+            </div>
           </div>
-          <SearchBar
-            v-model="searchQuery"
-            @update:modelValue="(value) => workflowStore.setSearch(value)"
-          />
         </div>
-      </div>
 
-      <!-- Empty state -->
-      <EmptyState v-if="!workflowStore.filtered.length" message="No orders to display" />
+        <!-- Content Section -->
+        <div class="p-6">
+          <!-- Empty state -->
+          <EmptyState v-if="!workflowStore.filtered.length" class="bg-gray-50/50 rounded-xl p-8">
+            <template #icon>
+              <svg class="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </template>
+            <template #message>
+              <h3 class="mt-4 text-lg font-medium text-gray-900">No orders to approve</h3>
+              <p class="mt-1 text-gray-500">All orders have been processed</p>
+            </template>
+          </EmptyState>
 
-      <!-- Data table -->
-      <template v-else>
-        <DataTable
-          :headers="tableHeaders"
-          :items="workflowStore.paginatedOrders"
-          :sorting="workflowStore.sorting"
-          :sortBy="workflowStore.setSorting"
-          :onEdit="openOrderDetail"
-          :onDelete="confirmDelete"
-          :expandedRows="expandedRows"
-          :onRowClick="toggleRow"
-        >
-          <template #row="{ item }">
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
-              {{ item.id }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ item.orderItems?.length || 0 }} items
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ formatDate(item.orderTime) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-              {{ formatPrice(item.cost) }} Kč
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="{
-                  'bg-green-100 text-green-800': item.orderType === 'SELL',
-                  'bg-red-100 text-red-800': item.orderType === 'PURCHASE',
-                }"
-              >
-                {{ item.orderType }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="{
-                  'bg-yellow-100 text-yellow-800': item.status === 'PENDING',
-                  'bg-green-100 text-green-800': item.status === 'CONFIRMED',
-                  'bg-red-100 text-red-800': item.status === 'CANCELED',
-                }"
-              >
-                {{ item.status }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-              <button
-                @click.stop="openOrderDetail(item)"
-                class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                title="View Details"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-              </button>
-              <button
-                @click.stop="openOrderEdit(item)"
-                class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-blue-50"
-                title="Edit Order"
-              >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  x="0px"
-                  y="0px"
-                  class="w-5 h-5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M 18 2 L 15.585938 4.4140625 L 19.585938 8.4140625 L 22 6 L 18 2 z M 14.076172 5.9238281 L 3 17 L 3 21 L 7 21 L 18.076172 9.9238281 L 14.076172 5.9238281 z"
-                  ></path>
-                </svg>
-              </button>
-              <button
-                @click.stop="confirmDelete(item)"
-                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                title="Delete Order"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </td>
-          </template>
+          <!-- Data table -->
+          <template v-else>
+            <div class="relative rounded-xl overflow-hidden">
+              <div
+                class="max-h-[calc(100vh-20rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent">
+                <DataTable :headers="tableHeaders" :items="workflowStore.paginatedOrders" :sorting="workflowStore.sorting"
+                  :sortBy="workflowStore.setSorting" :onEdit="openOrderDetail" :onDelete="confirmDelete"
+                  :expandedRows="expandedRows" :onRowClick="toggleRow">
+                  <template #row="{ item }">
+                    <td class="px-4 py-3 text-sm sticky left-0 z-[1] bg-inherit">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center ring-1 ring-blue-100">
+                          <span class="text-blue-700 font-medium text-sm">#{{ item.id }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="font-medium text-gray-900">Order #{{ item.id }}</span>
+                          <span class="text-xs text-gray-500">{{ formatDate(item.orderTime) }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-blue-600/20">
+                        {{ item.orderItems?.length || 0 }} items
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                      {{ formatDate(item.orderTime) }}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                      <span class="font-medium text-gray-900">{{ formatPrice(item.cost) }} Kč</span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium" :class="{
+                        'bg-green-50 text-green-700 ring-1 ring-green-600/20': item.orderType === 'SELL',
+                        'bg-red-50 text-red-700 ring-1 ring-red-600/20': item.orderType === 'PURCHASE'
+                      }">
+                        {{ item.orderType }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" :class="{
+                        'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20': item.status === 'PENDING',
+                        'bg-green-50 text-green-700 ring-1 ring-green-600/20': item.status === 'CONFIRMED',
+                        'bg-red-50 text-red-700 ring-1 ring-red-600/20': item.status === 'CANCELED'
+                      }">
+                        <span class="w-1.5 h-1.5 rounded-full" :class="{
+                          'bg-yellow-500': item.status === 'PENDING',
+                          'bg-green-500': item.status === 'CONFIRMED',
+                          'bg-red-500': item.status === 'CANCELED'
+                        }"></span>
+                        {{ item.status }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-right">
+                      <div class="flex items-center justify-end gap-2">
+                        <button @click.stop="openOrderDetail(item)"
+                          class="p-1.5 text-blue-600 hover:text-blue-900 rounded-lg hover:bg-blue-50/80 transition-colors"
+                          title="View Details">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        <button @click.stop="openOrderEdit(item)"
+                          class="p-1.5 text-green-600 hover:text-green-900 rounded-lg hover:bg-green-50/80 transition-colors"
+                          title="Edit Order" :disabled="item.status !== 'PENDING'"
+                          :class="{ 'opacity-50 cursor-not-allowed': item.status !== 'PENDING' }">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button @click.stop="confirmDelete(item)"
+                          class="p-1.5 text-red-600 hover:text-red-900 rounded-lg hover:bg-red-50/80 transition-colors"
+                          title="Delete Order">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </template>
 
-          <template #expanded-content="{ item }">
-            <div class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200">
-              <div class="p-4">
-                <div class="flex items-center justify-between mb-3">
-                  <h4 class="text-sm font-medium text-gray-700">Order Items</h4>
-                  <button
-                    @click.stop="toggleRow(item.id)"
-                    class="p-1 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50/80 backdrop-blur-sm">
-                      <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">
-                          Product
-                        </th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">
-                          Quantity
-                        </th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Price</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                      <tr
-                        v-for="orderItem in item.orderItems"
-                        :key="orderItem.id"
-                        class="text-sm hover:bg-gray-50/80"
-                      >
-                        <td class="px-4 py-2 w-[40%]">
-                          <div class="text-gray-900 font-medium">{{ orderItem.name }}</div>
-                          <div class="text-xs text-gray-500">{{ orderItem.description }}</div>
-                        </td>
-                        <td class="px-4 py-2 w-[20%]">
-                          <div
-                            :class="{
-                              'text-red-600 font-medium':
-                                orderItem.needQuantity > orderItem.stockedQuantity,
-                              'text-gray-600': orderItem.needQuantity <= orderItem.stockedQuantity,
-                            }"
-                          >
-                            {{ orderItem.needQuantity }}
-                          </div>
-                          <div class="text-xs text-gray-500">
-                            Stock: {{ orderItem.stockedQuantity }}
-                          </div>
-                        </td>
-                        <td class="px-4 py-2 w-[20%] text-gray-600">
-                          {{ formatPrice(orderItem.buyoutPrice) }} Kč
-                        </td>
-                        <td class="px-4 py-2 w-[20%] font-medium text-gray-900">
-                          {{ formatPrice(orderItem.buyoutPrice * orderItem.needQuantity) }} Kč
-                        </td>
-                      </tr>
-                    </tbody>
-                    <tfoot class="bg-gray-50/80 backdrop-blur-sm">
-                      <tr>
-                        <td
-                          colspan="3"
-                          class="px-4 py-2 text-sm font-medium text-gray-700 text-right"
-                        >
-                          Total:
-                        </td>
-                        <td class="px-4 py-2 text-sm font-bold text-gray-900">
-                          {{ formatPrice(item.cost) }} Kč
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
+                  <template #expanded-content="{ item }">
+                    <div class="bg-gray-50/50 p-6 space-y-6">
+                      <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-medium text-gray-900">Order Items</h4>
+                        <button @click.stop="toggleRow(item.id)"
+                          class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-white/50 transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div class="bg-white rounded-xl ring-1 ring-gray-100 overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-50/80 backdrop-blur-sm">
+                            <tr>
+                              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Product</th>
+                              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Quantity</th>
+                              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Price</th>
+                              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-100">
+                            <tr v-for="orderItem in item.orderItems" :key="orderItem.id"
+                              class="text-sm hover:bg-gray-50/50 transition-colors">
+                              <td class="px-4 py-3 w-[40%]">
+                                <div class="flex items-center gap-3">
+                                  <div
+                                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center ring-1 ring-gray-200">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                      stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <div class="font-medium text-gray-900">{{ orderItem.name }}</div>
+                                    <div class="text-xs text-gray-500">{{ orderItem.description }}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td class="px-4 py-3 w-[20%]">
+                                <div :class="{
+                                  'text-red-600 font-medium': orderItem.needQuantity > orderItem.stockedQuantity,
+                                  'text-gray-700': orderItem.needQuantity <= orderItem.stockedQuantity
+                                }">
+                                  {{ orderItem.needQuantity }}
+                                </div>
+                                <div class="text-xs text-gray-500">Stock: {{ orderItem.stockedQuantity }}</div>
+                              </td>
+                              <td class="px-4 py-3 w-[20%] text-gray-700">
+                                {{ formatPrice(orderItem.buyoutPrice) }} Kč
+                              </td>
+                              <td class="px-4 py-3 w-[20%] font-medium text-gray-900">
+                                {{ formatPrice(orderItem.buyoutPrice * orderItem.needQuantity) }} Kč
+                              </td>
+                            </tr>
+                          </tbody>
+                          <tfoot class="bg-gray-50/80">
+                            <tr>
+                              <td colspan="3" class="px-4 py-3 text-sm font-medium text-gray-700 text-right">
+                                Total:
+                              </td>
+                              <td class="px-4 py-3 text-sm font-bold text-gray-900">
+                                {{ formatPrice(item.cost) }} Kč
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  </template>
+                </DataTable>
               </div>
             </div>
-          </template>
-        </DataTable>
 
-        <Pagination :store="useWorkflowStore" />
-      </template>
+            <!-- Pagination -->
+            <div class="mt-6">
+              <Pagination :store="useWorkflowStore" />
+            </div>
+          </template>
+        </div>
+      </div>
     </div>
 
     <!-- Order Details Modal -->
-    <Modal :show="isDetailModalOpen" @close="closeOrderDetail" title="Order Details">
-      <div v-if="selectedOrder" class="space-y-4">
+    <Modal :show="isDetailModalOpen" title="Order Detail" @close="closeOrderDetail">
+      <div v-if="selectedOrder" class="space-y-6">
         <!-- Header with close button -->
-        <div class="flex items-center justify-between pb-2 border-b border-gray-200">
-          <h6 class="text-xl font-bold text-gray-900"></h6>
-          <button
-            @click="closeOrderDetail"
-            class="p-1.5 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors"
-            title="Close"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Basic Information -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
-            <div class="flex items-center gap-1.5">
-              <span
-                class="px-2 py-0.5 text-xs font-medium rounded-full"
-                :class="{
-                  'bg-green-100 text-green-800': selectedOrder.orderType === 'SELL',
-                  'bg-red-100 text-red-800': selectedOrder.orderType === 'PURCHASE',
-                }"
-              >
+        <div class="flex items-center justify-between pb-4">
+          <div class="flex items-center gap-3">
+            <h3 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              Order Details
+            </h3>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium" :class="{
+                'bg-green-50 text-green-700 ring-1 ring-green-600/20': selectedOrder.orderType === 'SELL',
+                'bg-red-50 text-red-700 ring-1 ring-red-600/20': selectedOrder.orderType === 'PURCHASE'
+              }">
                 {{ selectedOrder.orderType }}
               </span>
-              <span
-                class="px-2 py-0.5 text-xs font-medium rounded-full"
-                :class="{
-                  'bg-yellow-100 text-yellow-800': selectedOrder.status === 'PENDING',
-                  'bg-green-100 text-green-800': selectedOrder.status === 'CONFIRMED',
-                  'bg-red-100 text-red-800': selectedOrder.status === 'CANCELED',
-                }"
-              >
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" :class="{
+                'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20': selectedOrder.status === 'PENDING',
+                'bg-green-50 text-green-700 ring-1 ring-green-600/20': selectedOrder.status === 'CONFIRMED',
+                'bg-red-50 text-red-700 ring-1 ring-red-600/20': selectedOrder.status === 'CANCELED'
+              }">
+                <span class="w-1.5 h-1.5 rounded-full" :class="{
+                  'bg-yellow-500': selectedOrder.status === 'PENDING',
+                  'bg-green-500': selectedOrder.status === 'CONFIRMED',
+                  'bg-red-500': selectedOrder.status === 'CANCELED'
+                }"></span>
                 {{ selectedOrder.status }}
               </span>
             </div>
           </div>
+          <button @click="closeOrderDetail"
+            class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-          <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-gray-500">Order ID</p>
-              <p class="text-base font-semibold text-gray-900">#{{ selectedOrder.id }}</p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-gray-500">Date</p>
-              <p class="text-base font-semibold text-gray-900">
-                {{ formatDate(selectedOrder.orderTime) }}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-gray-500">Items Count</p>
-              <p class="text-base font-semibold text-gray-900">
-                {{ selectedOrder.orderItems?.length || 0 }} items
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-gray-500">Total Amount</p>
-              <p class="text-lg font-bold text-gray-900">
-                {{ formatPrice(selectedOrder.cost) }} Kč
-              </p>
-            </div>
+        <!-- Order Information -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-4 rounded-xl bg-gray-50/50 ring-1 ring-gray-100">
+            <p class="text-sm font-medium text-gray-500">Order ID</p>
+            <p class="text-base font-semibold text-gray-900">#{{ selectedOrder.id }}</p>
+          </div>
+          <div class="p-4 rounded-xl bg-gray-50/50 ring-1 ring-gray-100">
+            <p class="text-sm font-medium text-gray-500">Date</p>
+            <p class="text-base font-semibold text-gray-900">
+              {{ formatDate(selectedOrder.orderTime) }}
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-gray-50/50 ring-1 ring-gray-100">
+            <p class="text-sm font-medium text-gray-500">Items Count</p>
+            <p class="text-base font-semibold text-gray-900">
+              {{ selectedOrder.orderItems?.length || 0 }} items
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-gray-50/50 ring-1 ring-gray-100">
+            <p class="text-sm font-medium text-gray-500">Total Amount</p>
+            <p class="text-lg font-bold text-gray-900">
+              {{ formatPrice(selectedOrder.cost) }} Kč
+            </p>
           </div>
         </div>
 
         <!-- Approval/Rejection Section -->
-        <div
-          v-if="selectedOrder.status === 'PENDING'"
-          class="space-y-4 pt-4 border-t border-gray-200"
-        >
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Decision</h3>
-          </div>
-
-          <div class="bg-white rounded-xl border border-gray-200">
+        <div v-if="selectedOrder.status === 'PENDING'" class="pt-4 border-t border-gray-100">
+          <div class="rounded-xl bg-gray-50/50 ring-1 ring-gray-100 overflow-hidden">
             <div class="p-4">
-              <BaseInput
-                v-model="modelComment"
-                type="textarea"
-                label="Comment"
-                placeholder="Enter your decision comment..."
-                :rows="3"
-              />
+              <h3 class="text-base font-semibold text-gray-900 mb-4">Decision</h3>
+              <BaseInput v-model="modelComment" type="textarea" label="Comment"
+                placeholder="Enter your decision comment..." :rows="3" />
             </div>
 
-            <div class="flex justify-end gap-2 px-4 py-3 bg-gray-50 rounded-b-xl">
-              <button
-                @click="rejectOrder"
-                class="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all disabled:opacity-50"
-                :disabled="workflowStore.loading"
-              >
+            <div class="flex justify-end gap-3 px-4 py-3 bg-gray-100/50">
+              <BaseButton :disabled="workflowStore.loading" type="error"
+                class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
+                @click="rejectOrder">
                 Reject Order
-              </button>
-              <button
-                @click="approveOrder"
-                class="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
-                :disabled="workflowStore.loading"
-              >
-                Approve Order
-              </button>
+              </BaseButton>
+              <BaseButton :disabled="workflowStore.loading" type="primary"
+                class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
+                @click="approveOrder">
+                Confirm Order
+              </BaseButton>
             </div>
           </div>
         </div>
 
         <!-- Approval History -->
-        <div
-          v-if="selectedOrder.status !== 'PENDING'"
-          class="space-y-4 pt-4 border-t border-gray-200"
-        >
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Approval History</h3>
-          </div>
+        <div v-if="selectedOrder.status !== 'PENDING'" class="pt-4 border-t border-gray-100">
+          <div class="rounded-xl bg-gray-50/50 ring-1 ring-gray-100 overflow-hidden">
+            <div class="p-4">
+              <h3 class="text-base font-semibold text-gray-900 mb-4">Approval History</h3>
 
-          <div class="bg-gray-50 rounded-xl divide-y divide-gray-200">
-            <div class="p-4 space-y-3">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-500">Status</span>
-                <span
-                  class="px-2 py-0.5 text-xs font-medium rounded-full"
-                  :class="{
-                    'bg-green-50 text-green-700 ring-1 ring-green-600/20':
-                      selectedOrder.status === 'CONFIRMED',
-                    'bg-red-50 text-red-700 ring-1 ring-red-600/20':
-                      selectedOrder.status === 'CANCELED',
-                  }"
-                >
-                  {{ selectedOrder.status }}
-                </span>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-500">Status</span>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" :class="{
+                    'bg-green-50 text-green-700 ring-1 ring-green-600/20': selectedOrder.status === 'CONFIRMED',
+                    'bg-red-50 text-red-700 ring-1 ring-red-600/20': selectedOrder.status === 'CANCELED'
+                  }">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="{
+                      'bg-green-500': selectedOrder.status === 'CONFIRMED',
+                      'bg-red-500': selectedOrder.status === 'CANCELED'
+                    }"></span>
+                    {{ selectedOrder.status }}
+                  </span>
+                </div>
+
+                <div v-if="selectedOrder.decisionTime" class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-500">Decision Time</span>
+                  <span class="text-sm text-gray-900">{{ formatDate(selectedOrder.decisionTime) }}</span>
+                </div>
+
+                <div v-if="selectedOrder.approvedBy" class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-500">Processed By</span>
+                  <span class="text-sm text-gray-900">
+                    {{ selectedOrder.approvedBy.firstName }} {{ selectedOrder.approvedBy.lastName }}
+                    <span class="text-gray-500">({{ selectedOrder.approvedBy.username }})</span>
+                  </span>
+                </div>
+
+                <div v-if="selectedOrder.comment" class="pt-3 mt-3 border-t border-gray-200">
+                  <span class="text-sm font-medium text-gray-500 block mb-2">Comment</span>
+                  <div class="p-3 rounded-lg bg-white/50 ring-1 ring-gray-100">
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ parsedComment }}</p>
+                  </div>
+                </div>
               </div>
-
-              <div v-if="selectedOrder.decisionTime" class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-500">Decision Time</span>
-                <span class="text-sm text-gray-900">{{
-                  formatDate(selectedOrder.decisionTime)
-                }}</span>
-              </div>
-
-              <div v-if="selectedOrder.approvedBy" class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-500">Processed By</span>
-                <span class="text-sm text-gray-900">
-                  {{ selectedOrder.approvedBy.firstName }} {{ selectedOrder.approvedBy.lastName }}
-                  <span class="text-gray-500">({{ selectedOrder.approvedBy.username }})</span>
-                </span>
-              </div>
-            </div>
-
-            <div v-if="selectedOrder.comment" class="p-4 space-y-2">
-              <span class="text-sm font-medium text-gray-500">Comment</span>
-              <p
-                class="mt-1 text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200 whitespace-pre-wrap"
-              >
-                {{ parsedComment }}
-              </p>
             </div>
           </div>
         </div>
@@ -414,6 +383,7 @@ import {
 } from '@/components'
 
 import { useErrorStore, useNotifier, useWorkflowStore, useOrdersStore } from '@/stores'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 import { useRouter } from 'vue-router'
 import { formatDate, formatPrice } from '@/utils'
@@ -428,7 +398,7 @@ const $stores = {
 }
 
 // Stores
-const errorStore = useErrorStore()
+const errors = useErrorStore()
 const ordersStore = useOrdersStore()
 const $notifier = useNotifier()
 const workflowStore = useWorkflowStore()
@@ -495,7 +465,7 @@ onMounted(async () => {
   try {
     await workflowStore.fetchOrders()
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 })
 
@@ -507,7 +477,7 @@ const openOrderDetail = async (order) => {
     approvalComment.value = ''
     isDetailModalOpen.value = true
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -526,7 +496,7 @@ const openOrderEdit = async (order) => {
 
     $router.push({ path: '/orders' })
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -537,7 +507,7 @@ const confirmDelete = async (order) => {
       $notifier.success('Order was successfully deleted')
       await workflowStore.fetchOrders()
     } catch (err) {
-      errorStore.handle(err)
+      errors.handle(err)
     }
   }
 }
@@ -554,7 +524,7 @@ const approveOrder = async () => {
       $notifier.success('Order was successfully approved')
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -569,7 +539,7 @@ const rejectOrder = async () => {
       $notifier.success('Order was successfully rejected')
     }
   } catch (err) {
-    errorStore.handle(err)
+    errors.handle(err)
   }
 }
 
@@ -582,4 +552,8 @@ const toggleRow = (id) => {
 }
 </script>
 
-<style scoped src="@/assets/WorkflowView.css" />
+<style scoped>
+.workflow-view {
+  @apply w-full h-full;
+}
+</style>

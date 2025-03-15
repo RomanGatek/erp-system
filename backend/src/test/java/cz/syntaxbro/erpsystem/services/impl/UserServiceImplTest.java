@@ -1,6 +1,6 @@
 package cz.syntaxbro.erpsystem.services.impl;
 
-import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import cz.syntaxbro.erpsystem.security.PasswordSecurity;
 import cz.syntaxbro.erpsystem.models.Role;
 import cz.syntaxbro.erpsystem.models.User;
@@ -23,8 +23,7 @@ class UserServiceImplTest {
     private UserServiceImpl userServiceImpl;
     private AutoCloseable autoCloseable;
     private User user;
-    private UserPartial userPartial;
-    private CreateUserRequest createUserRequest;
+    private UserRequest userRequest;
 
     @Mock
     private UserRepository userRepository;
@@ -41,8 +40,8 @@ class UserServiceImplTest {
         userServiceImpl = new UserServiceImpl(userRepository, roleRepository, passwordSecurity);
 
         user = new User(1L, "username", "1!Password", "firstName", "lastName", "email@email.com", null, true, Set.of());
-        userPartial = new UserPartial("username", "firstName", "lastName", "email@email.com", true, Set.of(), null);
-        createUserRequest = new CreateUserRequest("username", "1!Password", "email@email.com", "firstName", "lastName", true, Set.of("ROLE_USER"));
+        userRequest = new UserRequest("username", "firstName", "lastName", true, Set.of(), null);
+        new CreateUserRequest("username", "1!Password", "email@email.com", "firstName", "lastName", true, Set.of("ROLE_USER"));
     }
 
     @AfterEach
@@ -83,10 +82,10 @@ class UserServiceImplTest {
         when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(roleUser));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User updatedUser = userServiceImpl.updateUser(1L, userPartial);
+        User updatedUser = userServiceImpl.updateUser(1L, userRequest);
 
         assertNotNull(updatedUser);
-        assertEquals(userPartial.getUsername(), updatedUser.getUsername());
+        assertEquals(userRequest.getUsername(), updatedUser.getUsername());
         verify(userRepository, times(1)).save(any(User.class));
     }
 

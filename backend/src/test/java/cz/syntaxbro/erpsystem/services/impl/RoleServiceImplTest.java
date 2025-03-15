@@ -36,8 +36,8 @@ class RoleServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        role = new Role(1L, "ROLE_TEST", new HashSet<>());
-        permission = new Permission(1L, "TEST_PERMISSION", new HashSet<>());
+        role = new Role(1L, "ROLE_TEST", new HashSet<>(), null, null);
+        permission = new Permission(1L, "TEST_PERMISSION", new HashSet<>(), null, null);
     }
 
     @Test
@@ -47,7 +47,7 @@ class RoleServiceImplTest {
         List<Role> roles = roleService.getAllRoles();
 
         assertThat(roles).isNotNull().hasSize(1);
-        assertThat(roles.get(0).getName()).isEqualTo("ROLE_TEST");
+        assertThat(roles.getFirst().getName()).isEqualTo("ROLE_TEST");
 
         verify(roleRepository, times(1)).findAll();
     }
@@ -97,7 +97,7 @@ class RoleServiceImplTest {
     @Test
     void createRole_ShouldReturnNewRole() {
         when(roleRepository.existsByName("ROLE_NEW")).thenReturn(false);
-        when(roleRepository.save(any(Role.class))).thenReturn(new Role(2L, "ROLE_NEW", new HashSet<>()));
+        when(roleRepository.save(any(Role.class))).thenReturn(new Role(2L, "ROLE_NEW", new HashSet<>(), null, null));
 
         Role createdRole = roleService.createRole("ROLE_NEW");
 

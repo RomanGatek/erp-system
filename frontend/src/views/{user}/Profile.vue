@@ -1,153 +1,326 @@
 <template>
-  <div class="p-8">
-    <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 max-w-5xl mx-auto">
-      <!-- Header section -->
-      <div class="relative bg-gradient-to-r from-blue-600 to-blue-400 p-6">
-        <div class="flex items-center space-x-4">
-          <div class="relative">
-            <img
-              :src="meStore.user?.avatar || 'https://ui-avatars.com/api/?name=' + meStore.user?.firstName + '+' + meStore.user?.lastName"
-              class="w-16 h-16 rounded-full border-4 border-white/90 shadow-lg" :alt="meStore.user?.firstName" />
-            <button @click="removeAvatar"
-              class="absolute bottom-0 left-0 bg-red-500 rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-all group">
-              <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <button @click="triggerFileInput"
-              class="absolute bottom-0 right-0 bg-white/15 backdrop-blur-lg rounded-full p-1.5 shadow-lg hover:bg-white/25 transition-all group">
-              <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
+  <div class="min-h-screen bg-gray-50/50 backdrop-blur-sm py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+      <!-- Profile Header Card -->
+      <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 overflow-hidden mb-6">
+        <div class="relative h-32 bg-gradient-to-r from-blue-600 to-blue-400">
+          <div class="absolute -bottom-10 left-6 flex items-end space-x-4">
+            <div class="relative">
+              <img
+                :src="meStore.user?.avatar || 'https://ui-avatars.com/api/?name=' + meStore.user?.firstName + '+' + meStore.user?.lastName"
+                class="w-24 h-24 rounded-2xl border-4 border-white shadow-lg object-cover"
+                :alt="meStore.user?.firstName" />
+              <div class="absolute -right-1 -bottom-1 flex space-x-1">
+                <button @click="removeAvatar"
+                  class="bg-red-500 rounded-lg p-1.5 shadow-md hover:bg-red-600 transition-all text-white">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <button @click="triggerFileInput"
+                  class="bg-white rounded-lg p-1.5 shadow-md hover:bg-gray-50 transition-all text-gray-700">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+              <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
+            </div>
+            <div class="mb-3">
+              <h1 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                {{ meStore.user?.firstName }} {{ meStore.user?.lastName }}
+                <span class="text-sm font-normal opacity-90">@{{ meStore.user.username }}</span>
+              </h1>
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-white/90">{{ meStore.user?.email }}</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-white/10 backdrop-blur-sm" :class="getRoleStyle(highestRole)">
+                  {{ formatRole(highestRole) }}
+                </span>
+              </div>
+            </div>
           </div>
-          <div class="text-white">
-            <h1 class="text-xl font-bold">{{ meStore.user?.firstName }} {{ meStore.user?.lastName }}</h1>
-            <p class="text-blue-100 text-sm">{{ meStore.user?.email }}</p>
-            <div class="flex gap-2 mt-1.5">
-              <span v-for="role in meStore.user?.roles" :key="role.name"
-                class="px-2 py-0.5 rounded-full text-xs font-medium" :class="getRoleStyle(role.name)">
-                {{ formatRole(role.name) }}
-              </span>
+          <!-- Session Timer -->
+          <div class="absolute top-3 right-4">
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-2">
+              <div class="text-xs text-white/80">Session expires in</div>
+              <div :class="[
+                'text-xs font-mono px-2 py-0.5 rounded-md text-white',
+                remainingTime > 24 * 60 * 60 ? 'bg-green-400/20' :
+                  remainingTime > 60 * 60 ? 'bg-yellow-400/20' : 'bg-red-400/20'
+              ]">
+                {{ formatRemainingTime }}
+              </div>
             </div>
           </div>
         </div>
+        <div class="h-16"></div>
       </div>
 
-      <!-- Token expiration info -->
-      <div class="px-6 py-4 border-b bg-white/15 backdrop-blur-lg">
-        <div class="flex items-center justify-between">
-          <span class="text-gray-600 text-sm">Token expiration:</span>
-          <span :class="[
-            'font-mono px-3 py-1 rounded-full text-sm',
-            remainingTime > 24 * 60 * 60 ? 'bg-green-100 text-green-800' :
-              remainingTime > 60 * 60 ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-          ]">
-            {{ formatRemainingTime }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Profile settings -->
-      <div class="p-6">
-        <form @submit.prevent="updateProfile" class="space-y-6">
-          <div class="grid grid-cols-3 gap-10">
-            <!-- Personal information -->
-            <div class="col-span-2 space-y-6">
-              <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
-                <div class="h-0.5 flex-1 bg-gray-100 ml-4"></div>
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Personal Information -->
+          <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 p-6">
+            <div class="flex items-center mb-6">
+              <h2 class="text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">Personal Information</h2>
+              <div class="ml-4 h-px flex-1 bg-gray-100"></div>
+            </div>
+            <form @submit.prevent="updateProfile" class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <BaseInput v-model="reactiveProfile.firstName" label="First Name" placeholder="Your first name"
+                  :error="errors.firstName" class="text-sm" />
+                <BaseInput v-model="reactiveProfile.lastName" label="Last Name" placeholder="Your last name"
+                  :error="errors.lastName" class="text-sm" />
+                <BaseInput disabled v-model="reactiveProfile.email" type="email" label="Email Address"
+                  placeholder="your@email.com" :error="errors.email" class="text-sm" />
+                <BaseInput v-model="reactiveProfile.username" label="Username" placeholder="Username"
+                  :error="errors.username" class="text-sm" />
               </div>
 
-              <div class="grid grid-cols-2 gap-6">
-                <BaseInput v-model="profileForm.firstName" label="First Name" placeholder="Your first name"
-                  :error="serverErrors.firstName" />
-                <BaseInput v-model="profileForm.lastName" label="Last Name" placeholder="Your last name"
-                  :error="serverErrors.lastName" />
-                <BaseInput disabled v-model="profileForm.email" type="email" label="Email Address" placeholder="your@email.com"
-                  :error="serverErrors.email" />
-                <BaseInput v-model="profileForm.username" label="Username" placeholder="Username"
-                  :error="serverErrors.username" />
+              <!-- Action Buttons -->
+              <div class="flex justify-end space-x-3 pt-4">
+                <BaseButton type="secondary" @click="resetForm" size="sm">
+                  Reset
+                </BaseButton>
+                <BaseButton type="primary" @click="updateProfile" size="sm">
+                  Save Changes
+                </BaseButton>
               </div>
+            </form>
+
+            <!-- Password Change Collapsible -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+              <button @click="isPasswordChangeVisible = !isPasswordChangeVisible"
+                class="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                <span class="font-medium">Change Password</span>
+                <svg class="w-4 h-4 transition-transform duration-200"
+                  :class="{ 'rotate-180': isPasswordChangeVisible }" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <Transition enter-active-class="transition-all duration-300 ease-in-out"
+                leave-active-class="transition-all duration-200 ease-in-out"
+                enter-from-class="transform opacity-0 -translate-y-2"
+                enter-to-class="transform opacity-100 translate-y-0"
+                leave-from-class="transform opacity-100 translate-y-0"
+                leave-to-class="transform opacity-0 -translate-y-2">
+                <div v-show="isPasswordChangeVisible" class="mt-4 space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PasswordInput v-model="reactiveProfile.newPassword" label="New Password" placeholder="••••••••"
+                      :error="errors.newPassword" class="text-sm" />
+                    <PasswordInput v-model="reactiveProfile.confirmPassword" label="Confirm Password"
+                      placeholder="••••••••" :error="errors.confirmPassword" class="text-sm" />
+                  </div>
+                  <div class="flex justify-end">
+                    <BaseButton type="primary" @click="updatePassword" size="sm">
+                      Update Password
+                    </BaseButton>
+                  </div>
+                </div>
+              </Transition>
             </div>
 
-            <!-- Notifications -->
-            <div class="space-y-6">
-              <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-gray-900">Notifications</h2>
-                <div class="h-0.5 flex-1 bg-gray-100 ml-4"></div>
-              </div>
+            <!-- Privacy & Consents Collapsible -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+              <button @click="isPrivacyVisible = !isPrivacyVisible"
+                class="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                <span class="font-medium">Privacy & Consents</span>
+                <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': isPrivacyVisible }"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-              <div class="space-y-4 bg-gray-50 p-5 rounded-xl">
-                <BaseCheckbox v-model="profileForm.notifications.email" label="Email notifications" />
-                <BaseCheckbox v-model="profileForm.notifications.push" label="Push notifications" />
-              </div>
+              <Transition enter-active-class="transition-all duration-300 ease-in-out"
+                leave-active-class="transition-all duration-200 ease-in-out"
+                enter-from-class="transform opacity-0 -translate-y-2"
+                enter-to-class="transform opacity-100 translate-y-0"
+                leave-from-class="transform opacity-100 translate-y-0"
+                leave-to-class="transform opacity-0 -translate-y-2">
+                <div v-show="isPrivacyVisible" class="mt-4 space-y-3">
+                  <button @click="toggleConsent('marketing')" :class="[
+                    'w-full flex items-center p-3 rounded-xl transition-colors cursor-pointer ring-1',
+                    consents.marketing ? 'bg-emerald-50 ring-emerald-100 hover:bg-emerald-100/70' : 'bg-red-50 ring-red-100 hover:bg-red-100/70'
+                  ]">
+                    <div class="flex-1">
+                      <h3 class="text-sm font-medium" :class="consents.marketing ? 'text-emerald-900' : 'text-red-900'">
+                        Marketing Communications
+                      </h3>
+                      <p class="text-xs mt-0.5" :class="consents.marketing ? 'text-emerald-600' : 'text-red-600'">
+                        Receive marketing updates and newsletters
+                      </p>
+                    </div>
+                    <div class="flex items-center">
+                      <span class="text-xs font-medium mr-2"
+                        :class="consents.marketing ? 'text-emerald-600' : 'text-red-600'">
+                        {{ consents.marketing ? 'Consented' : 'Not Consented' }}
+                      </span>
+                      <div :class="[
+                        'w-2 h-2 rounded-full',
+                        consents.marketing ? 'bg-emerald-500' : 'bg-red-500'
+                      ]"></div>
+                    </div>
+                  </button>
+
+                  <button @click="toggleConsent('analytics')" :class="[
+                    'w-full flex items-center p-3 rounded-xl transition-colors cursor-pointer ring-1',
+                    consents.analytics ? 'bg-emerald-50 ring-emerald-100 hover:bg-emerald-100/70' : 'bg-red-50 ring-red-100 hover:bg-red-100/70'
+                  ]">
+                    <div class="flex-1">
+                      <h3 class="text-sm font-medium" :class="consents.analytics ? 'text-emerald-900' : 'text-red-900'">
+                        Analytics Tracking
+                      </h3>
+                      <p class="text-xs mt-0.5" :class="consents.analytics ? 'text-emerald-600' : 'text-red-600'">
+                        Allow usage analytics collection
+                      </p>
+                    </div>
+                    <div class="flex items-center">
+                      <span class="text-xs font-medium mr-2"
+                        :class="consents.analytics ? 'text-emerald-600' : 'text-red-600'">
+                        {{ consents.analytics ? 'Consented' : 'Not Consented' }}
+                      </span>
+                      <div :class="[
+                        'w-2 h-2 rounded-full',
+                        consents.analytics ? 'bg-emerald-500' : 'bg-red-500'
+                      ]"></div>
+                    </div>
+                  </button>
+
+                  <button @click="toggleConsent('thirdParty')" :class="[
+                    'w-full flex items-center p-3 rounded-xl transition-colors cursor-pointer ring-1',
+                    consents.thirdParty ? 'bg-emerald-50 ring-emerald-100 hover:bg-emerald-100/70' : 'bg-red-50 ring-red-100 hover:bg-red-100/70'
+                  ]">
+                    <div class="flex-1">
+                      <h3 class="text-sm font-medium"
+                        :class="consents.thirdParty ? 'text-emerald-900' : 'text-red-900'">
+                        Third-Party Data Sharing
+                      </h3>
+                      <p class="text-xs mt-0.5" :class="consents.thirdParty ? 'text-emerald-600' : 'text-red-600'">
+                        Allow sharing data with trusted partners
+                      </p>
+                    </div>
+                    <div class="flex items-center">
+                      <span class="text-xs font-medium mr-2"
+                        :class="consents.thirdParty ? 'text-emerald-600' : 'text-red-600'">
+                        {{ consents.thirdParty ? 'Consented' : 'Not Consented' }}
+                      </span>
+                      <div :class="[
+                        'w-2 h-2 rounded-full',
+                        consents.thirdParty ? 'bg-emerald-500' : 'bg-red-500'
+                      ]"></div>
+                    </div>
+                  </button>
+
+                  <div class="mt-4 pt-3 border-t border-gray-100">
+                    <p class="text-xs text-gray-500">
+                      Last updated: {{ formatConsentDate(consents.lastUpdated) }}
+                    </p>
+                    <a href="#" class="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block">
+                      View Privacy Policy
+                    </a>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </div>
+        </div>
 
-          <!-- Password change -->
-          <div class="pt-6 border-t">
-            <div class="flex items-center justify-between mb-6">
-              <h2 class="text-xl font-semibold text-gray-900">Change Password</h2>
-              <div class="h-0.5 flex-1 bg-gray-100 ml-4"></div>
+        <!-- Right Column -->
+        <div class="space-y-6">
+          <!-- Notification Settings -->
+          <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 p-6">
+            <div class="flex items-center mb-6">
+              <h2 class="text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">Notifications</h2>
+              <div class="ml-4 h-px flex-1 bg-gray-100"></div>
             </div>
+            <div class="space-y-3">
+              <button @click="reactiveProfile.notifications.email = !reactiveProfile.notifications.email" :class="[
+                'w-full flex items-center p-3 rounded-xl transition-colors cursor-pointer ring-1',
+                reactiveProfile.notifications.email ? 'bg-emerald-50 ring-emerald-100 hover:bg-emerald-100/70' : 'bg-red-50 ring-red-100 hover:bg-red-100/70'
+              ]">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium"
+                    :class="reactiveProfile.notifications.email ? 'text-emerald-900' : 'text-red-900'">
+                    Email Notifications
+                  </h3>
+                  <p class="text-xs mt-0.5" :class="reactiveProfile.notifications.email ? 'text-emerald-600' : 'text-red-600'">
+                    Receive updates via email
+                  </p>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-xs font-medium mr-2"
+                    :class="reactiveProfile.notifications.email ? 'text-emerald-600' : 'text-red-600'">
+                    {{ reactiveProfile.notifications.email ? 'Enabled' : 'Disabled' }}
+                  </span>
+                  <div :class="[
+                    'w-2 h-2 rounded-full',
+                    reactiveProfile.notifications.email ? 'bg-emerald-500' : 'bg-red-500'
+                  ]"></div>
+                </div>
+              </button>
 
-            <div class="flex items-start gap-6">
-              <div class="flex-1 grid grid-cols-2 gap-6">
-                <div class="min-h-[76px]">
-                  <PasswordInput v-model="profileForm.newPassword" label="New Password" placeholder="••••••••"
-                    :error="serverErrors.newPassword" />
-                  <p v-if="serverErrors.newPassword" class="text-xs text-red-500 mt-1">
-                    {{ serverErrors.newPassword }}
+              <button @click="reactiveProfile.notifications.push = !reactiveProfile.notifications.push" :class="[
+                'w-full flex items-center p-3 rounded-xl transition-colors cursor-pointer ring-1',
+                reactiveProfile.notifications.push ? 'bg-emerald-50 ring-emerald-100 hover:bg-emerald-100/70' : 'bg-red-50 ring-red-100 hover:bg-red-100/70'
+              ]">
+                <div class="flex-1">
+                  <h3 class="text-sm font-medium"
+                    :class="reactiveProfile.notifications.push ? 'text-emerald-900' : 'text-red-900'">
+                    Push Notifications
+                  </h3>
+                  <p class="text-xs mt-0.5" :class="reactiveProfile.notifications.push ? 'text-emerald-600' : 'text-red-600'">
+                    Receive instant updates
                   </p>
                 </div>
-                <div class="min-h-[76px]">
-                  <PasswordInput v-model="profileForm.confirmPassword" label="Confirm Password" placeholder="••••••••"
-                    :error="serverErrors.confirmPassword" />
-                  <p v-if="serverErrors.confirmPassword" class="text-xs text-red-500 mt-1">
-                    {{ serverErrors.confirmPassword }}
-                  </p>
-                </div>
-              </div>
-              <button type="button" @click="updatePassword"
-                class="group px-3 py-2.5 mt-7 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden whitespace-nowrap">
-                <span class="relative z-10">Apply Change</span>
-                <div
-                  class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="flex items-center">
+                  <span class="text-xs font-medium mr-2"
+                    :class="reactiveProfile.notifications.push ? 'text-emerald-600' : 'text-red-600'">
+                    {{ reactiveProfile.notifications.push ? 'Enabled' : 'Disabled' }}
+                  </span>
+                  <div :class="[
+                    'w-2 h-2 rounded-full',
+                    reactiveProfile.notifications.push ? 'bg-emerald-500' : 'bg-red-500'
+                  ]"></div>
                 </div>
               </button>
             </div>
           </div>
 
-          <!-- Add general error message display -->
-          <div v-if="serverErrors.general" class="text-sm text-red-600 text-center mt-4">
-            {{ serverErrors.general }}
-          </div>
-
-          <!-- Action buttons -->
-          <div class="flex justify-end space-x-4 pt-6 border-t">
-            <button type="button" @click="resetForm"
-              class="group px-6 py-3 bg-white/15 backdrop-blur-lg text-gray-700 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden">
-              <span class="relative z-10">Cancel Changes</span>
-              <div
-                class="!bg-red-200 absolute inset-0 bg-gradient-to-r from-gray-500/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <!-- Recent Activity -->
+          <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100/50 p-6">
+            <div class="flex items-center mb-6">
+              <h2 class="text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">Recent Activity</h2>
+              <div class="ml-4 h-px flex-1 bg-gray-100"></div>
+            </div>
+            <div class="space-y-3">
+              <div v-if="!recentActivity?.length" class="text-center py-6 text-gray-500 text-sm">
+                No recent activity
               </div>
-            </button>
-            <button type="submit"
-              class="group px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden">
-              <span class="relative z-10">Save Changes</span>
-              <div
-                class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div v-else v-for="activity in recentActivity" :key="activity.id"
+                class="flex items-start space-x-3 p-3 rounded-xl bg-gray-50/80 ring-1 ring-gray-100">
+                <div class="flex-shrink-0">
+                  <div :class="[
+                    'w-8 h-8 rounded-xl flex items-center justify-center',
+                    getActivityTypeStyle(activity.type)
+                  ]">
+                    <i :class="getActivityIcon(activity.type)" class="text-sm"></i>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-sm text-gray-900">{{ activity.title }}</p>
+                  <p class="text-xs text-gray-600 mt-0.5">{{ activity.description }}</p>
+                  <p class="text-xs text-gray-400 mt-1">{{ formatActivityDate(activity.timestamp) }}</p>
+                </div>
               </div>
-            </button>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
@@ -157,12 +330,13 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useMeStore } from '@/stores/me.store.js'
 import { notify } from '@kyvg/vue3-notification'
-import {
-  BaseInput,
-  BaseCheckbox,
-  PasswordInput
-} from '@/components'
+import { BaseInput, BaseCheckbox, PasswordInput } from '@/components'
+import BaseButton from '@/components/common/BaseButton.vue'
 import { jwtDecode } from 'jwt-decode'
+import { format } from 'date-fns'
+import { Transition } from 'vue'
+import { useErrorStore } from '@/stores/errors.store.js'
+import { $reactive } from '@/utils/index.js'
 
 defineOptions({
   name: 'ProfileView'
@@ -170,8 +344,10 @@ defineOptions({
 
 const meStore = useMeStore()
 const fileInput = ref(null)
+const recentActivity = ref([])
 
-const profileForm = reactive({
+const errors = useErrorStore()
+const reactiveProfile = $reactive({
   firstName: '',
   lastName: '',
   email: '',
@@ -183,6 +359,19 @@ const profileForm = reactive({
     email: true,
     push: true
   }
+})
+
+// Validate fields for error store
+errors.validateField(reactiveProfile.$cleaned())
+
+const isPasswordChangeVisible = ref(false)
+const isPrivacyVisible = ref(false)
+
+const consents = reactive({
+  marketing: false,
+  analytics: true,
+  thirdParty: false,
+  lastUpdated: new Date()
 })
 
 // JWT token remaining time
@@ -200,7 +389,7 @@ const formatRemainingTime = computed(() => {
 
   if (hours > 24) {
     const days = Math.floor(hours / 24)
-    return `${days} ${days === 1 ? 'den' : days < 5 ? 'dny' : 'dní'}`
+    return `${days} ${days === 1 ? 'day' : days < 5 ? 'days' : 'days'}`
   }
   if (hours > 0) {
     return `${hours}h ${minutes}m`
@@ -212,6 +401,49 @@ const formatRole = (role) => {
   return role.replace('ROLE_', '').toLowerCase()
 }
 
+const highestRole = computed(() => {
+  const roles = meStore.user?.roles?.map(r => r.name) || []
+  if (roles.includes('ROLE_ADMIN')) return 'ROLE_ADMIN'
+  if (roles.includes('ROLE_MANAGER')) return 'ROLE_MANAGER'
+  if (roles.includes('ROLE_USER')) return 'ROLE_USER'
+  return 'ROLE_GUEST'
+})
+
+const getRoleStyle = (roleName) => {
+  const roleStyles = {
+    'ROLE_ADMIN': 'bg-red-400/20 text-red-700',
+    'ROLE_MANAGER': 'bg-blue-400/20 text-blue-700',
+    'ROLE_USER': 'bg-green-400/20 text-green-700',
+    'ROLE_GUEST': 'bg-gray-400/20 text-gray-700'
+  }
+  return roleStyles[roleName] || 'bg-gray-400/20 text-gray-700'
+}
+
+const getActivityTypeStyle = (type) => {
+  const styles = {
+    login: 'bg-blue-100 text-blue-600',
+    update: 'bg-green-100 text-green-600',
+    security: 'bg-yellow-100 text-yellow-600',
+    error: 'bg-red-100 text-red-600'
+  }
+  return styles[type] || styles.update
+}
+
+const getActivityIcon = (type) => {
+  const icons = {
+    login: 'fas fa-sign-in-alt',
+    update: 'fas fa-sync',
+    security: 'fas fa-shield-alt',
+    error: 'fas fa-exclamation-triangle'
+  }
+  return icons[type] || icons.update
+}
+
+const formatActivityDate = (date) => {
+  return format(new Date(date), 'MMM d, yyyy HH:mm')
+}
+
+// Existing functions
 const triggerFileInput = () => {
   fileInput.value.click()
 }
@@ -220,7 +452,6 @@ const handleAvatarChange = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // Validate file type and size
   if (!file.type.startsWith('image/')) {
     notify({
       type: 'error',
@@ -240,8 +471,6 @@ const handleAvatarChange = async (event) => {
   const formData = new FormData()
   formData.append('avatar', file)
 
-  console.log(file);
-
   try {
     await meStore.updateAvatar(formData)
     notify({
@@ -249,7 +478,6 @@ const handleAvatarChange = async (event) => {
       text: 'Avatar updated successfully'
     })
   } catch (error) {
-    console.error('Upload error:', error)
     notify({
       type: 'error',
       text: error.response?.data?.message || 'Failed to update avatar'
@@ -257,136 +485,66 @@ const handleAvatarChange = async (event) => {
   }
 }
 
-// Add server errors state
-const serverErrors = ref({
-  firstName: '',
-  lastName: '',
-  avatar: '',
-  email: '',
-  username: '',
-  newPassword: '',
-  confirmPassword: '',
-  general: ''
-})
-
-// Clear server errors function
-const clearServerErrors = () => {
-  serverErrors.value = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    avatar: '',
-    username: '',
-    newPassword: '',
-    confirmPassword: '',
-    general: ''
-  }
-}
-
-// Handle server validation errors
-const handleServerValidationErrors = (error) => {
-  clearServerErrors()
-
-  if (!error.response?.data) {
-    serverErrors.value.general = 'An unexpected error occurred'
-    return
-  }
-
-  const data = error?.response?.data || null;
-
-  console.error(data)
-
-  if (data) {
-    if (Array.isArray(data)) {
-      data.forEach(e => {
-        const { field, message } = e
-        if (field === 'password') {
-          serverErrors.value['newPassword'] = message
-        } else if (field) {
-          serverErrors.value[field] = message
-        } else {
-          serverErrors.value.general = message
-        }
-      });
-    } else {
-      const { field, message } = data
-      if (field === 'password') {
-        serverErrors.value['newPassword'] = message
-      } else if (field) {
-        serverErrors.value[field] = message
-      } else {
-        serverErrors.value.general = message
-      }
-    }
-  }
-}
-
 const updateProfile = async () => {
-  clearServerErrors()
-
-  if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
-    serverErrors.value.confirmPassword = 'Passwords do not match'
-    return
-  }
+  errors.clearServerErrors()
 
   try {
-    await meStore.updateProfile({
-      firstName: profileForm.firstName,
-      lastName: profileForm.lastName,
-      email: profileForm.email,
-      username: profileForm.username,
-      ...(profileForm.newPassword && {
-        newPassword: profileForm.newPassword
-      })
-    })
+    const profileData = {
+      firstName: reactiveProfile.firstName,
+      lastName: reactiveProfile.lastName,
+      email: meStore.user?.email,
+      username: reactiveProfile.username
+    }
 
-    notify({
-      type: 'success',
-      text: 'Profile was successfully updated'
-    })
-  } catch (error) {
-    handleServerValidationErrors(error)
-    notify({
-      type: 'error',
-      text: serverErrors.value.general || 'Failed to update profile'
-    })
+    await meStore.updateProfile(profileData)
+    if (!meStore.error) {
+      notify({
+        type: 'success',
+        text: 'Profile updated successfully'
+      })
+    } else {
+      errors.handle(meStore.error)
+    }
+  } catch (err) {
+    errors.handle(err)
+    console.error(err)
   }
 }
 
 const updatePassword = async () => {
-  clearServerErrors()
+  errors.clearServerErrors()
 
-  if (!profileForm.newPassword || !profileForm.confirmPassword) {
-    serverErrors.value.general = 'Please fill in all password fields'
+  if (!reactiveProfile.newPassword || !reactiveProfile.confirmPassword) {
+    errors.newPassword = 'Please fill in all password fields'
     return
   }
 
-  if (profileForm.newPassword !== profileForm.confirmPassword) {
-    serverErrors.value.confirmPassword = 'Passwords do not match'
+  if (reactiveProfile.newPassword !== reactiveProfile.confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match'
     return
   }
 
   try {
-    await meStore.updatePassword(profileForm.newPassword)
-
-    notify({
-      type: 'success',
-      text: 'Password successfully updated'
-    })
-
-    profileForm.newPassword = ''
-    profileForm.confirmPassword = ''
-  } catch (error) {
-    handleServerValidationErrors(error)
-    notify({
-      type: 'error',
-      text: serverErrors.value.general || 'Failed to update password'
-    })
+    await meStore.updatePassword(reactiveProfile.newPassword)
+    if (!meStore.error) {
+      notify({
+        type: 'success',
+        text: 'Password updated successfully'
+      })
+      reactiveProfile.newPassword = ''
+      reactiveProfile.confirmPassword = ''
+    } else {
+      errors.handle(meStore.error)
+    }
+  } catch (err) {
+    errors.handle(err)
+    console.error(err)
   }
 }
 
 const resetForm = () => {
-  Object.assign(profileForm, {
+  errors.clearServerErrors()
+  reactiveProfile.$assign({
     firstName: meStore.user?.firstName || '',
     lastName: meStore.user?.lastName || '',
     email: meStore.user?.email || '',
@@ -396,47 +554,84 @@ const resetForm = () => {
   })
 }
 
-onMounted(() => {
-  resetForm()
-})
-
-// Přidáme helper pro styly rolí
-const getRoleStyle = (roleName) => {
-  const roleStyles = {
-    'ROLE_ADMIN': ['bg-red-100', 'text-red-800'],
-    'ROLE_MANAGER': ['bg-blue-100', 'text-blue-800'],
-    'ROLE_USER': ['bg-green-100', 'text-green-800']
-  }
-  return roleStyles[roleName] || ['bg-gray-100', 'text-gray-800']
-}
-
-// Clear server errors on input change
-watch(() => profileForm, () => {
-  clearServerErrors()
-}, { deep: true })
-
 const removeAvatar = async () => {
   try {
     await meStore.updateProfile({
-      ...profileForm,
-      avatar: null // Set avatar to null
-    });
+      ...reactiveProfile,
+      avatar: null
+    })
     notify({
       type: 'success',
       text: 'Avatar removed successfully'
-    });
+    })
   } catch (error) {
-    console.error('Remove error:', error);
     notify({
       type: 'error',
       text: error.response?.data?.message || 'Failed to remove avatar'
-    });
+    })
   }
 }
+
+// Mock function to fetch activity - replace with actual API call
+const fetchRecentActivity = async () => {
+  try {
+    // TODO: Replace with actual API call
+    const response = await fetch('/api/user/activity')
+    recentActivity.value = await response.json()
+  } catch (error) {
+    console.error('Failed to fetch activity:', error)
+  }
+}
+
+const toggleConsent = async (type) => {
+  try {
+    // TODO: Add API call to update consent
+    consents[type] = !consents[type]
+    consents.lastUpdated = new Date()
+
+    notify({
+      type: 'success',
+      text: `${type.charAt(0).toUpperCase() + type.slice(1)} consent updated successfully`
+    })
+  } catch (error) {
+    notify({
+      type: 'error',
+      text: 'Failed to update consent'
+    })
+  }
+}
+
+const formatConsentDate = (date) => {
+  return format(new Date(date), 'MMM d, yyyy HH:mm')
+}
+
+onMounted(() => {
+  resetForm()
+  fetchRecentActivity()
+})
+
+watch(() => reactiveProfile, () => {
+  const fields = ['firstName', 'lastName', 'email', 'username', 'newPassword', 'confirmPassword']
+  fields.forEach(field => {
+    if (reactiveProfile[field] !== undefined) {
+      errors.clear(field)
+    }
+  })
+}, { deep: true })
 </script>
 
 <style scoped>
-.bg-white {
-  overflow: hidden;
+/* Remove all styles since we're using Tailwind classes directly */
+
+/* Transition for password change panel */
+.password-change-enter-active,
+.password-change-leave-active {
+  transition: all 0.3s ease;
+}
+
+.password-change-enter-from,
+.password-change-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

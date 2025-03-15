@@ -67,14 +67,14 @@ class OrderRepositoryTest {
                 .description("test products")
                 .build());
 
-        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", productCategoryOne);
-        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", productCategoryTwo);
+        productOne = new Product(null, "ProductOne", 100.0, 100.0, "ProductOne", null, productCategoryOne);
+        Product productTwo = new Product(null, "ProductTwo", 200.0, 2000.0, "ProductTwo", null, productCategoryTwo);
         productOne = productRepository.save(productOne);
         productTwo = productRepository.save(productTwo);
 
         // Create inventory items from products
-        InventoryItem inventoryItemOne = new InventoryItem(null, productOne, 100, LocalDateTime.now());
-        InventoryItem inventoryItemTwo = new InventoryItem(null, productTwo, 200, LocalDateTime.now());
+        InventoryItem inventoryItemOne = new InventoryItem(null, productOne, 100, LocalDateTime.now(), null);
+        InventoryItem inventoryItemTwo = new InventoryItem(null, productTwo, 200, LocalDateTime.now(), null);
         inventoryItemOne = inventoryRepository.save(inventoryItemOne);
         inventoryItemTwo = inventoryRepository.save(inventoryItemTwo);
 

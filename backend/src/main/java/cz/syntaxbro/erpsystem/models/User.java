@@ -1,12 +1,15 @@
 package cz.syntaxbro.erpsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.HashSet;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -58,6 +61,11 @@ public class User {
     )
     private Set<Role> roles;
 
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
     @Override
     public String toString() {
         return "User{" + "id=" + id +
@@ -70,5 +78,25 @@ public class User {
                 ", active=" + active +
                 ", roles=" + roles +
                 '}';
+    }
+
+    public void map(UserRequest partial) {
+        this.firstName = partial.getFirstName();
+        this.lastName = partial.getLastName();
+        this.avatar = partial.getAvatar();
+        this.active = partial.isActive();
+        this.username = partial.getUsername();
+    }
+
+    public User(Long id, String username, String password, String firstName, String lastName, String email, String avatar, boolean active, Set<Role> roles) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.avatar = avatar;
+        this.active = active;
+        this.roles = roles;
     }
 }

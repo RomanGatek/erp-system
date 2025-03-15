@@ -7,8 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
@@ -33,7 +35,16 @@ public class InventoryItem {
 
     @PositiveOrZero(message = "Item quantity must be zero or positive")
     @Column(name = "stocked_amount")
-    private int stockedAmount;
+    private double stockedAmount;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public InventoryItem(int stockedAmount, Product product, Long id) {
+        this.stockedAmount = stockedAmount;
+        this.product = product;
+        this.id = id;
+    }
 }

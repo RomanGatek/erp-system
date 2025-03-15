@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.services;
 import cz.syntaxbro.erpsystem.models.InventoryItem;
 import cz.syntaxbro.erpsystem.models.Product;
 import cz.syntaxbro.erpsystem.repositories.InventoryRepository;
+import cz.syntaxbro.erpsystem.requests.InventoryItemRequest;
 import cz.syntaxbro.erpsystem.services.impl.InventoryServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,10 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,6 +22,9 @@ public class InventoryServiceTest {
     @Mock
     private InventoryRepository inventoryRepository;
 
+    @Mock
+    private ProductService productService;
+
     @InjectMocks
     private InventoryServiceImpl inventoryService;
 
@@ -32,6 +32,7 @@ public class InventoryServiceTest {
 
     private Product product;
 
+    private InventoryItemRequest itemRequest;
     @BeforeEach
     void setUp() {
         this.product = Product.builder()
@@ -42,18 +43,28 @@ public class InventoryServiceTest {
                 .purchasePrice(20)
                 .build();
 
+
         this.item1 = InventoryItem.builder()
                 .id(1L)
                 .product(this.product)
                 .stockedAmount(10)
                 .build();
+
+        this.itemRequest = InventoryItemRequest.builder()
+                .id(1L)
+                .productId(product.getId())
+                .stockedAmount(10)
+                .build();
+
+
     }
 
     @Test
     void testAddItem() {
-        when(inventoryRepository.save(item1)).thenReturn(item1);
+        when(productService.getProductById(product.getId())).thenReturn(product);
+        when(inventoryRepository.save(any(InventoryItem.class))).thenReturn(item1);
 
-        InventoryItem result = inventoryService.addItem(item1);
+        InventoryItem result = inventoryService.addItem(itemRequest);
 
         assertNotNull(result);
         assertEquals(item1.getId(), result.getId());

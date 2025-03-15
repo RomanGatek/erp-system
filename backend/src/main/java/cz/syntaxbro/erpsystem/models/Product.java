@@ -9,6 +9,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
@@ -35,10 +39,26 @@ public class Product {
     private double purchasePrice;
 
     private String description;
+    private String image;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
     @NotNull(message = "Category can't be null or empty")
     @JsonManagedReference
     private ProductCategory productCategory;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public Product(Long id, String name, double buyoutPrice, double purchasePrice, String description, String image, ProductCategory productCategory) {
+        this.id = id;
+        this.name = name;
+        this.buyoutPrice = buyoutPrice;
+        this.purchasePrice = purchasePrice;
+        this.description = description;
+        this.image = image;
+        this.productCategory = productCategory;
+    }
 }

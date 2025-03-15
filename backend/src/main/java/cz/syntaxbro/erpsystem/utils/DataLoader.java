@@ -66,9 +66,9 @@ public class DataLoader implements CommandLineRunner {
         Permission approveBudgets = createPermissionIfNotExists("APPROVE_BUDGETS");
         Permission viewProfile = createPermissionIfNotExists("VIEW_PROFILE");
 
-        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", Set.of(readReports, approveBudgets));
         Role managerRole = createRoleIfNotExists("ROLE_MANAGER", Set.of(readReports));
         Role userRole = createRoleIfNotExists("ROLE_USER", Set.of(viewProfile));
+        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", Set.of(readReports, approveBudgets));
 
         // Create users
         createUserIfNotExists(
@@ -91,35 +91,106 @@ public class DataLoader implements CommandLineRunner {
         );
 
         createProductCategoryIfNotExists();
+
         @SuppressWarnings("OptionalGetWithoutIsPresent") ProductCategory defaultCategory = productCategoryRepository.findByName("default").get();
 
-        // Create sample products
-        createProductIfNotExists("Milka Chocolate 200g", 52.2, 52.2, "Milk chocolate bar", defaultCategory);
-        createProductIfNotExists("Black Tea", 22.2, 22.2, "Premium black tea", defaultCategory);
-        createProductIfNotExists("Semi-skimmed Milk", 19.90, 19.90, "Fresh dairy milk", defaultCategory);
-        createProductIfNotExists("Rye Bread", 34.5, 34.5, "Fresh baked bread", defaultCategory);
-        createProductIfNotExists("Butter 250g", 49.9, 49.9, "Farm butter", defaultCategory);
-        createProductIfNotExists("Apples 1kg", 29.99, 29.99, "Fresh local apples", defaultCategory);
-        createProductIfNotExists("Bananas 1kg", 26.5, 26.5, "Ripe bananas", defaultCategory);
-        createProductIfNotExists("Beef Steak 300g", 159.0, 159.0, "Premium beef", defaultCategory);
-        createProductIfNotExists("Chicken Breast 500g", 89.9, 89.9, "Fresh chicken", defaultCategory);
-        createProductIfNotExists("Bread Roll", 3.5, 3.5, "Crispy roll", defaultCategory);
-        createProductIfNotExists("Edam Cheese 100g", 24.0, 24.0, "Mild cheese", defaultCategory);
-        createProductIfNotExists("Ham 100g", 32.9, 32.9, "Quality ham", defaultCategory);
-        createProductIfNotExists("Oranges 1kg", 45.0, 45.0, "Juicy oranges", defaultCategory);
-        createProductIfNotExists("Coffee Beans 250g", 149.0, 149.0, "Strong coffee", defaultCategory);
-        createProductIfNotExists("Spaghetti 500g", 32.5, 32.5, "Italian pasta", defaultCategory);
-        createProductIfNotExists("Basmati Rice 1kg", 69.0, 69.0, "Aromatic rice", defaultCategory);
-        createProductIfNotExists("Olive Oil 500ml", 129.0, 129.0, "Extra virgin", defaultCategory);
-        createProductIfNotExists("Ketchup 500g", 39.9, 39.9, "Tomato ketchup", defaultCategory);
-        createProductIfNotExists("Mustard 200g", 19.9, 19.9, "Traditional mustard", defaultCategory);
-        createProductIfNotExists("Chocolate Bar", 14.5, 14.5, "Sweet treat", defaultCategory);
-        createProductIfNotExists("Potatoes 2kg", 49.9, 49.9, "Local potatoes", defaultCategory);
-        createProductIfNotExists("Onions 1kg", 22.9, 22.9, "Quality onions", defaultCategory);
-        createProductIfNotExists("Garlic 200g", 29.5, 29.5, "Aromatic garlic",defaultCategory);
-        createProductIfNotExists("Strawberry Yogurt 150g", 15.9, 15.9, "Creamy yogurt", defaultCategory);
-        createProductIfNotExists("Toilet Paper 8pcs", 89.9, 89.9, "Soft and strong", defaultCategory);
+        // Get all categories
+        ProductCategory electronics = productCategoryRepository.findByName("Electronics")
+                .orElseThrow(() -> new RuntimeException("Electronics category not found"));
+        ProductCategory food = productCategoryRepository.findByName("Food")
+                .orElseThrow(() -> new RuntimeException("Food category not found"));
+        ProductCategory clothing = productCategoryRepository.findByName("Clothing")
+                .orElseThrow(() -> new RuntimeException("Clothing category not found"));
+        ProductCategory home = productCategoryRepository.findByName("Home")
+                .orElseThrow(() -> new RuntimeException("Home category not found"));
+        ProductCategory sports = productCategoryRepository.findByName("Sports")
+                .orElseThrow(() -> new RuntimeException("Sports category not found"));
 
+        // Electronics products
+        createProductIfNotExists("Smartphone X12", 12999.0, 9999.0, "Latest smartphone model", electronics, 
+            "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500");
+        createProductIfNotExists("Laptop Pro", 24999.0, 19999.0, "Professional laptop", electronics,
+            "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500");
+        createProductIfNotExists("Wireless Earbuds", 2499.0, 1799.0, "Premium wireless earbuds", electronics,
+            "https://images.unsplash.com/photo-1605464315542-bda3e2f4e605?w=500");
+        createProductIfNotExists("Smart Watch", 4999.0, 3499.0, "Fitness tracking smartwatch", electronics,
+            "https://images.unsplash.com/photo-1544117519-31a4b719223d?w=500");
+        createProductIfNotExists("4K TV 55\"", 15999.0, 12999.0, "Ultra HD Smart TV", electronics,
+            "https://images.unsplash.com/photo-1461151304267-38535e780c79?w=500");
+
+        // Food products
+        createProductIfNotExists("Organic Quinoa 500g", 129.0, 89.0, "Premium organic quinoa", food,
+            "https://images.unsplash.com/photo-1612257999756-61d5740f1207?w=500");
+        createProductIfNotExists("Extra Virgin Olive Oil 1L", 299.0, 199.0, "Premium Italian olive oil", food,
+            "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500");
+        createProductIfNotExists("Dark Chocolate 85% 100g", 89.0, 59.0, "Premium dark chocolate", food,
+            "https://images.unsplash.com/photo-1623428454614-a8d669f6c7a3?w=500");
+        createProductIfNotExists("Matcha Green Tea 50g", 249.0, 179.0, "Japanese ceremonial grade matcha", food,
+            "https://images.unsplash.com/photo-1582793988951-9aed5509eb97?w=500");
+        createProductIfNotExists("Truffle Oil 100ml", 399.0, 299.0, "Black truffle infused oil", food,
+            "https://images.unsplash.com/photo-1589476993333-f55b84301219?w=500");
+
+        // Clothing products
+        createProductIfNotExists("Designer Jeans", 1999.0, 1299.0, "Premium denim jeans", clothing,
+            "https://images.unsplash.com/photo-1604176354204-9268737828e4?w=500");
+        createProductIfNotExists("Leather Jacket", 4999.0, 3499.0, "Genuine leather jacket", clothing,
+            "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500");
+        createProductIfNotExists("Cotton T-Shirt", 499.0, 299.0, "100% organic cotton t-shirt", clothing,
+            "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=500");
+        createProductIfNotExists("Winter Coat", 3999.0, 2799.0, "Warm winter coat", clothing,
+            "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=500");
+        createProductIfNotExists("Running Shoes", 2499.0, 1799.0, "Professional running shoes", clothing,
+            "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500");
+
+        // Home products
+        createProductIfNotExists("Coffee Maker", 2999.0, 1999.0, "Premium coffee machine", home,
+            "https://images.unsplash.com/photo-1619067517755-40b01fdfb44e?w=500");
+        createProductIfNotExists("Bed Sheets Set", 1499.0, 999.0, "100% Egyptian cotton", home,
+            "https://images.unsplash.com/photo-1584100936595-c0654b55a2e6?w=500");
+        createProductIfNotExists("Kitchen Knife Set", 1999.0, 1499.0, "Professional knife set", home,
+            "https://images.unsplash.com/photo-1593618998160-c51d7956073f?w=500");
+        createProductIfNotExists("Air Purifier", 3999.0, 2999.0, "HEPA air purifier", home,
+            "https://images.unsplash.com/photo-1626436629565-8a147b9871f1?w=500");
+        createProductIfNotExists("Robot Vacuum", 7999.0, 5999.0, "Smart robot vacuum cleaner", home,
+            "https://images.unsplash.com/photo-1620962178716-e7981c8bef89?w=500");
+
+        // Sports products
+        createProductIfNotExists("Yoga Mat", 799.0, 499.0, "Professional yoga mat", sports,
+            "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?w=500");
+        createProductIfNotExists("Dumbbell Set", 1999.0, 1499.0, "Adjustable dumbbell set", sports,
+            "https://images.unsplash.com/photo-1586401100295-7a8096fd231a?w=500");
+        createProductIfNotExists("Tennis Racket", 2499.0, 1799.0, "Professional tennis racket", sports,
+            "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=500");
+        createProductIfNotExists("Basketball", 599.0, 399.0, "Official size basketball", sports,
+            "https://images.unsplash.com/photo-1494199505258-5f95387f933c?w=500");
+        createProductIfNotExists("Cycling Helmet", 999.0, 699.0, "Safety certified helmet", sports,
+            "https://images.unsplash.com/photo-1557803056-3ff8c92d103e?w=500");
+
+        createProductIfNotExists("Milka Chocolate 200g", 52.2, 52.2, "Milk chocolate bar", defaultCategory, null);
+        createProductIfNotExists("Black Tea", 22.2, 22.2, "Premium black tea", defaultCategory, null);
+        createProductIfNotExists("Semi-skimmed Milk", 19.90, 19.90, "Fresh dairy milk", defaultCategory, null);
+        createProductIfNotExists("Rye Bread", 34.5, 34.5, "Fresh baked bread", defaultCategory, null);
+        createProductIfNotExists("Butter 250g", 49.9, 49.9, "Farm butter", defaultCategory, null);
+        createProductIfNotExists("Apples 1kg", 29.99, 29.99, "Fresh local apples", defaultCategory, null);
+        createProductIfNotExists("Bananas 1kg", 26.5, 26.5, "Ripe bananas", defaultCategory, null);
+        createProductIfNotExists("Beef Steak 300g", 159.0, 159.0, "Premium beef", defaultCategory, null);
+        createProductIfNotExists("Chicken Breast 500g", 89.9, 89.9, "Fresh chicken", defaultCategory, null);
+        createProductIfNotExists("Bread Roll", 3.5, 3.5, "Crispy roll", defaultCategory, null);
+        createProductIfNotExists("Edam Cheese 100g", 24.0, 24.0, "Mild cheese", defaultCategory, null);
+        createProductIfNotExists("Ham 100g", 32.9, 32.9, "Quality ham", defaultCategory, null);
+        createProductIfNotExists("Oranges 1kg", 45.0, 45.0, "Juicy oranges", defaultCategory, null);
+        createProductIfNotExists("Coffee Beans 250g", 149.0, 149.0, "Strong coffee", defaultCategory, null);
+        createProductIfNotExists("Spaghetti 500g", 32.5, 32.5, "Italian pasta", defaultCategory, null);
+        createProductIfNotExists("Basmati Rice 1kg", 69.0, 69.0, "Aromatic rice", defaultCategory, null);
+        createProductIfNotExists("Olive Oil 500ml", 129.0, 129.0, "Extra virgin", defaultCategory, null);
+        createProductIfNotExists("Ketchup 500g", 39.9, 39.9, "Tomato ketchup", defaultCategory, null);
+        createProductIfNotExists("Mustard 200g", 19.9, 19.9, "Traditional mustard", defaultCategory, null);
+        createProductIfNotExists("Chocolate Bar", 14.5, 14.5, "Sweet treat", defaultCategory, null);
+        createProductIfNotExists("Potatoes 2kg", 49.9, 49.9, "Local potatoes", defaultCategory, null);
+        createProductIfNotExists("Onions 1kg", 22.9, 22.9, "Quality onions", defaultCategory, null);
+        createProductIfNotExists("Garlic 200g", 29.5, 29.5, "Aromatic garlic",defaultCategory, null);
+        createProductIfNotExists("Strawberry Yogurt 150g", 15.9, 15.9, "Creamy yogurt", defaultCategory, null);
+        createProductIfNotExists("Toilet Paper 8pcs", 89.9, 89.9, "Soft and strong", defaultCategory, null);
 
         // Create inventory items for sample products
         Product milkaProduct = productRepository.findByName("Milka Chocolate 200g")
@@ -386,9 +457,6 @@ public class DataLoader implements CommandLineRunner {
     private void createUserIfNotExists(String username, String firstName, String email, Set<Role> roles) {
         Optional<User> userFromDb = userRepository.findByEmail(email);
         if (userFromDb.isEmpty()) {
-
-            ErpSystemApplication.getLogger().warn("[DATA LOADER] User {} fetch already exists.", username);
-
             User user = new User();
             user.setUsername(username);
             user.setPassword(encoder.encode("P&ssw0rd123@")); // Default password
@@ -399,33 +467,47 @@ public class DataLoader implements CommandLineRunner {
             user.setRoles(roles);
 
             userRepository.save(user);
-        } else {
-            ErpSystemApplication.getLogger().info("[DATA LOADER] User {} created.", username);
         }
     }
 
     private void createProductCategoryIfNotExists() {
-        //create product category
-        Optional<ProductCategory> productCategoryFromDb = productCategoryRepository.findByName("default");
-        if (productCategoryFromDb.isEmpty()) {
+        // Create multiple product categories
+        createCategory("Electronics", "Electronic devices and accessories", "indigo");
+        createCategory("Food", "Food and beverages", "emerald");
+        createCategory("Clothing", "Apparel and accessories", "rose");
+        createCategory("Home", "Home and garden items", "violet");
+        createCategory("Sports", "Sports equipment and gear", "amber");
+        createCategory("Books", "Books and literature", "blue");
+        createCategory("Toys", "Toys and games", "orange");
+        createCategory("Beauty", "Beauty and personal care", "pink");
+        createCategory("Garden", "Garden tools and supplies", "lime");
+        createCategory("Office", "Office supplies", "slate");
+        createCategory("default", "...", "green");
+    }
+
+    private void createCategory(String name, String description, String color) {
+        Optional<ProductCategory> categoryFromDb = productCategoryRepository.findByName(name);
+        if (categoryFromDb.isEmpty()) {
             productCategoryRepository.save(ProductCategory.builder()
-                    .name("default")
-                    .description("default")
+                    .name(name)
+                    .description(description)
+                    .color(color)
                     .build());
         }
     }
 
-    private void createProductIfNotExists(String name, double buyoutPrice, double purchasePrice, String description, ProductCategory productCategory) {
-
+    private void createProductIfNotExists(String name, double buyoutPrice, double purchasePrice, 
+            String description, ProductCategory productCategory, String image) {
         Optional<Product> productFromDB = productRepository.findByName(name);
         if (productFromDB.isEmpty()) {
             productRepository.save(
-            Product.builder()
+                Product.builder()
                     .name(name)
                     .purchasePrice(purchasePrice)
                     .buyoutPrice(buyoutPrice)
                     .description(description)
                     .productCategory(productCategory)
+                    .image(image)
                     .build()
             );
         }

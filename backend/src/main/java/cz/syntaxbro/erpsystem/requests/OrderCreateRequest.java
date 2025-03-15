@@ -18,6 +18,9 @@ public class OrderCreateRequest {
     @NotNull(message = "Order Type cannot be null")
     private String comment;
 
+    //@NotNull(message = "Order code need to be defined")
+    //private String orderCode;
+
     List<ProductRequest> products;
 
     @Data

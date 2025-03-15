@@ -1,7 +1,7 @@
 package cz.syntaxbro.erpsystem.controllers;
 
 import cz.syntaxbro.erpsystem.models.User;
-import cz.syntaxbro.erpsystem.partials.UserPartial;
+import cz.syntaxbro.erpsystem.requests.UserRequest;
 import cz.syntaxbro.erpsystem.repositories.UserRepository;
 import cz.syntaxbro.erpsystem.requests.PasswordChangeRequest;
 import cz.syntaxbro.erpsystem.security.FileStorageConfig;
@@ -13,15 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -81,9 +78,8 @@ class MeControllerTest {
      */
     @Test
     void updateCurrentUser_ShouldUpdateAndReturnUser() {
-        UserPartial updatedUser = new UserPartial();
+        UserRequest updatedUser = new UserRequest();
         updatedUser.setUsername("updatedUser");
-        updatedUser.setEmail("updated@example.com");
         updatedUser.setFirstName("Updated");
         updatedUser.setLastName("User");
         updatedUser.setActive(false);
@@ -97,7 +93,6 @@ class MeControllerTest {
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getUsername()).isEqualTo(updatedUser.getUsername());
-        assertThat(response.getBody().getEmail()).isEqualTo(updatedUser.getEmail());
 
         verify(userRepository, times(1)).save(testUser);
     }
@@ -150,7 +145,7 @@ class MeControllerTest {
      * Test: Should throw an exception when the uploaded file is not an image.
      */
     @Test
-    void updateAvatar_ShouldThrowException_WhenFileIsNotImage() throws IOException, URISyntaxException {
+    void updateAvatar_ShouldThrowException_WhenFileIsNotImage() throws IOException {
         MultipartFile invalidFile = new MockMultipartFile(
                 "avatar", "avatar.jpg", MediaType.TEXT_PLAIN_VALUE, new byte[10]
         );

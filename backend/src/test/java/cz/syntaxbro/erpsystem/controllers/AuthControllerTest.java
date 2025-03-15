@@ -93,13 +93,16 @@ class AuthControllerTest {
     @Test
     void login_shouldReturnOk_whenValidCredentials() throws Exception {
         String mockToken = "mocked-jwt-token";
+        String mockRefreshToken = "mocked-refresh-token";
+
         when(authService.authenticateUser(any(LoginRequest.class))).thenReturn(mockToken);
+        when(authService.getRefreshToken(any(LoginRequest.class))).thenReturn(mockRefreshToken);
 
         mockMvc.perform(post("/api/auth/public/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(String.format("{\"accessToken\":\"%s\",\"refreshToken\":\"%s\"}", mockToken, mockToken)));
+                .andExpect(content().string(String.format("{\"accessToken\":\"%s\",\"refreshToken\":\"%s\"}", mockToken, mockRefreshToken)));
 
         verify(authService, times(1)).authenticateUser(any(LoginRequest.class));
     }

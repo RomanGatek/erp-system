@@ -13,6 +13,10 @@ import { useErrorStore } from '@/stores/errors.store.js'
 import Workflow from '@/views/{pages}/Workflow.vue'
 import Orders from '@/views/{pages}/Orders.vue'
 import Categories from './views/{pages}/Categories.vue'
+import ProductCatalog from './views/{user}/ProductCatalog.vue'
+import Checkout from './views/checkout/Checkout.vue'
+import UserOrders from './views/{user}/UserOrders.vue'
+import Dashboard from './views/{pages}/Dashboard.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -24,7 +28,39 @@ const routes = [
   { path: '/workflow', component: Workflow, meta: { requiresAuth: true, role: "ADMIN" } },
   { path: '/orders', component: Orders, meta: { requiresAuth: true, role: "MANAGER" } },
   { path: '/products/categories', component: Categories, meta: { requiresAuth: true, role: "MANAGER" } },
+  { path: '/catalog', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
+  { path: '/catalog/product/:slug', component: ProductCatalog, meta: { requiresAuth: true, role: "USER" } },
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, role: "MANAGER" } },
+  {
+    path: '/checkout',
+    name: 'Checkout',
+    component: Checkout,
+    meta: {
+      requiresAuth: false,
+      title: 'Checkout'
+    }
+  },
+  {
+    path: '/order-confirmation',
+    name: 'OrderConfirmation',
+    component: () => import('@/views/checkout/OrderConfirmation.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Order Confirmation'
+    },
+  },
+  {
+    path: '/user/orders',
+    name: 'UserOrders',
+    component: UserOrders,
+    meta: {
+      requiresAuth: false,
+      title: 'User Orders'
+    },
+  },
+
   { path: '/unauthorized', name: 'Unauthorized', component: Unauthorized },
+
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 ]
 

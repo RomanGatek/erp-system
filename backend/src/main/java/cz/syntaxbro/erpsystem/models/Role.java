@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,5 +50,16 @@ public class Role {
     public Role(String name, Set<Permission> permissions) {
         this.name = name;
         this.permissions = (permissions != null) ? permissions : new HashSet<>();
+    }
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public Role(Long id, String name, Set<Permission> permissions) {
+        this.id = id;
+        this.name = name;
+        this.permissions = permissions;
     }
 }

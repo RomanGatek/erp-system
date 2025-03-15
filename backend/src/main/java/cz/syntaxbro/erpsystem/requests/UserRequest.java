@@ -1,4 +1,4 @@
-package cz.syntaxbro.erpsystem.partials;
+package cz.syntaxbro.erpsystem.requests;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -10,13 +10,10 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserPartial {
+public class UserRequest {
     @Size(min = 5, max = 50, message = "Username must be between 5 and 50 characters")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
     private String username;
-
-    @Email(message = "Invalid email format")
-    private String email;
 
     @NotEmpty(message = "First Name cannot be empty field")
     private String firstName;

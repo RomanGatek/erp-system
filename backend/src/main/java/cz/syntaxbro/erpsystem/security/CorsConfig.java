@@ -19,6 +19,14 @@ public class CorsConfig {
                   .exposedHeaders("Authorization")
                   .allowCredentials(true) // Funguje s allowedOriginPatterns("*")
                   .maxAge(3600L);
+
+                registry.addMapping("/actuator/**")
+                        .allowedOriginPatterns("*") // Povolit všechny originy (včetně dynamických portů)
+                        .allowedMethods("GET", "HEAD")
+                        .allowedHeaders("*")
+                        .exposedHeaders("Authorization")
+                        .allowCredentials(true) // Funguje s allowedOriginPatterns("*")
+                        .maxAge(3600L);
             }
         };
     }

@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,13 +45,16 @@ public class Order {
     private String comment;
     
     @ManyToOne
-    @JoinColumn(name = "approved_by", nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "approved_by", nullable = true)
     private User approvedBy;
     
     @Column(name = "decision_time")
     private LocalDateTime decisionTime;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     public enum Status {
@@ -90,6 +97,7 @@ public class Order {
         return BigDecimal.valueOf(total);
     }
 
+    @SuppressWarnings("unused")
     public void recalculateTotal() {
         this.cost = this.orderItems.stream()
                 .mapToDouble(item -> item.getQuantity() * (
@@ -99,4 +107,15 @@ public class Order {
                 .sum();
     }
 
+    public Order(OrderType orderType, Long id, List<OrderItem> orderItems, double cost, Status status, LocalDateTime orderTime, String comment, User approvedBy, LocalDateTime decisionTime) {
+        this.orderType = orderType;
+        this.id = id;
+        this.orderItems = orderItems;
+        this.cost = cost;
+        this.status = status;
+        this.orderTime = orderTime;
+        this.comment = comment;
+        this.approvedBy = approvedBy;
+        this.decisionTime = decisionTime;
+    }
 }

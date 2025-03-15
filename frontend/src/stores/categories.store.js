@@ -1,6 +1,12 @@
 import { defineStore } from "pinia";
 import api from "@/services/api";
-import { setupSort, filter, paginateViaState } from "@/utils";
+import { 
+    setupSort, 
+    filter, 
+    paginateViaState 
+} from "@/utils";
+
+let _;
 
 export const useCategoriesStore = defineStore("categories", {
     state: () => ({
@@ -8,9 +14,9 @@ export const useCategoriesStore = defineStore("categories", {
         items: [],
         loading: false,
         error: null,
+        searchQuery: '',
         pagination: { currentPage: 1, perPage: 10 },
         sorting: setupSort('name'),
-        searchQuery: '',
     }),
     getters: {
         filtered: (state) => filter(state, (/**@type {import("../../types").Category} */category) => {
@@ -22,32 +28,26 @@ export const useCategoriesStore = defineStore("categories", {
     },
     actions: {
         async fetchCategories() {
-            this.loading = true;
             [this.items, this.error] = await api.category().getAll();
-            this.loading = false;
         },
         async addCategory(category) {
-            this.loading = true;
-            var output;
-            [output, this.error] = await api.category().create(category);
-            await this.fetchCategories();
-            this.loading = false;
+            [_, this.error] = await api.category().create(category);
+            if (!this.error) this.items.push(_);
         },
         async updateCategory(id, categoryData) {
-            console.log(1, id, categoryData);
-            this.loading = true;
-            var output;
-            [output, this.error] = await api.category().update(id, categoryData);
-            await this.fetchCategories();
-            this.loading = false;
+            [_, this.error] = await api.category().update(id, categoryData);
+            if (!this.error) {
+                const index = this.items.findIndex(p => p.id === id);
+                if (index === -1) return;
+                this.items[index] = _;
+            }
         },
         async deleteCategory(categoryId) {
-            this.loading = true;
-            var output;
-            [output, this.error] = await api.category().delete(categoryId);
+            [_, this.error] = await api.category().delete(categoryId);
             if (!this.error) {
-                await this.fetchCategories();
-                this.loading = false;
+                const index = this.items.findIndex(p => p.id === categoryId);
+                if (index === -1) return;
+                this.items.splice(index, 1);
             }
         },
         setSearch(query) {

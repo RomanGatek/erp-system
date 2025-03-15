@@ -3,6 +3,7 @@ package cz.syntaxbro.erpsystem.controllers;
 import cz.syntaxbro.erpsystem.models.ProductCategory;
 import cz.syntaxbro.erpsystem.requests.ProductCategoryRequest;
 import cz.syntaxbro.erpsystem.services.ProductCategoryService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +16,7 @@ import java.util.List;
 @RequestMapping("/api/categories")
 @EnableMethodSecurity()
 @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+@Valid
 public class ProductCategoryController {
 
     private final ProductCategoryService productCategoryService;
@@ -25,6 +27,7 @@ public class ProductCategoryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'MANAGER')")
     public ResponseEntity<ProductCategory> getProductCategoryById(@PathVariable long id) {
         return ResponseEntity.ok(
                 productCategoryService.getProductCategory(id)
@@ -32,12 +35,13 @@ public class ProductCategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'MANAGER')")
     public ResponseEntity<List<ProductCategory>> findAll() {
         return ResponseEntity.ok(productCategoryService.getProductCategories());
     }
 
-    @PostMapping()
-    public ResponseEntity<ProductCategory> create(@RequestBody ProductCategoryRequest productCategory) {
+    @PostMapping
+    public ResponseEntity<ProductCategory> create(@Valid @RequestBody ProductCategoryRequest productCategory) {
         ProductCategory savedProductCategory =  productCategoryService.createProductCategory(productCategory);
         return ResponseEntity.ok(savedProductCategory);
     }
@@ -45,7 +49,7 @@ public class ProductCategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductCategory> update(
             @PathVariable long id,
-            @RequestBody ProductCategoryRequest productCategory) {
+            @Valid @RequestBody ProductCategoryRequest productCategory) {
         return ResponseEntity.ok(productCategoryService.updateProductCategory(id, productCategory));
     }
 
