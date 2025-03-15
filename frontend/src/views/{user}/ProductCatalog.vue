@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 h-[80dvh] max-h-[80dvh] overflow-hidden bg-gray-50">
+  <div class="p-6 h-[80dvh] max-h-[80dvh] overflow-hidden">
     <div class="grid grid-cols-[250px_1fr_300px] gap-10 h-[calc(80dvh-3rem)] max-h-[calc(80dvh-3rem)] overflow-hidden">
       <!-- Categories Sidebar -->
       <CategoriesSidebar :categories="categories.items" :selected-category="selectedCategory"
