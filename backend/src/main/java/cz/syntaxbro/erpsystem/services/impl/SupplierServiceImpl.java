@@ -4,6 +4,7 @@ import cz.syntaxbro.erpsystem.models.Supplier;
 import cz.syntaxbro.erpsystem.repositories.SupplierRepository;
 import cz.syntaxbro.erpsystem.services.SupplierService;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +23,13 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     public Supplier getSupplierById(long id) {
         return supplierRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Supplier not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Supplier not found"));
     }
 
     @Override
     public Supplier getSupplierByName(String name) {
-        return supplierRepository.findByCompanyName("name").orElseThrow(() -> new RuntimeException("Supplier not found"));
+        return supplierRepository.findByCompanyName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Supplier not found"));
     }
 
     @Override
